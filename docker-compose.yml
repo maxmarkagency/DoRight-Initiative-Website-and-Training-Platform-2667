@@ -1,0 +1,74 @@
+version: "3.8"
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: dorightdb
+      POSTGRES_USER: doright
+      POSTGRES_PASSWORD: dorightpass123
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - doright_network
+
+  # Backend API Server (Node.js/Express)
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: on-failure
+    environment:
+      DATABASE_URL: postgres://doright:dorightpass123@db:5432/dorightdb
+      JWT_SECRET: your_super_secret_jwt_key_change_this_in_production
+      NODE_ENV: production
+      PORT: 4000
+    volumes:
+      - ./backend/uploads:/usr/src/app/uploads
+      - ./backend/logs:/usr/src/app/logs
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
+    networks:
+      - doright_network
+
+  # Frontend (React/Vite)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    restart: on-failure
+    environment:
+      VITE_API_URL: http://localhost:4000/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - doright_network
+
+  # Admin Panel (React Admin)
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+    restart: on-failure
+    environment:
+      REACT_APP_API_URL: http://localhost:4000/api
+    ports:
+      - "3001:3000"
+    depends_on:
+      - backend
+    networks:
+      - doright_network
+
+volumes:
+  db_data:
+
+networks:
+  doright_network:
+    driver: bridge
