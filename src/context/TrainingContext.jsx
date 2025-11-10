@@ -1,108 +1,140 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import supabase from '../lib/supabase';
+import { courses as mockCourses, lessons as mockLessons } from '../data/courses';
 
 const TrainingContext = createContext();
 
-export const useTraining = () => {
-  const context = useContext(TrainingContext);
-  if (!context) {
-    throw new Error('useTraining must be used within a TrainingProvider');
-  }
-  return context;
-};
+export const useTraining = () => useContext(TrainingContext);
 
 export const TrainingProvider = ({ children }) => {
-  const [progress, setProgress] = useState({});
   const { user } = useAuth();
+  const [enrollments, setEnrollments] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [progress, setProgress] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Load progress from localStorage when user changes
   useEffect(() => {
-    if (user) {
-      loadUserProgress();
-    } else {
-      setProgress({});
-    }
+    const fetchTrainingData = async () => {
+      if (!user) {
+        setCourses(mockCourses);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Fetch all courses
+        const { data: coursesData, error: coursesError } = await supabase
+          .from('courses')
+          .select('*');
+        if (coursesError) throw coursesError;
+        setCourses(coursesData.length > 0 ? coursesData : mockCourses);
+
+        // Fetch user's enrollments
+        const { data: enrollmentsData, error: enrollmentsError } = await supabase
+          .from('enrollments')
+          .select('*, courses(*)')
+          .eq('user_id', user.id);
+        if (enrollmentsError) throw enrollmentsError;
+        setEnrollments(enrollmentsData);
+
+        // Fetch user's progress
+        const { data: progressData, error: progressError } = await supabase
+          .from('progress')
+          .select('*')
+          .eq('user_id', user.id);
+
+        if (progressError) throw progressError;
+
+        const progressMap = progressData.reduce((acc, p) => {
+            acc[p.lesson_id] = p;
+            return acc;
+        }, {});
+        setProgress(progressMap);
+
+      } catch (err) {
+        console.error("Error fetching training data:", err);
+        setError(err.message);
+        setCourses(mockCourses); // Fallback to mock data on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTrainingData();
   }, [user]);
 
-  const loadUserProgress = () => {
-    if (!user) return;
-    try {
-      const savedProgress = localStorage.getItem(`doingright_training_${user.id}`);
-      if (savedProgress) {
-        setProgress(JSON.parse(savedProgress));
-      } else {
-        setProgress({});
-      }
-    } catch (e) {
-      console.error('Error parsing saved progress:', e);
-      setProgress({});
-    }
+  const getCourseById = (courseId) => {
+    return courses.find(c => c.id === courseId);
   };
 
-  const saveUserProgress = (newProgress) => {
-    if (!user) return;
-    try {
-      localStorage.setItem(`doingright_training_${user.id}`, JSON.stringify(newProgress));
-    } catch (e) {
-      console.error('Error saving progress:', e);
-    }
+  const getLessonsForCourse = (courseId) => {
+    // This is still mock. In a real scenario, you'd fetch this from Supabase.
+    return mockLessons[courseId] || [];
   };
 
-  const completeLesson = (courseId, lessonId) => {
+  const getLessonProgress = (lessonId) => {
+    return progress[lessonId] || { completed: false };
+  };
+  
+  const toggleLessonCompleted = async (lessonId, courseId) => {
     if (!user) return;
 
-    const courseProgress = progress[courseId] || { completedLessons: [], certified: false };
-    if (!courseProgress.completedLessons.includes(lessonId)) {
-      courseProgress.completedLessons.push(lessonId);
-    }
-    const newProgress = { ...progress, [courseId]: courseProgress };
-    setProgress(newProgress);
-    saveUserProgress(newProgress);
-  };
+    const currentProgress = getLessonProgress(lessonId);
+    const newCompletedStatus = !currentProgress.completed;
 
-  const claimCertificate = (courseSpec) => {
-    if (!user) return { ok: false, msg: 'Please log in to claim certificates' };
-
-    const courseProgress = progress[courseSpec.id];
-    const allLessonsComplete = courseSpec.lessons.every(lesson =>
-      courseProgress?.completedLessons.includes(lesson.id)
-    );
-
-    if (!allLessonsComplete) {
-      return { ok: false, msg: 'Complete all lessons first' };
-    }
-
-    const certificateId = `DR-${courseSpec.id}-${user.id.substring(0, 8)}-${Date.now()}`;
-    const updatedProgress = { ...courseProgress, certified: true, certificate_id: certificateId };
-    const newProgress = { ...progress, [courseSpec.id]: updatedProgress };
+    setProgress(prev => ({
+        ...prev,
+        [lessonId]: {
+            ...prev[lessonId],
+            user_id: user.id,
+            lesson_id: lessonId,
+            completed: newCompletedStatus,
+            updated_at: new Date().toISOString(),
+        }
+    }));
     
-    setProgress(newProgress);
-    saveUserProgress(newProgress);
+    try {
+        const { error } = await supabase
+            .from('progress')
+            .upsert({
+                user_id: user.id,
+                lesson_id: lessonId,
+                completed: newCompletedStatus,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id, lesson_id' });
+        
+        if (error) throw error;
 
-    return { ok: true, certificate_id: certificateId, template: courseSpec.certificate };
-  };
-
-  const isCourseUnlocked = (courseSpec, courses) => {
-    if (!user) return false;
-    if (!courseSpec.prerequisite) return true;
-    const prereqProgress = progress[courseSpec.prerequisite];
-    return prereqProgress && prereqProgress.certified === true;
-  };
-
-  const isCourseComplete = (courseSpec) => {
-    if (!user) return false;
-    const courseProgress = progress[courseSpec.id];
-    if (!courseProgress) return false;
-    return courseSpec.lessons.every(lesson => courseProgress.completedLessons.includes(lesson.id));
+    } catch (err) {
+        console.error("Error updating lesson progress:", err);
+        // Revert optimistic update on failure
+        setProgress(prev => ({
+            ...prev,
+            [lessonId]: currentProgress
+        }));
+    }
   };
 
   const value = {
+    loading,
+    error,
+    courses,
+    enrollments,
     progress,
-    user,
-    completeLesson,
-    claimCertificate,
-    isCourseUnlocked,
-    isCourseComplete,
+    getCourseById,
+    getLessonsForCourse,
+    getLessonProgress,
+    toggleLessonCompleted,
+    userProgress: { // This is mock, replace with calculations from real data
+      overallPercentage: 65,
+      completedCourses: enrollments.filter(e => e.status === 'completed').length,
+      inProgressCourses: enrollments.filter(e => e.status === 'active').length,
+    }
   };
 
   return (

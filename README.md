@@ -1,298 +1,367 @@
-# DoRight Awareness Initiative Website
+# DoRight Foundation LMS
 
-A comprehensive website for the DoRight Awareness Initiative, featuring a complete training system with course progression, certification, and user management.
+A comprehensive Learning Management System built with React, Supabase, and Node.js.
 
-## Features
+---
 
-### Core Website
-- **Responsive Design**: Mobile-first approach with Tailwind CSS
-- **Modern UI/UX**: Premium design with smooth animations using Framer Motion
-- **Multi-page Navigation**: Home, Programs, Training, Webinars, Blog, Join, Contact
-- **Accessibility**: WCAG compliant with proper semantic HTML and focus management
+## 🚀 Quick Start
 
-### Training System
-- **Progressive Learning Path**: 5 structured courses with prerequisites
-- **Video Lessons**: Integrated video player with progress tracking
-- **Assessments**: Quizzes and project-based evaluations
-- **Certificates**: Downloadable certificates upon course completion
-- **Dashboard**: Personal training dashboard with progress overview
-- **Local Storage**: Demo progress tracking (production ready for backend integration)
+### Prerequisites
+- Node.js 18+ and npm
+- Supabase account (free tier works!)
+- Git
 
-### Pages Overview
-- **Home**: Hero section, programs overview, training promotion, statistics
-- **Programs**: Detailed program information with impact metrics
-- **Training**: Course catalog with enrollment and progress tracking
-- **Training Dashboard**: Personal progress, certificates, and course management
-- **Course Pages**: Individual course content with video player and lesson tracking
-- **Webinars**: Upcoming and recorded sessions
-- **Blog**: Article system with categories and search
-- **Join**: Volunteer, donation, and partnership opportunities
-- **Contact**: Contact forms, department information, and FAQ
+### Setup in 3 Steps
 
-## Technology Stack
+1. **Clone and Install**
+   ```bash
+   git clone <repository-url>
+   cd doright-lms
+   npm install
+   cd backend && npm install && cd ..
+   ```
 
-- **Frontend**: React 18 with JSX
-- **Routing**: React Router DOM with HashRouter
-- **Styling**: Tailwind CSS with custom design system
-- **Animations**: Framer Motion
-- **Icons**: React Icons (Feather Icons)
-- **Build Tool**: Vite
-- **State Management**: React Context API
+2. **Configure Environment**
+   
+   Create `backend/.env`:
+   ```env
+   SUPABASE_URL=https://jqekzavaerbxjzyeihvv.supabase.co
+   SUPABASE_ANON_KEY=your-anon-key
+   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+   PORT=4000
+   NODE_ENV=development
+   FRONTEND_URL=http://localhost:5173
+   ```
 
-## Design System
+   Create `.env` (frontend):
+   ```env
+   VITE_SUPABASE_URL=https://jqekzavaerbxjzyeihvv.supabase.co
+   VITE_SUPABASE_ANON_KEY=your-anon-key
+   ```
 
-### Colors
-- **Primary**: #005BBB (Nigerian blue)
-- **Primary 600**: #004499
-- **Accent**: #FFC107 (Golden yellow)
-- **Neutral 900**: #0D0E16
-- **Neutral 700**: #4B5563
-- **Neutral 100**: #F9FAFB
-- **Success**: #16A34A
-- **Danger**: #DC2626
+3. **Setup Database**
+   
+   See **[DATABASE_SETUP.md](./DATABASE_SETUP.md)** for complete instructions!
+   
+   Quick version:
+   - Go to Supabase SQL Editor
+   - Run `backend/migrations/supabase/001_initial_schema.sql`
+   - Run `backend/migrations/supabase/002_rls_policies.sql`
+   - Run `backend/migrations/supabase/003_seed_default_users.sql`
+   - Create users: `cd backend && npm run create-users`
 
-### Typography
-- **Headings**: Poppins font family
-- **Body**: Inter font family
-- **H1**: 48px
-- **H2**: 32px
-- **H3**: 22px
-- **H4**: 18px
+4. **Start the Application**
+   ```bash
+   # Terminal 1 - Backend
+   cd backend
+   npm run dev
 
-## Getting Started
+   # Terminal 2 - Frontend
+   npm run dev
+   ```
 
-### Installation
-```bash
-npm install
+5. **Login**
+   - Open: http://localhost:5173
+   - Email: `student@doright.ng`
+   - Password: `Student@123`
+
+---
+
+## 📚 Documentation
+
+- **[DATABASE_SETUP.md](./DATABASE_SETUP.md)** - Complete database setup guide (⭐ Start here!)
+- **[QUICK_FIX.md](./QUICK_FIX.md)** - Fast fixes for common issues
+- **[TROUBLESHOOTING.md](./TROUBLESHOOTING.md)** - Detailed troubleshooting
+- **[SETUP_GUIDE.md](./SETUP_GUIDE.md)** - Step-by-step setup guide
+
+---
+
+## 🔑 Default Login Credentials
+
+After running `npm run create-users`:
+
+| Role | Email | Password |
+|------|-------|----------|
+| **Student** | student@doright.ng | Student@123 |
+| **Instructor** | instructor@doright.ng | Instructor@123 |
+| **Admin** | admin@doright.ng | Admin@123 |
+
+⚠️ **Change these in production!**
+
+---
+
+## ✨ Features
+
+### For Students
+- 📚 Browse and enroll in courses
+- 📹 Watch video lessons
+- 📝 Take quizzes and assignments
+- 📊 Track learning progress
+- 🏆 Earn certificates
+- 💬 Participate in discussions
+- ⭐ Rate and review courses
+
+### For Instructors
+- 🎓 Create and manage courses
+- 📂 Organize content in modules
+- 📹 Upload video lessons
+- 📝 Create quizzes and assignments
+- ✅ Grade student submissions
+- 📢 Post announcements
+- 📊 View course analytics
+
+### For Admins
+- 👥 Manage users and roles
+- 📚 Oversee all courses
+- 💰 Track payments
+- 📊 View platform analytics
+- ⚙️ Configure site settings
+- 🖼️ Manage media library
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+- **React 18** - UI framework
+- **Vite** - Build tool
+- **TailwindCSS** - Styling
+- **Framer Motion** - Animations
+- **React Router** - Navigation
+- **React Icons** - Icons
+
+### Backend
+- **Node.js & Express** - API server
+- **Supabase** - Database & Auth
+- **PostgreSQL** - Database (via Supabase)
+- **Winston** - Logging
+- **Helmet** - Security
+
+### Database
+- **PostgreSQL** (via Supabase)
+- **Row Level Security** - Data protection
+- **23 Tables** - Comprehensive schema
+- **50+ RLS Policies** - Fine-grained access control
+
+---
+
+## 📁 Project Structure
+
+```
+doright-lms/
+├── backend/
+│   ├── config/          # Configuration files
+│   ├── middleware/      # Express middleware
+│   ├── migrations/      # Database migrations
+│   │   └── supabase/    # ⭐ Run these first!
+│   ├── routes/          # API routes
+│   ├── scripts/         # Utility scripts
+│   └── server.js        # Express server
+├── src/
+│   ├── components/      # React components
+│   ├── pages/          # Page components
+│   ├── context/        # React context
+│   ├── services/       # API services
+│   └── lib/            # Utilities
+├── DATABASE_SETUP.md   # ⭐ Database setup guide
+├── QUICK_FIX.md        # Quick fixes
+├── TROUBLESHOOTING.md  # Troubleshooting
+└── README.md           # This file
 ```
 
-### Development
-```bash
-npm run dev
-```
+---
 
-### Build for Production
+## 🗄️ Database Schema
+
+### Core Tables
+- **users** - User profiles and roles
+- **courses** - Course information
+- **modules** - Course sections
+- **lessons** - Learning content
+- **enrollments** - Student registrations
+- **progress** - Learning progress
+
+### Assessment Tables
+- **quizzes** - Quiz definitions
+- **questions** - Quiz questions
+- **quiz_submissions** - Quiz attempts
+- **assignments** - Assignment definitions
+- **assignment_submissions** - Student work
+
+### Additional Tables
+- **certificates** - Completion certificates
+- **payments** - Payment transactions
+- **discussions** - Course forums
+- **reviews** - Course ratings
+- **announcements** - Course updates
+- **media** - File uploads
+
+---
+
+## 🔒 Security Features
+
+- ✅ Row Level Security (RLS) on all tables
+- ✅ JWT-based authentication
+- ✅ Role-based access control (RBAC)
+- ✅ Password hashing (bcrypt)
+- ✅ Rate limiting
+- ✅ CORS protection
+- ✅ Helmet security headers
+- ✅ Input validation
+
+---
+
+## 📡 API Endpoints
+
+### Authentication
+- `POST /api/auth/signup` - Register new user
+- `POST /api/auth/login` - Login
+- `POST /api/auth/logout` - Logout
+- `GET /api/auth/me` - Get current user
+
+### Courses
+- `GET /api/courses` - List courses
+- `GET /api/courses/:id` - Get course details
+- `POST /api/courses` - Create course (instructor/admin)
+- `PUT /api/courses/:id` - Update course (instructor/admin)
+- `DELETE /api/courses/:id` - Delete course (admin)
+
+### Enrollments
+- `GET /api/enrollments` - My enrollments
+- `POST /api/enrollments` - Enroll in course
+- `DELETE /api/enrollments/:id` - Unenroll
+
+### Progress
+- `GET /api/progress/:courseId` - Course progress
+- `PUT /api/progress/:lessonId` - Update lesson progress
+
+### Admin
+- `GET /api/admin/users` - List all users
+- `PUT /api/admin/users/:id` - Update user
+- `GET /api/admin/analytics` - Platform analytics
+
+---
+
+## 🚀 Deployment
+
+### Frontend (Vercel/Netlify)
 ```bash
 npm run build
+# Deploy 'dist' folder
 ```
 
-### Preview Production Build
+### Backend (Railway/Heroku)
 ```bash
-npm run preview
+cd backend
+# Set environment variables
+# Deploy backend folder
 ```
 
-## Training System Implementation
+### Database (Supabase)
+- Already hosted!
+- Just run migrations via SQL Editor
 
-### Current Implementation (Demo)
-The training system currently uses localStorage for progress tracking and certificate generation. This provides a fully functional demo experience.
+---
 
-### Production Backend Integration
+## 🐛 Troubleshooting
 
-To replace localStorage with a proper backend, implement these API endpoints:
+### ❌ "Could not find the table 'public.enrollments'"
+**Solution:** Run database migrations!
+See [DATABASE_SETUP.md](./DATABASE_SETUP.md) or [QUICK_FIX.md](./QUICK_FIX.md)
 
-#### Authentication Endpoints
-```javascript
-POST /api/auth/login
-POST /api/auth/register
-POST /api/auth/logout
-GET /api/auth/user
+### ❌ "Invalid login credentials"
+**Solution:** Create default users!
+```bash
+cd backend
+npm run create-users
 ```
 
-#### Progress Tracking Endpoints
-```javascript
-GET /api/progress/:userId
-POST /api/progress/:userId/:courseId/lesson/:lessonId/complete
-GET /api/progress/:userId/:courseId
+### ❌ Backend won't start
+**Solution:** Check environment variables!
+```bash
+cat backend/.env
+```
+Ensure all required variables are set.
+
+### ❌ Frontend shows errors
+**Solution:** Check Supabase configuration!
+Verify `src/lib/supabase.js` has correct URL and keys.
+
+**For more help:** See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
+
+---
+
+## 📊 Available Scripts
+
+### Frontend
+```bash
+npm run dev          # Start dev server
+npm run build        # Build for production
+npm run preview      # Preview production build
 ```
 
-#### Certificate Endpoints
-```javascript
-POST /api/certificates/:userId/:courseId/claim
-GET /api/certificates/:userId
-GET /api/certificates/:certificateId/download
+### Backend
+```bash
+npm run dev          # Start backend server
+npm run migrate      # Check database tables
+npm run migrate:manual  # Output SQL for manual migration
+npm run create-users # Create default users
+npm run setup        # Run migrations + create users
 ```
 
-#### Course Management Endpoints
-```javascript
-GET /api/courses
-GET /api/courses/:courseId
-GET /api/courses/:courseId/lessons
-```
+---
 
-### Database Schema
+## 🤝 Contributing
 
-#### Users Table
-```sql
-CREATE TABLE users (
-  id UUID PRIMARY KEY,
-  name VARCHAR(255),
-  email VARCHAR(255) UNIQUE NOT NULL,
-  password_hash VARCHAR(255),
-  role ENUM('admin', 'learner') DEFAULT 'learner',
-  created_at TIMESTAMP,
-  updated_at TIMESTAMP
-);
-```
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-#### Courses Table
-```sql
-CREATE TABLE courses (
-  id VARCHAR(10) PRIMARY KEY,
-  title VARCHAR(255),
-  description TEXT,
-  prerequisite VARCHAR(10) REFERENCES courses(id),
-  image_url VARCHAR(500),
-  order_index INTEGER,
-  created_at TIMESTAMP
-);
-```
+---
 
-#### Lessons Table
-```sql
-CREATE TABLE lessons (
-  id VARCHAR(20) PRIMARY KEY,
-  course_id VARCHAR(10) REFERENCES courses(id),
-  title VARCHAR(255),
-  video_url VARCHAR(500),
-  duration VARCHAR(20),
-  order_index INTEGER,
-  content TEXT
-);
-```
+## 📄 License
 
-#### Course Progress Table
-```sql
-CREATE TABLE course_progress (
-  id UUID PRIMARY KEY,
-  user_id UUID REFERENCES users(id),
-  course_id VARCHAR(10) REFERENCES courses(id),
-  completed_lessons JSONB DEFAULT '[]',
-  certified BOOLEAN DEFAULT FALSE,
-  certificate_id VARCHAR(50),
-  created_at TIMESTAMP,
-  updated_at TIMESTAMP
-);
-```
+MIT License - see LICENSE file for details
 
-#### Certificates Table
-```sql
-CREATE TABLE certificates (
-  id VARCHAR(50) PRIMARY KEY,
-  user_id UUID REFERENCES users(id),
-  course_id VARCHAR(10) REFERENCES courses(id),
-  issued_at TIMESTAMP,
-  pdf_url VARCHAR(500)
-);
-```
+---
 
-### Certificate Generation
+## 🆘 Getting Help
 
-#### Server-Side PDF Generation
-Replace the current client-side certificate generation with a proper server-side solution:
+1. **Read the docs:**
+   - [DATABASE_SETUP.md](./DATABASE_SETUP.md) - Database setup
+   - [QUICK_FIX.md](./QUICK_FIX.md) - Quick fixes
+   - [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) - Detailed help
 
-```javascript
-// Example using PDFKit in Node.js
-const PDFDocument = require('pdfkit');
+2. **Check Supabase:**
+   - Dashboard: https://supabase.com/dashboard
+   - Docs: https://supabase.com/docs
+   - Status: https://status.supabase.com
 
-function generateCertificate(userData, courseData, certificateId) {
-  const doc = new PDFDocument({ size: 'A4', layout: 'landscape' });
-  
-  // Add certificate content
-  doc.fontSize(24).text('DoRight Awareness Initiative', { align: 'center' });
-  doc.fontSize(18).text('Certificate of Completion', { align: 'center' });
-  doc.fontSize(14).text(`This certifies that ${userData.name}`, { align: 'center' });
-  doc.text(`has successfully completed ${courseData.title}`, { align: 'center' });
-  doc.text(`Certificate ID: ${certificateId}`, { align: 'center' });
-  doc.text(`Date: ${new Date().toLocaleDateString()}`, { align: 'center' });
-  
-  return doc;
-}
-```
+3. **Review logs:**
+   ```bash
+   # Backend logs
+   cat backend/logs/combined.log
 
-### Security Considerations
+   # Browser console (F12)
+   ```
 
-1. **Authentication**: Implement JWT-based authentication
-2. **Authorization**: Role-based access control for admin functions
-3. **Data Validation**: Server-side validation for all inputs
-4. **Certificate Verification**: Signed certificates with verification endpoints
-5. **Rate Limiting**: Prevent abuse of API endpoints
-6. **HTTPS**: Secure all communications
+---
 
-## Content Management
+## 🎯 Next Steps
 
-### Adding New Courses
-1. Update the `src/data/courses.js` file with new course data
-2. Add course images to the appropriate CDN or storage service
-3. Update prerequisite chains as needed
+After setup:
+1. ✅ Log in with test credentials
+2. ✅ Explore the dashboard
+3. ✅ Create your first course (as instructor)
+4. ✅ Enroll in a course (as student)
+5. ✅ Customize the platform
+6. ✅ Add real content
+7. ✅ Deploy to production
 
-### Modifying Design Tokens
-Update the Tailwind configuration in `tailwind.config.js` to modify colors, fonts, or spacing.
+---
 
-### Adding New Pages
-1. Create new page component in `src/pages/`
-2. Add route to `src/App.jsx`
-3. Update navigation in `src/components/Header.jsx`
+**Built with ❤️ by DoRight Foundation**
 
-## SEO Optimization
-
-### Current Implementation
-- Semantic HTML structure
-- Proper heading hierarchy
-- Alt text for images
-- Meta descriptions (can be enhanced with React Helmet)
-
-### Recommended Enhancements
-1. **React Helmet**: Add dynamic meta tags per page
-2. **Structured Data**: JSON-LD for courses and organization
-3. **Sitemap**: Generate XML sitemap
-4. **Open Graph**: Social media sharing optimization
-
-## Performance Optimization
-
-### Current Optimizations
-- Lazy loading of images
-- Code splitting with React Router
-- Optimized bundle with Vite
-- Efficient re-renders with React Context
-
-### Production Recommendations
-1. **Image Optimization**: WebP format, responsive images
-2. **CDN**: Serve static assets from CDN
-3. **Caching**: Implement proper HTTP caching headers
-4. **Compression**: Gzip/Brotli compression
-5. **Monitoring**: Performance monitoring and analytics
-
-## Deployment
-
-### Static Hosting (Current)
-The site can be deployed to any static hosting service:
-- Vercel
-- Netlify
-- GitHub Pages
-- AWS S3 + CloudFront
-
-### Full-Stack Deployment
-For the complete system with backend:
-- **Backend**: Node.js on AWS/Google Cloud/Azure
-- **Database**: PostgreSQL or MongoDB
-- **File Storage**: AWS S3 for videos and certificates
-- **CDN**: CloudFront or similar for global distribution
-
-## Contributing
-
-1. Follow the existing code style and component patterns
-2. Ensure all components are responsive and accessible
-3. Add proper TypeScript types if migrating to TypeScript
-4. Test thoroughly across different devices and browsers
-5. Update documentation for any new features
-
-## License
-
-This project is proprietary to the DoRight Awareness Initiative. All rights reserved.
-
-## Support
-
-For technical support or questions about implementation:
-- Email: tech@doright.ng
-- Documentation: [Internal Wiki]
-- Issues: [Internal Issue Tracker]
+**Last Updated:** January 2025

@@ -2,198 +2,176 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTraining } from '../context/TrainingContext';
-import { courses } from '../data/courses';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
+import LoadingSpinner from '../components/LoadingSpinner';
 
-const { FiPlay, FiCheck, FiAward, FiClock, FiTrendingUp, FiUser, FiSettings } = FiIcons;
+const { FiTarget, FiPlus, FiCheck, FiClock, FiTrendingUp, FiBookOpen, FiAward, FiActivity, FiAlertCircle } = FiIcons;
 
-const TrainingDashboard = () => {
-  const { progress, user } = useTraining();
+const StatCard = ({ icon, title, value, color }) => (
+  <motion.div
+    className="bg-gray-800 p-6 rounded-xl flex items-center space-x-4"
+    whileHover={{ scale: 1.05, backgroundColor: '#2d3748' }}
+  >
+    <div className={`p-3 rounded-full bg-${color}-500/20 text-${color}-400`}>
+      <SafeIcon icon={icon} className="text-2xl" />
+    </div>
+    <div>
+      <p className="text-gray-400 text-sm font-medium">{title}</p>
+      <p className="text-2xl font-bold text-white">{value}</p>
+    </div>
+  </motion.div>
+);
 
-  const getOverallStats = () => {
-    const totalCourses = courses.length;
-    const completedCourses = courses.filter(course => {
-      const courseProgress = progress[course.id];
-      return courseProgress && courseProgress.certified;
-    }).length;
-    const inProgressCourses = courses.filter(course => {
-      const courseProgress = progress[course.id];
-      return courseProgress && courseProgress.completedLessons.length > 0 && !courseProgress.certified;
-    }).length;
-    const totalCertificates = completedCourses;
-    return { totalCourses, completedCourses, inProgressCourses, totalCertificates };
-  };
-
-  const stats = getOverallStats();
-
-  const getCourseProgress = (course) => {
-    const courseProgress = progress[course.id];
-    const completedLessons = courseProgress?.completedLessons?.length || 0;
-    const totalLessons = course.lessons.length;
-    const progressPercent = (completedLessons / totalLessons) * 100;
-    return { completedLessons, totalLessons, progressPercent, isCertified: courseProgress?.certified || false, certificateId: courseProgress?.certificate_id };
-  };
-
-  const recentActivity = courses
-    .map(course => ({ course, ...getCourseProgress(course) }))
-    .filter(item => item.completedLessons > 0)
-    .sort((a, b) => b.progressPercent - a.progressPercent)
-    .slice(0, 3);
+const CourseProgressCard = ({ course }) => {
+  const { getLessonsForCourse, getLessonProgress } = useTraining();
+  const lessons = getLessonsForCourse(course.id);
+  const completedLessons = lessons.filter(lesson => getLessonProgress(lesson.id).completed).length;
+  const progressPercentage = lessons.length > 0 ? Math.round((completedLessons / lessons.length) * 100) : 0;
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen bg-neutral-100">
-      {/* Header */}
-      <div className="bg-white border-b border-neutral-200">
-        <div className="max-w-container mx-auto px-5 py-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="bg-primary w-12 h-12 rounded-full flex items-center justify-center mr-4">
-                <SafeIcon icon={FiUser} className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-heading font-bold text-neutral-900"> Training Dashboard </h1>
-                <p className="text-neutral-600"> Welcome back! Continue your learning journey. </p>
-              </div>
-            </div>
-            <Link to="/training" className="bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-600 transition-colors">
-              Browse Courses
-            </Link>
-          </div>
+    <motion.div
+      className="bg-gray-800 p-6 rounded-xl space-y-4"
+      whileHover={{ scale: 1.02, boxShadow: '0 10px 15px -3px rgba(251, 191, 36, 0.1), 0 4px 6px -2px rgba(251, 191, 36, 0.05)' }}
+    >
+      <div className="flex justify-between items-start">
+        <div>
+          <p className="text-xs text-accent uppercase font-semibold">{course.category || 'Category'}</p>
+          <h3 className="text-xl font-bold text-white mt-1">{course.title}</h3>
+        </div>
+        <div className="text-right">
+          <p className="text-2xl font-bold text-accent">{progressPercentage}%</p>
+          <p className="text-sm text-gray-400">Complete</p>
         </div>
       </div>
-
-      <div className="max-w-container mx-auto px-5 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {[{ title: 'Courses Completed', value: stats.completedCourses, total: stats.totalCourses, icon: FiCheck, color: 'text-accent' }, { title: 'In Progress', value: stats.inProgressCourses, icon: FiPlay, color: 'text-primary' }, { title: 'Certificates Earned', value: stats.totalCertificates, icon: FiAward, color: 'text-accent' }, { title: 'Overall Progress', value: Math.round((stats.completedCourses / stats.totalCourses) * 100), suffix: '%', icon: FiTrendingUp, color: 'text-primary' }].map((stat, index) => (
-            <motion.div key={stat.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.1 }} className="bg-white rounded-lg shadow-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <SafeIcon icon={stat.icon} className={`w-8 h-8 ${stat.color}`} />
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-neutral-900">
-                    {stat.value}{stat.suffix}
-                    {stat.total && <span className="text-neutral-400">/{stat.total}</span>}
-                  </div>
-                </div>
-              </div>
-              <h3 className="text-sm font-medium text-neutral-600"> {stat.title} </h3>
-            </motion.div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Recent Activity */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-heading font-bold text-neutral-900 mb-6"> Recent Activity </h2>
-            <div className="space-y-4">
-              {recentActivity.length > 0 ? (
-                recentActivity.map((item) => (
-                  <div key={item.course.id} className="border-l-4 border-primary pl-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-neutral-900"> {item.course.title} </h3>
-                      {item.isCertified && (
-                        <SafeIcon icon={FiAward} className="w-5 h-5 text-accent" />
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-neutral-600"> {item.completedLessons} of {item.totalLessons} lessons </div>
-                      <div className="text-sm font-medium text-primary"> {Math.round(item.progressPercent)}% </div>
-                    </div>
-                    <div className="w-full bg-neutral-200 rounded-full h-2 mt-2">
-                      <div className="bg-primary h-2 rounded-full transition-all duration-300" style={{ width: `${item.progressPercent}%` }}></div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-8">
-                  <SafeIcon icon={FiPlay} className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
-                  <p className="text-neutral-600">No courses started yet</p>
-                  <Link to="/training" className="text-primary hover:text-primary-600 font-medium">
-                    Start your first course
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Certificates */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-heading font-bold text-neutral-900 mb-6"> My Certificates </h2>
-            <div className="space-y-4">
-              {courses
-                .filter(course => {
-                  const courseProgress = progress[course.id];
-                  return courseProgress && courseProgress.certified;
-                })
-                .map((course) => {
-                  const courseProgress = progress[course.id];
-                  return (
-                    <div key={course.id} className="border border-neutral-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <SafeIcon icon={FiAward} className="w-6 h-6 text-accent mr-3" />
-                          <div>
-                            <h3 className="font-semibold text-neutral-900"> {course.certificate} </h3>
-                            <p className="text-sm text-neutral-600"> {course.title} </p>
-                            <p className="text-xs text-neutral-500"> ID: {courseProgress.certificate_id} </p>
-                          </div>
-                        </div>
-                        <button className="text-primary hover:text-primary-600 text-sm font-medium"> Download </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              {stats.totalCertificates === 0 && (
-                <div className="text-center py-8">
-                  <SafeIcon icon={FiAward} className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
-                  <p className="text-neutral-600">No certificates earned yet</p>
-                  <p className="text-sm text-neutral-500"> Complete courses to earn certificates </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* All Courses Progress */}
-        <div className="mt-8 bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-xl font-heading font-bold text-neutral-900 mb-6"> All Courses </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {courses.map((course) => {
-              const courseData = getCourseProgress(course);
-              return (
-                <div key={course.id} className="border border-neutral-200 rounded-lg p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-neutral-900 mb-2"> {course.title} </h3>
-                      <p className="text-sm text-neutral-600 mb-3"> {course.description} </p>
-                      <div className="flex items-center text-sm text-neutral-500">
-                        <SafeIcon icon={FiClock} className="w-4 h-4 mr-1" /> {course.lessons.length} lessons
-                      </div>
-                    </div>
-                    {courseData.isCertified && (
-                      <SafeIcon icon={FiAward} className="w-6 h-6 text-accent ml-4" />
-                    )}
-                  </div>
-                  <div className="mb-4">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>Progress</span>
-                      <span>{courseData.completedLessons}/{courseData.totalLessons}</span>
-                    </div>
-                    <div className="w-full bg-neutral-200 rounded-full h-2">
-                      <div className={`h-2 rounded-full transition-all duration-300 ${courseData.isCertified ? 'bg-accent' : 'bg-primary'}`} style={{ width: `${courseData.progressPercent}%` }}></div>
-                    </div>
-                  </div>
-                  <Link to={`/training/course/${course.id}`} className="w-full bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary-600 transition-colors inline-flex items-center justify-center">
-                    {courseData.completedLessons > 0 ? 'Continue' : 'Start Course'}
-                  </Link>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+      <div className="w-full bg-gray-700 rounded-full h-2.5">
+        <div
+          className="bg-accent h-2.5 rounded-full"
+          style={{ width: `${progressPercentage}%` }}
+        ></div>
+      </div>
+      <div className="flex justify-between items-center text-sm text-gray-400">
+        <span>{completedLessons} / {lessons.length} Lessons</span>
+        <Link to={`/course/${course.id}`} className="text-accent font-semibold hover:underline">
+          Continue
+        </Link>
       </div>
     </motion.div>
   );
 };
+
+const TrainingDashboard = () => {
+  const { loading, error, enrollments, userProgress } = useTraining();
+
+  if (loading) {
+    return <div className="min-h-screen bg-primary flex items-center justify-center"><LoadingSpinner /></div>;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-primary text-white flex items-center justify-center p-8">
+        <div className="bg-red-500/20 text-red-300 p-6 rounded-lg flex items-center max-w-lg text-center">
+            <SafeIcon icon={FiAlertCircle} className="text-3xl mr-4" />
+            <div>
+              <h2 className="text-xl font-bold mb-2">Something went wrong</h2>
+              <p>We couldn't load your dashboard data. Please try again later.</p>
+              <p className="text-xs mt-2 text-red-400">Error: {error}</p>
+            </div>
+        </div>
+      </div>
+    );
+  }
+
+  const enrolledCourses = enrollments.map(e => e.courses);
+
+  return (
+    <div className="min-h-screen bg-primary text-white p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h1 className="text-4xl font-bold mb-2">Your Dashboard</h1>
+          <p className="text-gray-400 text-lg">Welcome back, let's continue learning!</p>
+        </motion.div>
+
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 my-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <StatCard icon={FiBookOpen} title="Courses in Progress" value={enrollments.filter(e => e.status === 'active').length} color="accent" />
+          <StatCard icon={FiAward} title="Completed Courses" value={enrollments.filter(e => e.status === 'completed').length} color="green" />
+          <StatCard icon={FiTrendingUp} title="Overall Progress" value={`${userProgress.overallPercentage}%`} color="blue" />
+          <StatCard icon={FiActivity} title="Total Courses" value={enrollments.length} color="purple" />
+        </motion.div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <h2 className="text-2xl font-bold mb-4">My Courses</h2>
+            {enrolledCourses.length > 0 ? (
+                <div className="space-y-6">
+                    {enrolledCourses.map(course => (
+                        <CourseProgressCard key={course.id} course={course} />
+                    ))}
+                </div>
+            ) : (
+                <div className="bg-gray-800 p-8 rounded-xl text-center">
+                    <SafeIcon icon={FiBookOpen} className="text-5xl text-gray-500 mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-white">No Courses Yet</h3>
+                    <p className="text-gray-400 mt-2">You haven't enrolled in any courses. Explore our training catalog to get started!</p>
+                    <Link to="/training">
+                        <motion.button 
+                            className="mt-6 bg-accent text-primary font-bold py-2 px-6 rounded-lg hover:brightness-90 transition-all"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            Explore Courses
+                        </motion.button>
+                    </Link>
+                </div>
+            )}
+          </div>
+
+          <div className="bg-gray-800 p-6 rounded-xl">
+            <h2 className="text-2xl font-bold mb-4">Recent Activity</h2>
+            <div className="space-y-4">
+              {/* This section would be populated with dynamic data in a real app */}
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-accent/20 rounded-full text-accent">
+                  <SafeIcon icon={FiCheck} />
+                </div>
+                <div>
+                  <p className="font-semibold text-white">Lesson Completed</p>
+                  <p className="text-sm text-gray-400">"Ethical Decision Making" in Foundations of Integrity</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-blue-500/20 rounded-full text-blue-400">
+                  <SafeIcon icon={FiPlus} />
+                </div>
+                <div>
+                  <p className="font-semibold text-white">New Course Enrolled</p>
+                  <p className="text-sm text-gray-400">Leadership & Civic Responsibility</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-purple-500/20 rounded-full text-purple-400">
+                  <SafeIcon icon={FiTarget} />
+                </div>
+                <div>
+                  <p className="font-semibold text-white">Quiz Attempt</p>
+                  <p className="text-sm text-gray-400">Scored 85% on "Core Values Quiz"</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default TrainingDashboard;

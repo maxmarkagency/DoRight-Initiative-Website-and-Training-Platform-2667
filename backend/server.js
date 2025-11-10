@@ -1,143 +1,198 @@
-import express from 'express'
-import cors from 'cors'
-import helmet from 'helmet'
-import rateLimit from 'express-rate-limit'
-import winston from 'winston'
-import path from 'path'
-import { fileURLToPath } from 'url'
-import dotenv from 'dotenv'
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import winston from 'winston';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+import fs from 'fs';
 
-// Import Supabase configuration
-import { testConnection } from './config/supabase.js'
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Import Supabase client and test connection
+import { testConnection } from './config/supabase.js';
+
+// Import migration runner
+import runMigrations from './scripts/migrate.js';
+
+// Import user creation script
+import createDefaultUsers from './scripts/createDefaultUsers.js';
 
 // Import routes
-import supabaseAuthRoutes from './routes/supabaseAuth.js'
-import supabaseUserRoutes from './routes/supabaseUsers.js'
-// Import other routes as needed
+import supabaseAuthRoutes from './routes/supabaseAuth.js';
+import supabaseUserRoutes from './routes/supabaseUsers.js';
+import migrationRoutes from './routes/migrations.js';
+import blogRoutes from './routes/blog.js';
+import galleryRoutes from './routes/gallery.js';
 
-// Import middleware
-import { errorHandler } from './middleware/errorHandler.js'
+// Import error handler
+import { errorHandler } from './middleware/errorHandler.js';
 
-// Load environment variables
-dotenv.config()
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-
-const app = express()
-const PORT = process.env.PORT || 4000
-
-// Logger setup
+// Setup Winston logger
 const logger = winston.createLogger({
-  level: 'info',
+  level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
     winston.format.timestamp(),
-    winston.format.json()
+    winston.format.colorize(),
+    winston.format.printf(({ timestamp, level, message }) => {
+      return `${timestamp} ${level}: ${message}`;
+    })
   ),
   transports: [
+    new winston.transports.Console(),
     new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' }),
-    new winston.transports.Console()
+    new winston.transports.File({ filename: 'logs/combined.log' })
   ]
-})
+});
+
+// Create logs directory if it doesn't exist
+const logsDir = path.join(__dirname, 'logs');
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+}
+
+const app = express();
+const PORT = process.env.PORT || 4000;
 
 // Security middleware
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
-      fontSrc: ["'self'"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"]
-    }
-  },
-  hsts: {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true
-  }
-}))
+app.use(helmet());
 
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
   message: 'Too many requests from this IP, please try again later.'
-})
+});
+app.use('/api/', limiter);
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 auth requests per windowMs
-  message: 'Too many authentication attempts, please try again later.'
-})
+// CORS configuration - support multiple origins
+const allowedOrigins = process.env.FRONTEND_URL 
+  ? process.env.FRONTEND_URL.split(',').map(url => url.trim())
+  : ['http://localhost:3000', 'http://localhost:5173'];
 
-app.use(limiter)
-
-// CORS configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is in allowed list or matches pattern
+    if (allowedOrigins.some(allowed => origin.startsWith(allowed)) || 
+        origin.includes('localhost') ||
+        origin.includes('127.0.0.1')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
-}))
+}));
 
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }))
-app.use(express.urlencoded({ extended: true, limit: '10mb' }))
+// Body parser
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Request logging
 app.use((req, res, next) => {
-  logger.info(`${req.method} ${req.path} - ${req.ip}`)
-  next()
-})
+  logger.info(`${req.method} ${req.path}`);
+  next();
+});
 
-// Health check endpoint
-app.get('/health', async (req, res) => {
-  const supabaseHealthy = await testConnection()
-  
-  res.status(supabaseHealthy ? 200 : 503).json({
-    status: supabaseHealthy ? 'ok' : 'error',
+// Health check
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
     timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    database: supabaseHealthy ? 'connected' : 'disconnected'
-  })
-})
+    service: 'DoRight LMS Backend',
+    version: '1.0.0'
+  });
+});
 
 // API Routes
-app.use('/api/auth', authLimiter, supabaseAuthRoutes)
-app.use('/api/users', supabaseUserRoutes)
+app.use('/api/auth', supabaseAuthRoutes);
+app.use('/api/users', supabaseUserRoutes);
+app.use('/api/migrations', migrationRoutes);
+app.use('/api/blog', blogRoutes);
+app.use('/api/gallery', galleryRoutes);
 
-// Additional routes would be imported and used here
-// app.use('/api/courses', courseRoutes)
-// app.use('/api/enrollments', enrollmentRoutes)
-// app.use('/api/progress', progressRoutes)
-// etc.
-
-// Serve uploaded files
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
-
-// Error handling middleware
-app.use(errorHandler)
+// Error handler (must be last)
+app.use(errorHandler);
 
 // 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Route not found' })
-})
+app.use((req, res) => {
+  res.status(404).json({ 
+    success: false, 
+    error: 'Route not found' 
+  });
+});
 
-// Start server
-app.listen(PORT, async () => {
-  logger.info(`DoRight LMS Backend (Supabase) running on port ${PORT}`)
-  
-  // Test Supabase connection
-  const isConnected = await testConnection()
-  if (isConnected) {
-    logger.info('Successfully connected to Supabase')
-  } else {
-    logger.error('Failed to connect to Supabase')
+// Initialize server
+async function startServer() {
+  try {
+    logger.info('🚀 Starting DoRight LMS Backend...');
+    
+    // Test Supabase connection
+    logger.info('📡 Testing Supabase connection...');
+    const isConnected = await testConnection();
+    if (!isConnected) {
+      logger.warn('⚠️  Supabase connection test failed, but continuing...');
+    }
+
+    // Run migrations if AUTO_RUN_MIGRATIONS is true
+    if (process.env.AUTO_RUN_MIGRATIONS === 'true') {
+      logger.info('🔄 Running database migrations...');
+      try {
+        await runMigrations();
+        logger.info('✅ Migrations completed successfully');
+      } catch (error) {
+        logger.error('❌ Migration error:', error.message);
+        logger.warn('⚠️  Continuing despite migration errors...');
+      }
+    }
+
+    // Create default users if they don't exist
+    logger.info('👥 Checking/creating default users...');
+    try {
+      await createDefaultUsers();
+      logger.info('✅ Default users ready');
+    } catch (error) {
+      logger.error('❌ Error creating default users:', error.message);
+      logger.warn('⚠️  You may need to run: npm run create-users');
+    }
+
+    // Start server
+    app.listen(PORT, () => {
+      logger.info('='.repeat(60));
+      logger.info(`✅ Server running on port ${PORT}`);
+      logger.info(`🌐 API URL: http://localhost:${PORT}/api`);
+      logger.info(`📚 Environment: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`🔗 Frontend URL: ${allowedOrigins.join(', ')}`);
+      logger.info('='.repeat(60));
+      logger.info('\n📝 To test the API, try:');
+      logger.info(`   curl http://localhost:${PORT}/health\n`);
+    });
+
+  } catch (error) {
+    logger.error('💥 Failed to start server:', error);
+    process.exit(1);
   }
-})
+}
 
-export default app
+// Handle uncaught errors
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
+// Start the server
+startServer();
+
+export default app;
