@@ -1,27 +1,24 @@
-import { supabaseAdmin, getUserClient } from '../config/supabase.js'
-import winston from 'winston'
+import { supabaseAdmin, getUserClient } from '../config/supabase.js';
+import { AppError } from './errorHandler.js';
 
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.json(),
-  transports: [new winston.transports.Console()]
-})
-
-// Middleware to verify Supabase JWT token
-export const authenticateSupabaseToken = async (req, res, next) => {
+/**
+ * Middleware to authenticate Supabase JWT token
+ */
+export const authenticateToken = async (req, res, next) => {
   try {
-    const authHeader = req.headers['authorization']
-    const token = authHeader && authHeader.split(' ')[1]
-
-    if (!token) {
-      return res.status(401).json({ error: 'Access token required' })
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new AppError('No authentication token provided', 401);
     }
 
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+
     // Verify token with Supabase
-    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token)
+    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
 
     if (error || !user) {
-      return res.status(401).json({ error: 'Invalid or expired token' })
+      throw new AppError('Invalid or expired token', 401);
     }
 
     // Get user profile from database
@@ -29,79 +26,58 @@ export const authenticateSupabaseToken = async (req, res, next) => {
       .from('users')
       .select('*')
       .eq('id', user.id)
-      .single()
+      .single();
 
     if (profileError || !profile) {
-      return res.status(401).json({ error: 'User profile not found' })
+      throw new AppError('User profile not found', 404);
     }
 
     if (!profile.is_active) {
-      return res.status(401).json({ error: 'Account is deactivated' })
+      throw new AppError('Account is deactivated', 403);
     }
 
-    // Attach user and client to request
-    req.user = profile
-    req.supabaseUser = user
-    req.userClient = getUserClient(token)
-    
-    next()
-  } catch (err) {
-    logger.error('Auth middleware error:', err)
-    return res.status(500).json({ error: 'Authentication failed' })
-  }
-}
+    // Attach user info to request
+    req.user = profile;
+    req.userId = user.id;
+    req.userClient = getUserClient(token);
 
-// Role-based authorization middleware
-export const requireRole = (roles) => {
+    next();
+  } catch (error) {
+    if (error instanceof AppError) {
+      return res.status(error.statusCode).json({
+        success: false,
+        error: error.message
+      });
+    }
+    return res.status(401).json({
+      success: false,
+      error: 'Authentication failed'
+    });
+  }
+};
+
+/**
+ * Middleware to require specific roles
+ */
+export const requireRole = (allowedRoles) => {
   return (req, res, next) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' })
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
     }
 
-    const userRoles = Array.isArray(req.user.role) ? req.user.role : [req.user.role]
-    const requiredRoles = Array.isArray(roles) ? roles : [roles]
-
-    const hasPermission = requiredRoles.some(role => userRoles.includes(role))
-
-    if (!hasPermission) {
-      return res.status(403).json({ error: 'Insufficient permissions' })
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Insufficient permissions'
+      });
     }
 
-    next()
-  }
-}
+    next();
+  };
+};
 
-// Check if user owns resource or is admin
-export const requireOwnershipOrAdmin = (resourceUserIdField = 'user_id') => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' })
-    }
-
-    const resourceUserId = req.params.userId || req.body[resourceUserIdField] || req.query.user_id
-
-    if (req.user.role === 'admin' || req.user.id === resourceUserId) {
-      next()
-    } else {
-      return res.status(403).json({ error: 'Access denied' })
-    }
-  }
-}
-
-// Email verification required middleware
-export const requireEmailVerification = (req, res, next) => {
-  if (!req.user.is_email_verified) {
-    return res.status(403).json({ 
-      error: 'Email verification required',
-      code: 'EMAIL_NOT_VERIFIED'
-    })
-  }
-  next()
-}
-
-export default {
-  authenticateSupabaseToken,
-  requireRole,
-  requireOwnershipOrAdmin,
-  requireEmailVerification
-}
+// Aliases for compatibility
+export const authenticateSupabaseToken = authenticateToken;

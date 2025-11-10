@@ -1,5 +1,8 @@
-import { createClient } from '@supabase/supabase-js'
-import winston from 'winston'
+import { createClient } from '@supabase/supabase-js';
+import winston from 'winston';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const logger = winston.createLogger({
   level: 'info',
@@ -7,27 +10,45 @@ const logger = winston.createLogger({
   transports: [
     new winston.transports.Console()
   ]
-})
+});
 
 // Supabase configuration
-const supabaseUrl = 'https://jqekzavaerbxjzyeihvv.supabase.co'
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxZWt6YXZhZXJieGp6eWVpaHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MTUxNjIsImV4cCI6MjA2OTk5MTE2Mn0.IuHqn-LqcaqRyP9AgIP7khq6hjfZ6oH-wOpe3PdYIIc'
+const supabaseUrl = process.env.SUPABASE_URL || 'https://jqekzavaerbxjzyeihvv.supabase.co';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxZWt6YXZhZXJieGp6eWVpaHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MTUxNjIsImV4cCI6MjA2OTk5MTE2Mn0.IuHqn-LqcaqRyP9AgIP7khq6hjfZ6oH-wOpe3PdYIIc';
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
+  throw new Error('Missing Supabase environment variables');
+}
+
+if (!supabaseServiceKey) {
+  logger.warn('⚠️  SUPABASE_SERVICE_ROLE_KEY not set. Admin operations may fail.');
+  logger.warn('⚠️  Get your service role key from: https://supabase.com/dashboard/project/jqekzavaerbxjzyeihvv/settings/api');
 }
 
 // Admin client with service role key (for server operations)
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey || supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
+export const supabaseAdmin = createClient(
+  supabaseUrl, 
+  supabaseServiceKey || supabaseAnonKey,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
   }
-})
+);
 
 // Client for user operations (with anon key)
-export const supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
+export const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: false
+  }
+});
+
+// Aliases for compatibility
+export const adminClient = supabaseAdmin;
+export const userClient = supabaseClient;
 
 // Helper function to get user client with token
 export const getUserClient = (accessToken) => {
@@ -36,9 +57,13 @@ export const getUserClient = (accessToken) => {
       headers: {
         Authorization: `Bearer ${accessToken}`
       }
+    },
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
     }
-  })
-}
+  });
+};
 
 // Test Supabase connection
 export const testConnection = async () => {
@@ -46,72 +71,18 @@ export const testConnection = async () => {
     const { data, error } = await supabaseAdmin
       .from('users')
       .select('count')
-      .limit(1)
+      .limit(1);
     
     if (error && error.code !== 'PGRST116') { // Table doesn't exist is OK
-      throw error
+      throw error;
     }
     
-    logger.info('Supabase connection test successful')
-    return true
+    logger.info('✓ Supabase connection test successful');
+    return true;
   } catch (err) {
-    logger.error('Supabase connection test failed:', err)
-    return false
+    logger.error('✗ Supabase connection test failed:', err.message);
+    return false;
   }
-}
+};
 
-// Query helper function
-export const query = async (table, operation = 'select', options = {}) => {
-  try {
-    let queryBuilder = supabaseAdmin.from(table)
-    
-    switch (operation) {
-      case 'select':
-        queryBuilder = queryBuilder.select(options.select || '*')
-        if (options.eq) {
-          Object.entries(options.eq).forEach(([key, value]) => {
-            queryBuilder = queryBuilder.eq(key, value)
-          })
-        }
-        if (options.limit) queryBuilder = queryBuilder.limit(options.limit)
-        if (options.order) queryBuilder = queryBuilder.order(options.order.column, { ascending: options.order.ascending })
-        break
-        
-      case 'insert':
-        queryBuilder = queryBuilder.insert(options.data)
-        if (options.select) queryBuilder = queryBuilder.select(options.select)
-        break
-        
-      case 'update':
-        queryBuilder = queryBuilder.update(options.data)
-        if (options.eq) {
-          Object.entries(options.eq).forEach(([key, value]) => {
-            queryBuilder = queryBuilder.eq(key, value)
-          })
-        }
-        if (options.select) queryBuilder = queryBuilder.select(options.select)
-        break
-        
-      case 'delete':
-        if (options.eq) {
-          Object.entries(options.eq).forEach(([key, value]) => {
-            queryBuilder = queryBuilder.eq(key, value)
-          })
-        }
-        queryBuilder = queryBuilder.delete()
-        break
-    }
-    
-    const { data, error } = await queryBuilder
-    
-    if (error) throw error
-    
-    logger.debug('Supabase query executed successfully', { table, operation })
-    return { data, error: null }
-  } catch (err) {
-    logger.error('Supabase query error', { table, operation, error: err.message })
-    return { data: null, error: err }
-  }
-}
-
-export default supabaseAdmin
+export default supabaseAdmin;

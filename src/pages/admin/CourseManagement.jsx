@@ -1,12 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import SafeIcon from '../../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import { mockCourses } from '../../data/adminMockData';
 
-const { FiSearch, FiFilter, FiPlus, FiMoreVertical } = FiIcons;
+const { FiSearch, FiFilter, FiPlus, FiMoreVertical, FiBarChart2, FiEye } = FiIcons;
 
 const CourseManagement = () => {
+  const navigate = useNavigate();
+
   const getStatusBadge = (status) => {
     const statuses = {
       Published: 'bg-green-100 text-green-800',
@@ -14,6 +17,10 @@ const CourseManagement = () => {
       Archived: 'bg-neutral-200 text-neutral-700',
     };
     return statuses[status] || 'bg-neutral-200 text-neutral-700';
+  };
+
+  const handleViewAnalytics = (courseId) => {
+    navigate('/admin/analytics');
   };
 
   return (
@@ -70,10 +77,26 @@ const CourseManagement = () => {
                   </td>
                   <td className="p-4 text-neutral-600">{course.enrolled.toLocaleString()}</td>
                   <td className="p-4 text-neutral-600">{course.created}</td>
-                  <td className="p-4 text-right">
-                    <button className="text-neutral-500 hover:text-neutral-800 p-2 rounded-full hover:bg-neutral-100">
-                      <SafeIcon icon={FiMoreVertical} />
-                    </button>
+                  <td className="p-4">
+                    <div className="flex items-center justify-end space-x-2">
+                      <button
+                        onClick={() => handleViewAnalytics(course.id)}
+                        className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                        title="View Analytics"
+                      >
+                        <SafeIcon icon={FiBarChart2} className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => alert('View course details')}
+                        className="p-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+                        title="View Course"
+                      >
+                        <SafeIcon icon={FiEye} className="w-4 h-4" />
+                      </button>
+                      <button className="p-2 text-neutral-500 hover:bg-neutral-100 rounded-lg transition-colors">
+                        <SafeIcon icon={FiMoreVertical} className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
