@@ -1,0 +1,158 @@
+#!/usr/bin/env node
+
+/**
+ * cPanel Deployment Health Check Script
+ * Run this after deployment to verify everything is working
+ */
+
+const http = require('http');
+const https = require('https');
+const fs = require('fs');
+
+console.log('🏥 DoRight LMS - cPanel Deployment Health Check');
+console.log('='.repeat(50));
+
+const checks = [
+  {
+    name: 'Frontend (Static)',
+    check: () => fetchWithTimeout('http://localhost:5173/', 5000),
+    url: 'Frontend (React App)',
+    critical: true
+  },
+  {
+    name: 'Backend API Health',
+    check: () => fetchWithTimeout('http://localhost:4000/health', 5000),
+    url: 'Backend Health Endpoint',
+    critical: true
+  },
+  {
+    name: 'Blog API',
+    check: () => fetchWithTimeout('http://localhost:4000/api/clean/blog', 5000),
+    url: 'Blog Management API',
+    critical: false
+  },
+  {
+    name: 'Gallery API',
+    check: () => fetchWithTimeout('http://localhost:4000/api/admin/gallery', 5000),
+    url: 'Gallery Management API',
+    critical: false
+  }
+];
+
+async function checkDeployment() {
+  let allPassed = true;
+  let criticalPassed = true;
+
+  for (const check of checks) {
+    try {
+      console.log(`\n🔍 Checking ${check.name}...`);
+      const result = await check.check();
+      
+      if (result.statusCode === 200) {
+        console.log(`✅ ${check.name}: PASSED (${result.statusCode})`);
+        console.log(`   Response: ${result.data?.status || 'OK'}`);
+      } else {
+        console.log(`⚠️  ${check.name}: WARNING (${result.statusCode})`);
+        if (check.critical) criticalPassed = false;
+        allPassed = false;
+      }
+    } catch (error) {
+      console.log(`❌ ${check.name}: FAILED`);
+      console.log(`   Error: ${error.message}`);
+      if (check.critical) criticalPassed = false;
+      allPassed = false;
+    }
+  }
+
+  console.log('\n' + '='.repeat(50));
+  
+  if (criticalPassed) {
+    console.log('🎉 Deployment Health Check: PASSED');
+    console.log('✅ Core functionality is working');
+    
+    if (allPassed) {
+      console.log('🌟 All checks passed - deployment is perfect!');
+    } else {
+      console.log('⚠️  Some non-critical checks failed, but core works');
+    }
+  } else {
+    console.log('🚨 Deployment Health Check: FAILED');
+    console.log('❌ Critical functionality is not working');
+    console.log('🔧 Please check your deployment configuration');
+  }
+
+  return criticalPassed;
+}
+
+function fetchWithTimeout(url, timeout = 5000) {
+  return new Promise((resolve, reject) => {
+    const urlObj = new URL(url);
+    const options = {
+      hostname: urlObj.hostname,
+      port: urlObj.port,
+      path: urlObj.pathname + urlObj.search,
+      method: 'GET',
+      timeout: timeout
+    };
+
+    const req = http.request(options, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const parsedData = JSON.parse(data);
+          resolve({ statusCode: res.statusCode, data: parsedData });
+        } catch {
+          resolve({ statusCode: res.statusCode, data: data });
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('Request timeout'));
+    });
+
+    req.setTimeout(timeout);
+    req.end();
+  });
+}
+
+// File system checks
+console.log('\n📁 Checking file system...');
+const requiredFiles = [
+  'backend/server.js',
+  'backend/package.json',
+  'backend/.env',
+  'dist/index.html'
+];
+
+let filesOK = true;
+for (const file of requiredFiles) {
+  if (fs.existsSync(file)) {
+    console.log(`✅ ${file}: Found`);
+  } else {
+    console.log(`❌ ${file}: Missing`);
+    filesOK = false;
+  }
+}
+
+if (!filesOK) {
+  console.log('\n⚠️  Some required files are missing. Please ensure you have uploaded all files correctly.');
+}
+
+// Run the health check
+checkDeployment().then(criticalOK => {
+  if (criticalOK) {
+    console.log('\n🚀 Your DoRight LMS is ready for production!');
+    console.log('📖 See CPANEL_DEPLOYMENT.md for next steps');
+    process.exit(0);
+  } else {
+    console.log('\n🔧 Please fix the issues before going live');
+    process.exit(1);
+  }
+}).catch(error => {
+  console.error('Health check failed:', error);
+  process.exit(1);
+});

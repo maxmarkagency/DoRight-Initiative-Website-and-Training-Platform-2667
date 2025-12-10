@@ -196,7 +196,7 @@ const validateQuizAnswers = (answers, questions) => {
   });
 };
 
-module.exports = {
+export {
   validateEmail,
   validatePassword,
   validatePhone,

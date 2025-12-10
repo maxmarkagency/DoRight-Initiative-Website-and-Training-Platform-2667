@@ -173,7 +173,7 @@ const BlogManagement = () => {
                 {posts.map(post => (
                   <tr key={post.id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td className="p-4 font-medium">{post.title}</td>
-                    <td className="p-4">{post.users?.full_name || post.users?.email || 'Unknown'}</td>
+                    <td className="p-4">Admin</td>
                     <td className="p-4">
                       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                         post.status === 'published' ? 'bg-green-100 text-green-800' : 

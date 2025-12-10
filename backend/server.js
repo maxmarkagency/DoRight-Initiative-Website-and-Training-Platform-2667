@@ -26,7 +26,13 @@ import createDefaultUsers from './scripts/createDefaultUsers.js';
 import supabaseAuthRoutes from './routes/supabaseAuth.js';
 import supabaseUserRoutes from './routes/supabaseUsers.js';
 import migrationRoutes from './routes/migrations.js';
+import adminBlogRoutes from './routes/adminBlog.js';
+import adminGalleryRoutes from './routes/adminGallery.js';
+import uploadRoutes from './routes/upload.js';
+import cleanBlogRoutes from './routes/cleanBlog.js';
+import publicBlogRoutes from './routes/publicBlog.js';
 import blogRoutes from './routes/blog.js';
+import testBlogRoutes from './routes/test-blog.js';
 import galleryRoutes from './routes/gallery.js';
 
 // Import error handler
@@ -115,8 +121,17 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', supabaseAuthRoutes);
 app.use('/api/users', supabaseUserRoutes);
 app.use('/api/migrations', migrationRoutes);
+app.use('/api/admin/blog', adminBlogRoutes);
+app.use('/api/admin/gallery', adminGalleryRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/clean/blog', cleanBlogRoutes);
+app.use('/api/public/blog', publicBlogRoutes);
 app.use('/api/blog', blogRoutes);
+app.use('/api/test-blog', testBlogRoutes);
 app.use('/api/gallery', galleryRoutes);
+
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
 
 // Error handler (must be last)
 app.use(errorHandler);

@@ -36,7 +36,8 @@ class ApiService {
 
       const data = await response.json();
 
-      if (!response.ok) {
+      // Check if the response indicates success (either HTTP 200 or success: true)
+      if (!response.ok && !data.success) {
         throw new Error(data.error || data.message || `Request failed with status ${response.status}`);
       }
 
@@ -73,29 +74,29 @@ class ApiService {
   // Blog endpoints
   async getBlogPosts(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/blog${queryString ? `?${queryString}` : ''}`);
+    return this.request(`/clean/blog${queryString ? `?${queryString}` : ''}`);
   }
 
   async getBlogPost(id) {
-    return this.request(`/blog/${id}`);
+    return this.request(`/clean/blog/${id}`);
   }
 
   async createBlogPost(postData) {
-    return this.request('/blog', {
+    return this.request('/admin/blog', {
       method: 'POST',
       body: JSON.stringify(postData),
     });
   }
 
   async updateBlogPost(id, postData) {
-    return this.request(`/blog/${id}`, {
+    return this.request(`/admin/blog/${id}`, {
       method: 'PUT',
       body: JSON.stringify(postData),
     });
   }
 
   async deleteBlogPost(id) {
-    return this.request(`/blog/${id}`, {
+    return this.request(`/admin/blog/${id}`, {
       method: 'DELETE',
     });
   }
@@ -103,27 +104,102 @@ class ApiService {
   // Gallery endpoints
   async getGalleryItems(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/gallery${queryString ? `?${queryString}` : ''}`);
+    return this.request(`/admin/gallery${queryString ? `?${queryString}` : ''}`);
   }
 
   async createGalleryItem(itemData) {
-    return this.request('/gallery', {
+    return this.request('/admin/gallery', {
       method: 'POST',
       body: JSON.stringify(itemData),
     });
   }
 
   async updateGalleryItem(id, itemData) {
-    return this.request(`/gallery/${id}`, {
+    return this.request(`/admin/gallery/${id}`, {
       method: 'PUT',
       body: JSON.stringify(itemData),
     });
   }
 
   async deleteGalleryItem(id) {
-    return this.request(`/gallery/${id}`, {
+    return this.request(`/admin/gallery/${id}`, {
       method: 'DELETE',
     });
+  }
+
+  // Upload endpoints
+  async uploadFile(file, onProgress) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const tokenData = localStorage.getItem('sb-jqekzavaerbxjzyeihvv-auth-token');
+    let token = null;
+    if (tokenData) {
+      try {
+        token = JSON.parse(tokenData).access_token;
+      } catch(e) {
+        console.error("Error parsing auth token from local storage", e);
+      }
+    }
+
+    try {
+      const response = await fetch(`${this.baseUrl}/upload`, {
+        method: 'POST',
+        headers: token ? {
+          'Authorization': `Bearer ${token}`
+        } : {},
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok && !data.success) {
+        throw new Error(data.error || data.message || `Upload failed with status ${response.status}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('File upload failed:', error);
+      throw error;
+    }
+  }
+
+  async uploadMultipleFiles(files, onProgress) {
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('files', file);
+    });
+
+    const tokenData = localStorage.getItem('sb-jqekzavaerbxjzyeihvv-auth-token');
+    let token = null;
+    if (tokenData) {
+      try {
+        token = JSON.parse(tokenData).access_token;
+      } catch(e) {
+        console.error("Error parsing auth token from local storage", e);
+      }
+    }
+
+    try {
+      const response = await fetch(`${this.baseUrl}/upload/multiple`, {
+        method: 'POST',
+        headers: token ? {
+          'Authorization': `Bearer ${token}`
+        } : {},
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok && !data.success) {
+        throw new Error(data.error || data.message || `Upload failed with status ${response.status}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Multiple files upload failed:', error);
+      throw error;
+    }
   }
 }
 

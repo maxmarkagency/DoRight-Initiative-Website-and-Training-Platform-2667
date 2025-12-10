@@ -52,7 +52,7 @@ const CourseProgressCard = ({ course }) => {
       </div>
       <div className="flex justify-between items-center text-sm text-gray-400">
         <span>{completedLessons} / {lessons.length} Lessons</span>
-        <Link to={`/course/${course.id}`} className="text-accent font-semibold hover:underline">
+        <Link to={`/dashboard/course/${course.id}`} className="text-accent font-semibold hover:underline">
           Continue
         </Link>
       </div>
@@ -122,8 +122,8 @@ const TrainingDashboard = () => {
                     <SafeIcon icon={FiBookOpen} className="text-5xl text-gray-500 mx-auto mb-4" />
                     <h3 className="text-xl font-bold text-white">No Courses Yet</h3>
                     <p className="text-gray-400 mt-2">You haven't enrolled in any courses. Explore our training catalog to get started!</p>
-                    <Link to="/training">
-                        <motion.button 
+                    <Link to="/dashboard/courses">
+                        <motion.button
                             className="mt-6 bg-accent text-primary font-bold py-2 px-6 rounded-lg hover:brightness-90 transition-all"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}

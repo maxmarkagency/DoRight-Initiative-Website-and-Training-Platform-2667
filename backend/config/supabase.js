@@ -68,12 +68,11 @@ export const getUserClient = (accessToken) => {
 // Test Supabase connection
 export const testConnection = async () => {
   try {
+    // Test basic connection by checking if we can query a system table
     const { data, error } = await supabaseAdmin
-      .from('users')
-      .select('count')
-      .limit(1);
+      .rpc('version');
     
-    if (error && error.code !== 'PGRST116') { // Table doesn't exist is OK
+    if (error) {
       throw error;
     }
     

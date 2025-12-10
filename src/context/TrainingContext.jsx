@@ -80,6 +80,55 @@ export const TrainingProvider = ({ children }) => {
   const getLessonProgress = (lessonId) => {
     return progress[lessonId] || { completed: false };
   };
+
+  const isCourseUnlocked = (course, allCourses) => {
+    if (!course.prerequisite) return true;
+    const prerequisiteCourse = allCourses.find(c => c.id === course.prerequisite);
+    if (!prerequisiteCourse) return true;
+    
+    // Check if prerequisite course is completed
+    const prerequisiteProgress = progress[prerequisiteCourse.id];
+    if (!prerequisiteProgress) return false;
+    
+    // Check if all lessons in prerequisite are completed
+    const prerequisiteLessons = getLessonsForCourse(prerequisiteCourse.id);
+    return prerequisiteLessons.every(lesson => {
+      const lessonProgress = progress[lesson.id];
+      return lessonProgress?.completed || false;
+    });
+  };
+
+  const isCourseComplete = (course) => {
+    // Check if all lessons in the course are completed
+    const courseLessons = course.lessons || getLessonsForCourse(course.id);
+    return courseLessons.every(lesson => {
+      const lessonProgress = progress[lesson.id];
+      return lessonProgress?.completed || false;
+    });
+  };
+
+  const completeLesson = (courseId, lessonId) => {
+    toggleLessonCompleted(lessonId, courseId);
+  };
+
+  const claimCertificate = (course) => {
+    // Mock certificate claiming - in production, this would be server-side
+    const isComplete = isCourseComplete(course);
+    if (isComplete) {
+      // Update course progress to mark as certified
+      setProgress(prev => ({
+        ...prev,
+        [courseId]: {
+          ...prev[courseId],
+          certified: true,
+          certificate_id: `CERT-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        }
+      }));
+      return { ok: true, msg: "Certificate claimed successfully!" };
+    } else {
+      return { ok: false, msg: "Please complete all lessons before claiming your certificate." };
+    }
+  };
   
   const toggleLessonCompleted = async (lessonId, courseId) => {
     if (!user) return;
@@ -130,6 +179,10 @@ export const TrainingProvider = ({ children }) => {
     getLessonsForCourse,
     getLessonProgress,
     toggleLessonCompleted,
+    completeLesson,
+    claimCertificate,
+    isCourseUnlocked,
+    isCourseComplete,
     userProgress: { // This is mock, replace with calculations from real data
       overallPercentage: 65,
       completedCourses: enrollments.filter(e => e.status === 'completed').length,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import { HashRouter as Router, Route, Routes, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { AuthProvider } from './context/AuthContext';
 import { TrainingProvider } from './context/TrainingContext';
@@ -22,11 +22,11 @@ import Login from './pages/Login';
 import Trustees from './pages/Trustees';
 import Webinars from './pages/Webinars';
 import CoursePage from './pages/CoursePage';
-import TrainingDashboard from './pages/TrainingDashboard';
 import Gallery from './pages/Gallery';
 import Events from './pages/Events';
 
 import AdminLayout from './components/admin/AdminLayout';
+import StudentLayout from './components/student/StudentLayout';
 import DashboardOverview from './pages/admin/DashboardOverview';
 import UserManagement from './pages/admin/UserManagement';
 import CourseManagement from './pages/admin/CourseManagement';
@@ -46,6 +46,7 @@ function AppContent() {
   }, [location.pathname]);
 
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const isStudentRoute = location.pathname.startsWith('/dashboard');
 
   return (
     <>
@@ -54,9 +55,9 @@ function AppContent() {
         {isLoading && <LoadingTransition />}
       </AnimatePresence>
       
-      {!isAdminRoute && <Header />}
+      {!isAdminRoute && !isStudentRoute && <Header />}
       
-      <main className={!isAdminRoute ? "pt-20" : ""}>
+      <main className={!isAdminRoute && !isStudentRoute ? "pt-16 sm:pt-20" : ""}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
@@ -72,14 +73,26 @@ function AppContent() {
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/events" element={<Events />} />
 
-          <Route path="/training/dashboard" element={
-            <ProtectedRoute>
-              <TrainingDashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/training/courses/:courseId" element={
+          <Route path="/training/dashboard" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/training/course/:courseId" element={
             <ProtectedRoute>
               <CoursePage />
+            </ProtectedRoute>
+          } />
+          <Route path="/course/:courseId" element={
+            <ProtectedRoute>
+              <CoursePage />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Navigate to="/dashboard/dashboard" replace />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/*" element={
+            <ProtectedRoute>
+              <StudentLayout />
             </ProtectedRoute>
           } />
           
@@ -99,7 +112,7 @@ function AppContent() {
         </Routes>
       </main>
 
-      {!isAdminRoute && <Footer />}
+      {!isAdminRoute && !isStudentRoute && <Footer />}
     </>
   );
 }
