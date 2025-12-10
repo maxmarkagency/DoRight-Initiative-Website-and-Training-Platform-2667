@@ -16,13 +16,6 @@ const About = () => {
     { year: '2024', title: 'Comprehensive Platform', description: 'Launched our complete training and certification system,serving over 5,000 active learners.' }
   ];
 
-  const leadership = [
-    { name: 'Dr. Amina Hassan', position: 'Founder & Executive Director', bio: 'Former civil servant with 15 years of experience in public administration and governance reform.', image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
-    { name: 'Emmanuel Okafor', position: 'Director of Programs', bio: 'Youth development specialist and community organizer with expertise in grassroots mobilization.', image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
-    { name: 'Prof. Kemi Adebayo', position: 'Director of Research & Policy', bio: 'Academic and policy researcher with extensive experience in anti-corruption studies.', image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
-    { name: 'Taiwo Adebisi', position: 'Director of Technology', bio: 'Tech innovator focused on developing digital solutions for transparency and accountability.', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' }
-  ];
-
   const values = [
     { icon: FiHeart, title: 'Integrity', description: 'We model the values we promote,operating with transparency and accountability in all our actions.' },
     { icon: FiUsers, title: 'Community-Centered', description: 'Our work is driven by communities,ensuring local ownership and sustainable impact.' },
@@ -201,22 +194,6 @@ const About = () => {
             </div>
           </motion.div>
 
-          {/* Leadership Team Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            {leadership.map((member, index) => (
-              <motion.div key={member.name} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.1 }} viewport={{ once: true }} whileHover={{ y: -10 }} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300">
-                <div className="relative overflow-hidden">
-                  <img src={member.image} alt={member.name} className="w-full h-48 sm:h-56 lg:h-64 object-cover transition-transform duration-300 hover:scale-110" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                </div>
-                <div className="p-4 sm:p-6">
-                  <h3 className="text-lg sm:text-xl font-heading font-bold text-neutral-900 mb-1 sm:mb-2"> {member.name} </h3>
-                  <p className="text-primary font-semibold mb-2 sm:mb-3 text-sm sm:text-base"> {member.position} </p>
-                  <p className="text-neutral-700 text-xs sm:text-sm leading-relaxed"> {member.bio} </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
         </div>
       </section>
 
