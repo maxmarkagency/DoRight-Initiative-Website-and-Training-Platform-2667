@@ -199,13 +199,13 @@ const Home = () => {
           </motion.div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             {programs.map((program, index) => (
-              <motion.div key={program.title} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.1 }} viewport={{ once: true }} whileHover={{ y: -5 }} className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 hover:shadow-2xl transition-all duration-300 border border-neutral-200">
-                <motion.div whileHover={{ scale: 1.1, rotate: 5 }} transition={{ duration: 0.3 }} className={`${program.color} w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 shadow-lg`}>
+              <motion.div key={program.title} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.1 }} viewport={{ once: true }} whileHover={{ y: -5 }} className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 hover:shadow-2xl transition-all duration-300 border border-neutral-200 flex flex-col h-full">
+                <motion.div whileHover={{ scale: 1.1, rotate: 5 }} transition={{ duration: 0.3 }} className={`${program.color} w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 shadow-lg flex-shrink-0`}>
                   <SafeIcon icon={program.icon} className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-black" />
                 </motion.div>
                 <h3 className="text-lg sm:text-xl lg:text-2xl font-heading font-bold text-black mb-3 sm:mb-4"> {program.title} </h3>
-                <p className="text-neutral-700 leading-relaxed mb-4 sm:mb-6 text-sm sm:text-base"> {program.description} </p>
-                <motion.div whileHover={{ x: 5 }} className="text-black font-semibold inline-flex items-center cursor-pointer text-sm sm:text-base">
+                <p className="text-neutral-700 leading-relaxed mb-4 sm:mb-6 text-sm sm:text-base flex-grow break-words"> {program.description} </p>
+                <motion.div whileHover={{ x: 5 }} className="text-black font-semibold inline-flex items-center cursor-pointer text-sm sm:text-base mt-auto">
                   Learn More
                   <SafeIcon icon={FiArrowRight} className="ml-2 w-3 h-3 sm:w-4 sm:h-4" />
                 </motion.div>
