@@ -188,12 +188,43 @@ router.get('/history/all', authenticateToken, requireRole(['admin']), async (req
   try {
     const { data, error } = await adminClient
       .from('migration_history')
-      .select('*, users(email, full_name)')
+      .select('*')
       .order('executed_at', { ascending: false })
       .limit(50);
 
     if (error) {
       throw error;
+    }
+
+    // Get user information separately for the execution history
+    if (data && data.length > 0) {
+      const userIds = data.map(record => record.executed_by).filter(id => id);
+      
+      if (userIds.length > 0) {
+        const { data: users } = await adminClient
+          .from('auth.users')
+          .select('id, email, raw_user_meta_data->first_name as first_name, raw_user_meta_data->last_name as last_name')
+          .in('id', userIds);
+        
+        // Map users to migration history
+        const history = data.map(record => {
+          const user = users.find(u => u.id === record.executed_by);
+          return {
+            ...record,
+            users: user ? {
+              email: user.email,
+              first_name: user.first_name || '',
+              last_name: user.last_name || ''
+            } : null
+          };
+        });
+        
+        res.json({
+          success: true,
+          history: history
+        });
+        return;
+      }
     }
 
     res.json({

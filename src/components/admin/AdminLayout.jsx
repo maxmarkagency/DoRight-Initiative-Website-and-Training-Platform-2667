@@ -7,6 +7,7 @@ import UserManagement from '../../pages/admin/UserManagement';
 import CourseManagement from '../../pages/admin/CourseManagement';
 import BlogManagement from '../../pages/admin/BlogManagement';
 import GalleryManagement from '../../pages/admin/GalleryManagement';
+import MediaManagement from '../../pages/admin/MediaManagement';
 import Settings from '../../pages/admin/Settings';
 
 const AdminLayout = () => {
@@ -20,10 +21,11 @@ const AdminLayout = () => {
             <Route path="dashboard" element={<DashboardOverview />} />
             <Route path="users" element={<UserManagement />} />
             <Route path="courses" element={<CourseManagement />} />
-            <Route path="blog" element={<BlogManagement />} />
-            <Route path="gallery" element={<GalleryManagement />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="/" element={<Navigate to="dashboard" replace />} />
+                        <Route path="blog" element={<BlogManagement />} />
+                        <Route path="gallery" element={<GalleryManagement />} />
+                        <Route path="media" element={<MediaManagement />} />
+                        <Route path="settings" element={<Settings />} />
+                        <Route path="/" element={<Navigate to="dashboard" replace />} />
           </Routes>
         </main>
       </div>

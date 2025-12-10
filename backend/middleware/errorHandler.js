@@ -1,4 +1,4 @@
-const winston = require('winston');
+import winston from 'winston';
 
 const logger = winston.createLogger({
   level: 'error',
@@ -151,7 +151,7 @@ const unauthenticatedError = (message = 'Authentication required') => {
   return new AppError(message, 401, 'AUTHENTICATION_REQUIRED');
 };
 
-module.exports = {
+export {
   AppError,
   asyncHandler,
   errorHandler,

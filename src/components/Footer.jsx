@@ -135,9 +135,22 @@ const Footer=()=> {
 
         {/* Bottom Section */}
         <div className="border-t border-neutral-700 mt-6 sm:mt-8 pt-6 sm:pt-8 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-          <p className="text-neutral-400 text-xs sm:text-sm text-center sm:text-left">
-            © {new Date().getFullYear()} Doing Right Awareness Initiative. All rights reserved.
-          </p>
+          <div className="text-center sm:text-left">
+            <p className="text-neutral-400 text-xs sm:text-sm mb-1">
+              © {new Date().getFullYear()} Doing Right Awareness Initiative. All rights reserved.
+            </p>
+            <p className="text-neutral-400 text-xs sm:text-sm">
+              Created by{' '}
+              <a
+                href="https://maxmarkagency.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent hover:text-white transition-colors"
+              >
+                Maxmark Agency
+              </a>
+            </p>
+          </div>
           <div className="flex flex-wrap justify-center sm:justify-end gap-4 sm:gap-6">
             <Link
               to="/privacy"

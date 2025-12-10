@@ -55,11 +55,18 @@ const UserMenu = ({ isMobile = false, closeMenu }) => {
     return (
       <div className="space-y-2">
         <div className="px-4 py-2 border-b border-gray-700">
-          <p className="text-sm text-gray-400">Signed in as</p>
-          <p className="font-medium text-white truncate">{user?.email}</p>
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-accent text-primary rounded-full flex items-center justify-center font-bold text-sm">
+              {user ? getInitials(user.email) : <SafeIcon icon={FiUser} className="w-4 h-4" />}
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">Signed in as</p>
+              <p className="font-medium text-white truncate">{user?.email}</p>
+            </div>
+          </div>
         </div>
         <Link
-          to="/training/dashboard"
+          to="/dashboard"
           className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-accent rounded-md transition-colors duration-200"
           onClick={handleMenuItemClick}
         >
@@ -67,7 +74,7 @@ const UserMenu = ({ isMobile = false, closeMenu }) => {
           <span>Dashboard</span>
         </Link>
         <Link
-          to="/training"
+          to="/dashboard/courses"
           className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-accent rounded-md transition-colors duration-200"
           onClick={handleMenuItemClick}
         >
@@ -75,12 +82,20 @@ const UserMenu = ({ isMobile = false, closeMenu }) => {
           <span>My Courses</span>
         </Link>
         <Link
-          to="/profile"
+          to="/dashboard/profile"
+          className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-accent rounded-md transition-colors duration-200"
+          onClick={handleMenuItemClick}
+        >
+          <SafeIcon icon={FiUser} className="mr-3" />
+          <span>Profile Settings</span>
+        </Link>
+        <Link
+          to="/dashboard/settings"
           className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-accent rounded-md transition-colors duration-200"
           onClick={handleMenuItemClick}
         >
           <SafeIcon icon={FiSettings} className="mr-3" />
-          <span>Profile Settings</span>
+          <span>Settings</span>
         </Link>
         <button
           onClick={handleLogout}
@@ -98,13 +113,12 @@ const UserMenu = ({ isMobile = false, closeMenu }) => {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 text-white hover:text-accent transition-colors duration-300"
+        className="flex items-center text-white hover:text-accent transition-colors duration-300 p-1 rounded-full hover:bg-white/10"
       >
         <div className="w-10 h-10 bg-accent text-primary rounded-full flex items-center justify-center font-bold text-lg">
           {user ? getInitials(user.email) : <SafeIcon icon={FiUser} />}
         </div>
-        <span className="hidden md:inline font-medium">{user?.email}</span>
-        <SafeIcon icon={FiChevronDown} className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+        <SafeIcon icon={FiChevronDown} className={`ml-1 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       <AnimatePresence>
@@ -118,12 +132,19 @@ const UserMenu = ({ isMobile = false, closeMenu }) => {
           >
             <div className="p-2">
               <div className="px-3 py-2">
-                <p className="text-sm text-gray-400">Signed in as</p>
-                <p className="font-medium text-white truncate">{user?.email}</p>
+                <div className="flex items-center space-x-3 mb-2">
+                  <div className="w-10 h-10 bg-accent text-primary rounded-full flex items-center justify-center font-bold text-lg">
+                    {user ? getInitials(user.email) : <SafeIcon icon={FiUser} />}
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Signed in as</p>
+                    <p className="font-medium text-white truncate">{user?.email}</p>
+                  </div>
+                </div>
               </div>
               <hr className="border-gray-700" />
               <Link
-                to="/training/dashboard"
+                to="/dashboard"
                 className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-accent rounded-md transition-colors duration-200"
                 onClick={handleMenuItemClick}
               >
@@ -131,7 +152,7 @@ const UserMenu = ({ isMobile = false, closeMenu }) => {
                 <span>Dashboard</span>
               </Link>
               <Link
-                to="/training"
+                to="/dashboard/courses"
                 className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-accent rounded-md transition-colors duration-200"
                 onClick={handleMenuItemClick}
               >
@@ -139,12 +160,20 @@ const UserMenu = ({ isMobile = false, closeMenu }) => {
                 <span>My Courses</span>
               </Link>
               <Link
-                to="/profile"
+                to="/dashboard/profile"
+                className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-accent rounded-md transition-colors duration-200"
+                onClick={handleMenuItemClick}
+              >
+                <SafeIcon icon={FiUser} className="mr-3" />
+                <span>Profile Settings</span>
+              </Link>
+              <Link
+                to="/dashboard/settings"
                 className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-accent rounded-md transition-colors duration-200"
                 onClick={handleMenuItemClick}
               >
                 <SafeIcon icon={FiSettings} className="mr-3" />
-                <span>Profile Settings</span>
+                <span>Settings</span>
               </Link>
               <hr className="border-gray-700 my-1" />
               <button
