@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 
-const { FiMail, FiPhone, FiMapPin, FiClock, FiFacebook, FiTwitter, FiInstagram, FiLinkedin, FiSend, FiCheck } = FiIcons;
+const { FiMail, FiMapPin, FiFacebook, FiTwitter, FiInstagram, FiLinkedin, FiSend, FiCheck } = FiIcons;
 
 const Contact = () => {
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
@@ -22,9 +22,7 @@ const Contact = () => {
 
   const contactInfo = [
     { icon: FiMail, title: 'Email Us', details: ['info@doright.ng', 'support@doright.ng'], color: 'text-primary' },
-    { icon: FiPhone, title: 'Call Us', details: ['+234 (0) 123 456 7890', '+234 (0) 987 654 3210'], color: 'text-primary' },
-    { icon: FiMapPin, title: 'Visit Us', details: ['DoRight Awareness Initiative', '123 Integrity Street,Victoria Island', 'Lagos,Nigeria'], color: 'text-primary' },
-    { icon: FiClock, title: 'Office Hours', details: ['Monday - Friday: 9:00 AM - 6:00 PM', 'Saturday: 10:00 AM - 2:00 PM', 'Sunday: Closed'], color: 'text-primary' }
+    { icon: FiMapPin, title: 'Visit Us', details: ['DoRight Awareness Initiative', '28b, Olaminuyun street , Parkview', 'Lagos, Nigeria 101233'], color: 'text-primary' }
   ];
 
   const departments = [
@@ -54,7 +52,7 @@ const Contact = () => {
             <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-neutral-900 mb-3 sm:mb-4"> Contact Information </h2>
             <p className="text-sm sm:text-lg text-neutral-700 max-w-2xl mx-auto"> Multiple ways to reach us. Choose the method that works best for you. </p>
           </motion.div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-3xl mx-auto">
             {contactInfo.map((info, index) => (
               <motion.div key={info.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.1 }} viewport={{ once: true }} className="text-center">
                 <div className={`${info.color} w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 mx-auto mb-4 sm:mb-6 bg-neutral-100 rounded-full flex items-center justify-center`}>
