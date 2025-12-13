@@ -16,17 +16,22 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const { user, login, register } = useAuth();
+  const { user, profile, login, register } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = location.state?.from?.pathname || '/';
+  const from = location.state?.from?.pathname;
 
   useEffect(() => {
-    if (user) {
-      navigate(from, { replace: true });
+    if (user && profile) {
+      if (from) {
+        navigate(from, { replace: true });
+      } else {
+        const dashboardPath = profile.role === 'admin' ? '/admin/dashboard' : '/dashboard/courses';
+        navigate(dashboardPath, { replace: true });
+      }
     }
-  }, [user, navigate, from]);
+  }, [user, profile, navigate, from]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -34,8 +39,16 @@ const LoginPage = () => {
     setLoading(true);
     setSuccessMessage('');
     try {
-      await login(email, password);
-      navigate(from, { replace: true });
+      const { user: loggedInUser } = await login(email, password);
+      const userMetadata = loggedInUser.user_metadata || {};
+      const userRole = userMetadata.role || 'student';
+
+      if (from) {
+        navigate(from, { replace: true });
+      } else {
+        const dashboardPath = userRole === 'admin' ? '/admin/dashboard' : '/dashboard/courses';
+        navigate(dashboardPath, { replace: true });
+      }
     } catch (err) {
       setError(err.message || "Failed to log in. Please check your credentials.");
     } finally {
