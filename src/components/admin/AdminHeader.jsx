@@ -6,9 +6,10 @@ import * as FiIcons from 'react-icons/fi';
 const { FiSearch, FiBell, FiChevronDown } = FiIcons;
 
 const AdminHeader = () => {
-  const { user } = useAuth();
-  const displayName = user?.user_metadata?.first_name || user?.email.split('@')[0];
-  const initials = displayName.charAt(0).toUpperCase();
+  const { user, profile } = useAuth();
+  const displayName = profile?.first_name || user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'Admin';
+  const initials = displayName ? displayName.charAt(0).toUpperCase() : 'A';
+  const userRole = profile?.role || user?.user_metadata?.role || 'admin';
 
   return (
     <header className="h-18 bg-white border-b border-neutral-200 flex items-center justify-between px-6 lg:px-8 flex-shrink-0">
@@ -31,7 +32,7 @@ const AdminHeader = () => {
           </div>
           <div>
             <div className="font-semibold text-sm text-neutral-800">{displayName}</div>
-            <div className="text-xs text-neutral-500">{user?.role}</div>
+            <div className="text-xs text-neutral-500 capitalize">{userRole}</div>
           </div>
           <SafeIcon icon={FiChevronDown} className="text-neutral-500" />
         </div>
