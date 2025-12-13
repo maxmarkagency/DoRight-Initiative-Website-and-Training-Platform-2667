@@ -12,8 +12,15 @@ const Footer=()=> {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {/* Brand Section */}
           <div className="sm:col-span-2 lg:col-span-2">
-            <div className="text-xl sm:text-2xl font-heading font-bold text-white mb-4">
-              Doing Right Awareness Initiative
+            <div className="mb-4">
+              <img
+                src="/doing_right_logo.png"
+                alt="Doing Right Awareness Initiative"
+                className="h-12 sm:h-14 w-auto mb-2"
+              />
+              <div className="text-lg sm:text-xl font-heading font-bold text-white">
+                Doing Right Awareness Initiative
+              </div>
             </div>
             <p className="text-neutral-300 mb-6 max-w-md text-sm sm:text-base">
               Promoting integrity and civic responsibility across Nigeria through community-led action,education,and accountability initiatives.
