@@ -112,8 +112,12 @@ const Header = () => {
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
           <div className="flex-shrink-0">
-            <Link to="/" className="text-lg sm:text-2xl font-bold text-yellow-400">
-              DoRight
+            <Link to="/" className="flex items-center">
+              <img
+                src="/doing_right_logo.png"
+                alt="DoRight Logo"
+                className="h-10 sm:h-12 w-auto"
+              />
             </Link>
           </div>
           
