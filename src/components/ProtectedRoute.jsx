@@ -3,8 +3,8 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from './LoadingSpinner';
 
-const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { user, isAuthenticated, loading } = useAuth();
+const ProtectedRoute = ({ children, allowedRoles, adminOnly }) => {
+  const { user, profile, isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -15,9 +15,12 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user?.role)) {
-    // Redirect to a 'not authorized' page or home page
-    return <Navigate to="/training" replace />;
+  if (adminOnly && profile?.role !== 'admin') {
+    return <Navigate to="/dashboard/courses" replace />;
+  }
+
+  if (allowedRoles && profile?.role && !allowedRoles.includes(profile.role)) {
+    return <Navigate to="/dashboard/courses" replace />;
   }
 
   return children;
