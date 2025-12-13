@@ -4,7 +4,7 @@ import SafeIcon from '../../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 
-const { FiGrid, FiUsers, FiBookOpen, FiMessageSquare, FiImage, FiSettings, FiLogOut, FiChevronsLeft, FiChevronsRight, FiExternalLink, FiBarChart2, FiUpload } = FiIcons;
+const { FiGrid, FiUsers, FiBookOpen, FiMessageSquare, FiImage, FiSettings, FiLogOut, FiChevronsLeft, FiChevronsRight, FiExternalLink, FiBarChart2, FiUpload, FiEdit3 } = FiIcons;
 
 const AdminSidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -21,6 +21,7 @@ const AdminSidebar = () => {
       { name: 'Users', path: '/admin/users', icon: FiUsers },
       { name: 'Courses', path: '/admin/courses', icon: FiBookOpen },
       { name: 'Analytics', path: '/admin/analytics', icon: FiBarChart2 },
+      { name: 'Content', path: '/admin/content', icon: FiEdit3 },
       { name: 'Blog', path: '/admin/blog', icon: FiMessageSquare },
       { name: 'Gallery', path: '/admin/gallery', icon: FiImage },
       { name: 'Media', path: '/admin/media', icon: FiUpload },

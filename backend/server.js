@@ -34,6 +34,7 @@ import publicBlogRoutes from './routes/publicBlog.js';
 import blogRoutes from './routes/blog.js';
 import testBlogRoutes from './routes/test-blog.js';
 import galleryRoutes from './routes/gallery.js';
+import cmsRoutes from './routes/cms.js';
 
 // Import error handler
 import { errorHandler } from './middleware/errorHandler.js';
@@ -129,6 +130,7 @@ app.use('/api/public/blog', publicBlogRoutes);
 app.use('/api/blog', blogRoutes);
 app.use('/api/test-blog', testBlogRoutes);
 app.use('/api/gallery', galleryRoutes);
+app.use('/api/cms', cmsRoutes);
 
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));

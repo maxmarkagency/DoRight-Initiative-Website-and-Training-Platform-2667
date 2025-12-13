@@ -34,6 +34,7 @@ import CourseAnalytics from './pages/admin/CourseAnalytics';
 import BlogManagement from './pages/admin/BlogManagement';
 import GalleryManagement from './pages/admin/GalleryManagement';
 import Settings from './pages/admin/Settings';
+import ContentManagement from './pages/admin/ContentManagement';
 
 function AppContent() {
   const location = useLocation();
@@ -107,6 +108,7 @@ function AppContent() {
             <Route path="analytics" element={<CourseAnalytics />} />
             <Route path="blog" element={<BlogManagement />} />
             <Route path="gallery" element={<GalleryManagement />} />
+            <Route path="content" element={<ContentManagement />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>
