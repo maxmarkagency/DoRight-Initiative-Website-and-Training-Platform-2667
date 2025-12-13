@@ -43,10 +43,12 @@ export const AuthProvider = ({ children }) => {
     getSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
         if (session?.user) {
           setUser(session.user);
-          await fetchUserProfile(session.user.id);
+          (async () => {
+            await fetchUserProfile(session.user.id);
+          })();
         } else {
           setUser(null);
           setProfile(null);
@@ -81,6 +83,7 @@ export const AuthProvider = ({ children }) => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
     setUser(null);
+    setProfile(null);
   };
 
   const value = {

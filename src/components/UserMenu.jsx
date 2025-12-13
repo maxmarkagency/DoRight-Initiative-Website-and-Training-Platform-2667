@@ -53,7 +53,12 @@ const UserMenu = ({ isMobile = false, closeMenu }) => {
     }
     if (user?.email) {
       const emailPrefix = user.email.split('@')[0];
-      return emailPrefix.substring(0, 2).toUpperCase();
+      if (emailPrefix && emailPrefix.length > 0) {
+        return emailPrefix.substring(0, 2).toUpperCase();
+      }
+    }
+    if (user?.user_metadata?.name) {
+      return user.user_metadata.name.substring(0, 2).toUpperCase();
     }
     return 'U';
   };
@@ -70,8 +75,8 @@ const UserMenu = ({ isMobile = false, closeMenu }) => {
       <div className="space-y-2">
         <div className="px-4 py-2 border-b border-gray-700">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-accent text-primary rounded-full flex items-center justify-center font-bold text-sm">
-              {user ? getInitials() : <SafeIcon icon={FiUser} className="w-4 h-4" />}
+            <div className="w-8 h-8 bg-yellow-400 text-black rounded-full flex items-center justify-center font-bold text-sm">
+              {getInitials()}
             </div>
             <div>
               <p className="text-sm text-gray-400">Signed in as</p>
@@ -152,8 +157,8 @@ const UserMenu = ({ isMobile = false, closeMenu }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center text-white hover:text-accent transition-colors duration-300 p-1 rounded-full hover:bg-white/10"
       >
-        <div className="w-10 h-10 bg-accent text-primary rounded-full flex items-center justify-center font-bold text-lg">
-          {user ? getInitials() : <SafeIcon icon={FiUser} />}
+        <div className="w-10 h-10 bg-yellow-400 text-black rounded-full flex items-center justify-center font-bold text-lg">
+          {getInitials()}
         </div>
         <SafeIcon icon={FiChevronDown} className={`ml-1 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
@@ -170,8 +175,8 @@ const UserMenu = ({ isMobile = false, closeMenu }) => {
             <div className="p-2">
               <div className="px-3 py-2">
                 <div className="flex items-center space-x-3 mb-2">
-                  <div className="w-10 h-10 bg-accent text-primary rounded-full flex items-center justify-center font-bold text-lg">
-                    {user ? getInitials() : <SafeIcon icon={FiUser} />}
+                  <div className="w-10 h-10 bg-yellow-400 text-black rounded-full flex items-center justify-center font-bold text-lg">
+                    {getInitials()}
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Signed in as</p>
