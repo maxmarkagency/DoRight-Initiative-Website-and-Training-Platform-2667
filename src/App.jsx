@@ -27,14 +27,6 @@ import Events from './pages/Events';
 
 import AdminLayout from './components/admin/AdminLayout';
 import StudentLayout from './components/student/StudentLayout';
-import DashboardOverview from './pages/admin/DashboardOverview';
-import UserManagement from './pages/admin/UserManagement';
-import CourseManagement from './pages/admin/CourseManagement';
-import CourseAnalytics from './pages/admin/CourseAnalytics';
-import BlogManagement from './pages/admin/BlogManagement';
-import GalleryManagement from './pages/admin/GalleryManagement';
-import Settings from './pages/admin/Settings';
-import ContentManagement from './pages/admin/ContentManagement';
 
 function AppContent() {
   const location = useLocation();
@@ -101,16 +93,7 @@ function AppContent() {
             <ProtectedRoute adminOnly>
               <AdminLayout />
             </ProtectedRoute>
-          }>
-            <Route path="dashboard" element={<DashboardOverview />} />
-            <Route path="users" element={<UserManagement />} />
-            <Route path="courses" element={<CourseManagement />} />
-            <Route path="analytics" element={<CourseAnalytics />} />
-            <Route path="blog" element={<BlogManagement />} />
-            <Route path="gallery" element={<GalleryManagement />} />
-            <Route path="content" element={<ContentManagement />} />
-            <Route path="settings" element={<Settings />} />
-          </Route>
+          } />
         </Routes>
       </main>
 
