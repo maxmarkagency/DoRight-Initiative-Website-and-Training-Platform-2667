@@ -5,6 +5,8 @@ import AdminHeader from './AdminHeader';
 import DashboardOverview from '../../pages/admin/DashboardOverview';
 import UserManagement from '../../pages/admin/UserManagement';
 import CourseManagement from '../../pages/admin/CourseManagement';
+import CourseAnalytics from '../../pages/admin/CourseAnalytics';
+import ContentManagement from '../../pages/admin/ContentManagement';
 import BlogManagement from '../../pages/admin/BlogManagement';
 import GalleryManagement from '../../pages/admin/GalleryManagement';
 import MediaManagement from '../../pages/admin/MediaManagement';
@@ -21,11 +23,13 @@ const AdminLayout = () => {
             <Route path="dashboard" element={<DashboardOverview />} />
             <Route path="users" element={<UserManagement />} />
             <Route path="courses" element={<CourseManagement />} />
-                        <Route path="blog" element={<BlogManagement />} />
-                        <Route path="gallery" element={<GalleryManagement />} />
-                        <Route path="media" element={<MediaManagement />} />
-                        <Route path="settings" element={<Settings />} />
-                        <Route path="/" element={<Navigate to="dashboard" replace />} />
+            <Route path="analytics" element={<CourseAnalytics />} />
+            <Route path="content" element={<ContentManagement />} />
+            <Route path="blog" element={<BlogManagement />} />
+            <Route path="gallery" element={<GalleryManagement />} />
+            <Route path="media" element={<MediaManagement />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="/" element={<Navigate to="dashboard" replace />} />
           </Routes>
         </main>
       </div>
