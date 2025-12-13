@@ -1,0 +1,389 @@
+-- Enable necessary extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Create custom types
+DO $$ BEGIN
+  CREATE TYPE user_role AS ENUM ('student', 'instructor', 'admin', 'staff');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE course_status AS ENUM ('draft', 'published', 'archived');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE enrollment_status AS ENUM ('active', 'completed', 'cancelled', 'expired');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE content_type AS ENUM ('video', 'text', 'pdf', 'quiz', 'assignment', 'external_link');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE question_type AS ENUM ('mcq', 'multiple_choice', 'true_false', 'short_answer', 'long_answer', 'fill_blank');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE payment_status AS ENUM ('pending', 'completed', 'failed', 'cancelled', 'refunded');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE submission_status AS ENUM ('in_progress', 'submitted', 'graded', 'returned');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+-- Users table (extends Supabase auth.users)
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    email TEXT UNIQUE NOT NULL,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    role user_role NOT NULL DEFAULT 'student',
+    is_active BOOLEAN DEFAULT TRUE,
+    is_email_verified BOOLEAN DEFAULT FALSE,
+    profile_picture TEXT,
+    bio TEXT,
+    phone TEXT,
+    timezone TEXT DEFAULT 'UTC',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Categories table
+CREATE TABLE IF NOT EXISTS categories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    description TEXT,
+    parent_id UUID REFERENCES categories(id),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Courses table
+CREATE TABLE IF NOT EXISTS courses (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    description TEXT,
+    short_description TEXT,
+    instructor_id UUID REFERENCES users(id),
+    status course_status DEFAULT 'draft',
+    price NUMERIC(10, 2) DEFAULT 0,
+    currency CHAR(3) DEFAULT 'NGN',
+    thumbnail_url TEXT,
+    preview_video_url TEXT,
+    difficulty_level TEXT DEFAULT 'beginner' CHECK (difficulty_level IN ('beginner', 'intermediate', 'advanced')),
+    estimated_duration INTEGER,
+    language TEXT DEFAULT 'en',
+    tags TEXT[],
+    requirements TEXT[],
+    learning_objectives TEXT[],
+    target_audience TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Course category relationships
+CREATE TABLE IF NOT EXISTS course_categories (
+    course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
+    category_id UUID REFERENCES categories(id) ON DELETE CASCADE,
+    PRIMARY KEY (course_id, category_id)
+);
+
+-- Modules table
+CREATE TABLE IF NOT EXISTS modules (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT,
+    position INTEGER DEFAULT 0,
+    is_preview BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Lessons table
+CREATE TABLE IF NOT EXISTS lessons (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    module_id UUID REFERENCES modules(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT,
+    content_type content_type,
+    content JSONB,
+    duration_seconds INTEGER,
+    position INTEGER DEFAULT 0,
+    is_preview BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enrollments table
+CREATE TABLE IF NOT EXISTS enrollments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
+    status enrollment_status DEFAULT 'active',
+    enrolled_at TIMESTAMPTZ DEFAULT NOW(),
+    completed_at TIMESTAMPTZ,
+    expires_at TIMESTAMPTZ,
+    payment_id UUID,
+    UNIQUE(user_id, course_id)
+);
+
+-- Progress tracking table
+CREATE TABLE IF NOT EXISTS progress (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    lesson_id UUID REFERENCES lessons(id) ON DELETE CASCADE,
+    last_position_seconds INTEGER DEFAULT 0,
+    completed BOOLEAN DEFAULT FALSE,
+    completed_at TIMESTAMPTZ,
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id, lesson_id)
+);
+
+-- Quizzes table
+CREATE TABLE IF NOT EXISTS quizzes (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
+    lesson_id UUID REFERENCES lessons(id) ON DELETE SET NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    instructions TEXT,
+    time_limit_minutes INTEGER,
+    attempts_allowed INTEGER DEFAULT 3,
+    passing_score NUMERIC(5, 2) DEFAULT 70.00,
+    randomize_questions BOOLEAN DEFAULT FALSE,
+    show_results BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Quiz questions table
+CREATE TABLE IF NOT EXISTS questions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    quiz_id UUID REFERENCES quizzes(id) ON DELETE CASCADE,
+    question_text TEXT NOT NULL,
+    question_type question_type,
+    options JSONB,
+    correct_answer JSONB,
+    explanation TEXT,
+    points NUMERIC(5, 2) DEFAULT 1.00,
+    position INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Quiz submissions table
+CREATE TABLE IF NOT EXISTS quiz_submissions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    quiz_id UUID REFERENCES quizzes(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    answers JSONB NOT NULL,
+    score NUMERIC(5, 2),
+    max_score NUMERIC(5, 2),
+    percentage NUMERIC(5, 2),
+    status submission_status DEFAULT 'submitted',
+    started_at TIMESTAMPTZ,
+    submitted_at TIMESTAMPTZ DEFAULT NOW(),
+    graded_at TIMESTAMPTZ,
+    time_taken_seconds INTEGER
+);
+
+-- Assignments table
+CREATE TABLE IF NOT EXISTS assignments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
+    lesson_id UUID REFERENCES lessons(id) ON DELETE SET NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    instructions TEXT,
+    due_date TIMESTAMPTZ,
+    max_points NUMERIC(5, 2) DEFAULT 100.00,
+    submission_type TEXT DEFAULT 'file' CHECK (submission_type IN ('file', 'text', 'url')),
+    allowed_file_types TEXT[],
+    max_file_size INTEGER,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Assignment submissions table
+CREATE TABLE IF NOT EXISTS assignment_submissions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    assignment_id UUID REFERENCES assignments(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    submission_type TEXT CHECK (submission_type IN ('file', 'text', 'url')),
+    content TEXT,
+    submitted_at TIMESTAMPTZ DEFAULT NOW(),
+    grade NUMERIC(5, 2),
+    feedback TEXT,
+    graded_at TIMESTAMPTZ,
+    graded_by UUID REFERENCES users(id),
+    status submission_status DEFAULT 'submitted'
+);
+
+-- Certificates table
+CREATE TABLE IF NOT EXISTS certificates (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
+    certificate_number TEXT UNIQUE NOT NULL,
+    issued_at TIMESTAMPTZ DEFAULT NOW(),
+    pdf_url TEXT,
+    metadata JSONB,
+    is_revoked BOOLEAN DEFAULT FALSE,
+    revoked_at TIMESTAMPTZ,
+    revoked_reason TEXT
+);
+
+-- Media files table
+CREATE TABLE IF NOT EXISTS media (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    owner_id UUID REFERENCES users(id),
+    filename TEXT NOT NULL,
+    original_filename TEXT NOT NULL,
+    url TEXT NOT NULL,
+    size_bytes BIGINT,
+    mime_type TEXT,
+    metadata JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Payments table
+CREATE TABLE IF NOT EXISTS payments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id),
+    course_id UUID REFERENCES courses(id),
+    amount NUMERIC(10, 2) NOT NULL,
+    currency CHAR(3) NOT NULL,
+    status payment_status DEFAULT 'pending',
+    payment_method TEXT,
+    provider TEXT,
+    provider_transaction_id TEXT,
+    provider_response JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    completed_at TIMESTAMPTZ
+);
+
+-- Announcements table
+CREATE TABLE IF NOT EXISTS announcements (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
+    author_id UUID REFERENCES users(id),
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    published BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Discussion forums table
+CREATE TABLE IF NOT EXISTS discussions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id),
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    is_pinned BOOLEAN DEFAULT FALSE,
+    is_locked BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Discussion replies table
+CREATE TABLE IF NOT EXISTS discussion_replies (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    discussion_id UUID REFERENCES discussions(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id),
+    content TEXT NOT NULL,
+    parent_id UUID REFERENCES discussion_replies(id),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Reviews and ratings table
+CREATE TABLE IF NOT EXISTS reviews (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+    review_text TEXT,
+    is_approved BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(course_id, user_id)
+);
+
+-- Site settings table
+CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value JSONB,
+    description TEXT,
+    updated_by UUID REFERENCES users(id),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Create indexes for performance
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_users_active ON users(is_active);
+CREATE INDEX IF NOT EXISTS idx_courses_slug ON courses(slug);
+CREATE INDEX IF NOT EXISTS idx_courses_status ON courses(status);
+CREATE INDEX IF NOT EXISTS idx_courses_instructor ON courses(instructor_id);
+CREATE INDEX IF NOT EXISTS idx_modules_course_id ON modules(course_id);
+CREATE INDEX IF NOT EXISTS idx_modules_position ON modules(position);
+CREATE INDEX IF NOT EXISTS idx_lessons_module_id ON lessons(module_id);
+CREATE INDEX IF NOT EXISTS idx_lessons_position ON lessons(position);
+CREATE INDEX IF NOT EXISTS idx_enrollments_user_id ON enrollments(user_id);
+CREATE INDEX IF NOT EXISTS idx_enrollments_course_id ON enrollments(course_id);
+CREATE INDEX IF NOT EXISTS idx_enrollments_status ON enrollments(status);
+CREATE INDEX IF NOT EXISTS idx_progress_user_id ON progress(user_id);
+CREATE INDEX IF NOT EXISTS idx_progress_lesson_id ON progress(lesson_id);
+CREATE INDEX IF NOT EXISTS idx_progress_completed ON progress(completed);
+CREATE INDEX IF NOT EXISTS idx_quiz_submissions_user_id ON quiz_submissions(user_id);
+CREATE INDEX IF NOT EXISTS idx_quiz_submissions_quiz_id ON quiz_submissions(quiz_id);
+CREATE INDEX IF NOT EXISTS idx_certificates_user_id ON certificates(user_id);
+CREATE INDEX IF NOT EXISTS idx_certificates_course_id ON certificates(course_id);
+CREATE INDEX IF NOT EXISTS idx_certificates_number ON certificates(certificate_number);
+CREATE INDEX IF NOT EXISTS idx_payments_user_id ON payments(user_id);
+CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
+CREATE INDEX IF NOT EXISTS idx_reviews_course_id ON reviews(course_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_rating ON reviews(rating);
+
+-- Create function for updating updated_at timestamps
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Create triggers for updated_at timestamps
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_courses_updated_at ON courses;
+CREATE TRIGGER update_courses_updated_at BEFORE UPDATE ON courses FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_progress_updated_at ON progress;
+CREATE TRIGGER update_progress_updated_at BEFORE UPDATE ON progress FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_announcements_updated_at ON announcements;
+CREATE TRIGGER update_announcements_updated_at BEFORE UPDATE ON announcements FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_discussions_updated_at ON discussions;
+CREATE TRIGGER update_discussions_updated_at BEFORE UPDATE ON discussions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_discussion_replies_updated_at ON discussion_replies;
+CREATE TRIGGER update_discussion_replies_updated_at BEFORE UPDATE ON discussion_replies FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_reviews_updated_at ON reviews;
+CREATE TRIGGER update_reviews_updated_at BEFORE UPDATE ON reviews FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
