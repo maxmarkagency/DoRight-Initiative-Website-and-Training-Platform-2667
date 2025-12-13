@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import SafeIcon from '../../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
-import apiService from '../../services/api';
+import supabase from '../../lib/supabase';
 
 const { FiUpload, FiEdit2, FiTrash2, FiImage, FiVideo } = FiIcons;
 
@@ -28,8 +28,13 @@ const GalleryManagement = () => {
   const fetchItems = async () => {
     try {
       setLoading(true);
-      const response = await apiService.getGalleryItems();
-      setItems(response.items || []);
+      const { data, error } = await supabase
+        .from('gallery_items')
+        .select('*')
+        .order('position_order', { ascending: true });
+
+      if (error) throw error;
+      setItems(data || []);
     } catch (error) {
       console.error('Error fetching gallery items:', error);
       alert('Failed to fetch gallery items');
@@ -70,10 +75,19 @@ const GalleryManagement = () => {
     e.preventDefault();
     try {
       if (editingItem) {
-        await apiService.updateGalleryItem(editingItem.id, formData);
+        const { error } = await supabase
+          .from('gallery_items')
+          .update({ ...formData, updated_at: new Date().toISOString() })
+          .eq('id', editingItem.id);
+
+        if (error) throw error;
         alert('Gallery item updated successfully!');
       } else {
-        await apiService.createGalleryItem(formData);
+        const { error } = await supabase
+          .from('gallery_items')
+          .insert([formData]);
+
+        if (error) throw error;
         alert('Gallery item created successfully!');
       }
       setShowModal(false);
@@ -86,9 +100,14 @@ const GalleryManagement = () => {
 
   const handleDeleteItem = async (id) => {
     if (!confirm('Are you sure you want to delete this item?')) return;
-    
+
     try {
-      await apiService.deleteGalleryItem(id);
+      const { error } = await supabase
+        .from('gallery_items')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
       alert('Gallery item deleted successfully!');
       fetchItems();
     } catch (error) {
