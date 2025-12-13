@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import SafeIcon from '../../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
-import apiService from '../../services/api';
+import supabase from '../../lib/supabase';
 
 const { FiPlus, FiSearch, FiEdit2, FiTrash2, FiEye } = FiIcons;
 
@@ -30,12 +30,23 @@ const BlogManagement = () => {
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      const params = {};
-      if (searchTerm) params.search = searchTerm;
-      if (statusFilter !== 'all') params.status = statusFilter;
+      let query = supabase
+        .from('blog_posts')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      const response = await apiService.getBlogPosts(params);
-      setPosts(response.posts || []);
+      if (statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
+      }
+
+      if (searchTerm) {
+        query = query.ilike('title', `%${searchTerm}%`);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setPosts(data || []);
     } catch (error) {
       console.error('Error fetching posts:', error);
       alert('Failed to fetch blog posts');
@@ -75,11 +86,29 @@ const BlogManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const postData = {
+        ...formData,
+        updated_at: new Date().toISOString()
+      };
+
+      if (formData.status === 'published' && !formData.published_at) {
+        postData.published_at = new Date().toISOString();
+      }
+
       if (editingPost) {
-        await apiService.updateBlogPost(editingPost.id, formData);
+        const { error } = await supabase
+          .from('blog_posts')
+          .update(postData)
+          .eq('id', editingPost.id);
+
+        if (error) throw error;
         alert('Blog post updated successfully!');
       } else {
-        await apiService.createBlogPost(formData);
+        const { error } = await supabase
+          .from('blog_posts')
+          .insert([postData]);
+
+        if (error) throw error;
         alert('Blog post created successfully!');
       }
       setShowModal(false);
@@ -92,9 +121,14 @@ const BlogManagement = () => {
 
   const handleDeletePost = async (id) => {
     if (!confirm('Are you sure you want to delete this post?')) return;
-    
+
     try {
-      await apiService.deleteBlogPost(id);
+      const { error } = await supabase
+        .from('blog_posts')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
       alert('Blog post deleted successfully!');
       fetchPosts();
     } catch (error) {
