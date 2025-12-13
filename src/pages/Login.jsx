@@ -39,19 +39,9 @@ const LoginPage = () => {
     setLoading(true);
     setSuccessMessage('');
     try {
-      const { user: loggedInUser } = await login(email, password);
-      const userMetadata = loggedInUser.user_metadata || {};
-      const userRole = userMetadata.role || 'student';
-
-      if (from) {
-        navigate(from, { replace: true });
-      } else {
-        const dashboardPath = userRole === 'admin' ? '/admin/dashboard' : '/dashboard/courses';
-        navigate(dashboardPath, { replace: true });
-      }
+      await login(email, password);
     } catch (err) {
       setError(err.message || "Failed to log in. Please check your credentials.");
-    } finally {
       setLoading(false);
     }
   };
