@@ -3,7 +3,7 @@ import {Link} from 'react-router-dom';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 
-const {FiFacebook,FiTwitter,FiInstagram,FiLinkedin,FiMail,FiPhone,FiMapPin}=FiIcons;
+const {FiFacebook,FiTwitter,FiInstagram,FiLinkedin,FiMail,FiMapPin}=FiIcons;
 
 const Footer=()=> {
   return (
@@ -128,13 +128,9 @@ const Footer=()=> {
                 <SafeIcon icon={FiMail} className="w-4 h-4 text-accent flex-shrink-0" />
                 <span className="text-neutral-300 text-sm sm:text-base break-all">info@doingright.ng</span>
               </div>
-              <div className="flex items-center space-x-3">
-                <SafeIcon icon={FiPhone} className="w-4 h-4 text-accent flex-shrink-0" />
-                <span className="text-neutral-300 text-sm sm:text-base">+234 (0) 123 456 7890</span>
-              </div>
               <div className="flex items-start space-x-3">
                 <SafeIcon icon={FiMapPin} className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
-                <span className="text-neutral-300 text-sm sm:text-base break-words">Lagos,Nigeria</span>
+                <span className="text-neutral-300 text-sm sm:text-base break-words">28b, Olaminuyun street, Parkview, Lagos, Nigeria 101233</span>
               </div>
             </div>
           </div>
