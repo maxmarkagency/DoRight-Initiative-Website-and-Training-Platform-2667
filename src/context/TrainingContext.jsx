@@ -31,7 +31,12 @@ export const TrainingProvider = ({ children }) => {
           .eq('status', 'published')
           .order('created_at', { ascending: false });
 
-        if (coursesError) throw coursesError;
+        if (coursesError) {
+          console.error('Error fetching courses:', coursesError);
+          setCourses(mockCourses);
+          setLoading(false);
+          return;
+        }
 
         // Map database courses to expected format
         const formattedCourses = (coursesData || []).map(course => ({

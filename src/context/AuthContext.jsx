@@ -16,11 +16,17 @@ export const AuthProvider = ({ children }) => {
         .eq('id', userId)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        setProfile(null);
+        return null;
+      }
+
       setProfile(data);
       return data;
     } catch (error) {
       console.error('Error fetching user profile:', error);
+      setProfile(null);
       return null;
     }
   };

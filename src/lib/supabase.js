@@ -9,12 +9,17 @@ const envValidation = validateEnvVars();
 if (!envValidation.isValid) {
   console.error('❌ Supabase Configuration Error:', envValidation.message);
   console.error('Missing:', envValidation.missing.join(', '));
-  throw new Error(envValidation.message);
+  console.warn('App will continue to load, but database features will not work.');
 }
 
-console.log('✓ Supabase environment variables validated');
+if (envValidation.isValid) {
+  console.log('✓ Supabase environment variables validated');
+}
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+export const supabase = createClient(
+  SUPABASE_URL || 'https://placeholder.supabase.co',
+  SUPABASE_ANON_KEY || 'placeholder-key',
+  {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
