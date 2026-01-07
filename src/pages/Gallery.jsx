@@ -29,7 +29,7 @@ const Gallery = () => {
       const { data, error } = await supabase
         .from('gallery_items')
         .select('*')
-        .order('position_order', { ascending: true });
+        .order('display_order', { ascending: true });
 
       if (error) throw error;
 
