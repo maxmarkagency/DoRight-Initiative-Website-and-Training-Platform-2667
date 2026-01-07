@@ -9,6 +9,8 @@ import CourseAnalytics from '../../pages/admin/CourseAnalytics';
 import ContentManagement from '../../pages/admin/ContentManagement';
 import BlogManagement from '../../pages/admin/BlogManagement';
 import GalleryManagement from '../../pages/admin/GalleryManagement';
+import WebinarManagement from '../../pages/admin/WebinarManagement';
+import EventManagement from '../../pages/admin/EventManagement';
 import MediaManagement from '../../pages/admin/MediaManagement';
 import Settings from '../../pages/admin/Settings';
 
@@ -27,6 +29,8 @@ const AdminLayout = () => {
             <Route path="content" element={<ContentManagement />} />
             <Route path="blog" element={<BlogManagement />} />
             <Route path="gallery" element={<GalleryManagement />} />
+            <Route path="webinars" element={<WebinarManagement />} />
+            <Route path="events" element={<EventManagement />} />
             <Route path="media" element={<MediaManagement />} />
             <Route path="settings" element={<Settings />} />
             <Route path="/" element={<Navigate to="dashboard" replace />} />
