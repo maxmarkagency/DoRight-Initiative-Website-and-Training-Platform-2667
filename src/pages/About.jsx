@@ -1,13 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
+import { getPageContent, getSectionByKey } from '../services/pageContentService';
 
 const { FiUsers, FiTarget, FiEye, FiHeart, FiAward, FiTrendingUp, FiMapPin, FiCalendar, FiStar, FiGlobe } = FiIcons;
 
 const About = () => {
-  const timeline = [
+  const [sections, setSections] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadContent();
+  }, []);
+
+  const loadContent = async () => {
+    setLoading(true);
+    const content = await getPageContent('about');
+    setSections(content);
+    setLoading(false);
+  };
+
+  const iconMap = { FiHeart, FiUsers, FiTarget, FiTrendingUp, FiEye, FiAward, FiCalendar };
+
+  const heroSection = getSectionByKey(sections, 'hero');
+  const missionSection = getSectionByKey(sections, 'mission');
+  const visionSection = getSectionByKey(sections, 'vision');
+  const valuesSection = getSectionByKey(sections, 'values');
+  const timelineSection = getSectionByKey(sections, 'timeline');
+  const teamSection = getSectionByKey(sections, 'team');
+
+  const timeline = timelineSection?.content_data?.timeline || [
     { year: '2018', title: 'Foundation', description: 'Doing Right Awareness Initiative (DRAI) was founded by a group of passionate Nigerian citizens committed to promoting integrity and accountability.' },
     { year: '2019', title: 'First Community Programs', description: 'Launched our first youth mentorship programs in Lagos and Abuja,reaching over 500 young leaders.' },
     { year: '2020', title: 'Digital Expansion', description: 'Developed our first online training platform and launched digital reporting tools for citizens.' },
@@ -16,14 +40,14 @@ const About = () => {
     { year: '2024', title: 'Comprehensive Platform', description: 'Launched our complete training and certification system,serving over 5,000 active learners.' }
   ];
 
-  const values = [
-    { icon: FiHeart, title: 'Integrity', description: 'We model the values we promote,operating with transparency and accountability in all our actions.' },
-    { icon: FiUsers, title: 'Community-Centered', description: 'Our work is driven by communities,ensuring local ownership and sustainable impact.' },
-    { icon: FiTarget, title: 'Results-Oriented', description: 'We measure our success by tangible improvements in governance and civic engagement.' },
-    { icon: FiTrendingUp, title: 'Innovation', description: 'We leverage technology and creative approaches to solve complex social challenges.' }
+  const values = valuesSection?.content_data?.values || [
+    { icon: 'FiHeart', title: 'Integrity', description: 'We model the values we promote,operating with transparency and accountability in all our actions.' },
+    { icon: 'FiUsers', title: 'Community-Centered', description: 'Our work is driven by communities,ensuring local ownership and sustainable impact.' },
+    { icon: 'FiTarget', title: 'Results-Oriented', description: 'We measure our success by tangible improvements in governance and civic engagement.' },
+    { icon: 'FiTrendingUp', title: 'Innovation', description: 'We leverage technology and creative approaches to solve complex social challenges.' }
   ];
 
-  const stats = [
+  const stats = heroSection?.content_data?.stats || [
     { number: '6', label: 'Years of Impact', suffix: '+' },
     { number: '15', label: 'States Reached', suffix: '+' },
     { number: '5000', label: 'Citizens Trained', suffix: '+' },
@@ -54,7 +78,7 @@ const About = () => {
             </motion.div>
 
             <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.3 }} className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-heading font-bold mb-6 sm:mb-8 leading-tight">
-              About{' '}
+              {heroSection?.title || 'About'}{' '}
               <motion.span animate={{ color: ['#FFC107', '#FFFFFF', '#FFC107'] }} transition={{ duration: 3, repeat: Infinity }} className="relative">
                 DRAI
                 <motion.div initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 1, delay: 1 }} className="absolute bottom-0 left-0 h-1 bg-accent rounded-full" />
@@ -62,7 +86,7 @@ const About = () => {
             </motion.h1>
 
             <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.5 }} className="text-base sm:text-lg md:text-xl lg:text-2xl text-neutral-300 leading-relaxed max-w-3xl mx-auto">
-              We are a movement of Nigerian citizens committed to building a culture of integrity,accountability,and civic responsibility across our nation.
+              {heroSection?.content || 'We are a movement of Nigerian citizens committed to building a culture of integrity,accountability,and civic responsibility across our nation.'}
             </motion.p>
 
             {/* Floating stats preview */}
@@ -86,32 +110,30 @@ const About = () => {
               <motion.div initial={{ scale: 0 }} whileInView={{ scale: 1 }} transition={{ duration: 0.6, type: "spring" }} viewport={{ once: true }} className="bg-primary w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full flex items-center justify-center mb-4 sm:mb-6">
                 <SafeIcon icon={FiTarget} className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
               </motion.div>
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-neutral-900 mb-4 sm:mb-6"> Our Mission </h2>
-              <p className="text-sm sm:text-base lg:text-lg text-neutral-700 leading-relaxed mb-4 sm:mb-6"> To promote integrity,accountability,and civic responsibility across Nigeria through education,advocacy,and community-led action,creating sustainable change from the grassroots up. </p>
-              <p className="text-sm sm:text-base lg:text-lg text-neutral-700 leading-relaxed"> We believe that lasting transformation comes from empowering citizens with the knowledge,tools,and networks needed to demand and create positive change in their communities. </p>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-neutral-900 mb-4 sm:mb-6"> {missionSection?.title || 'Our Mission'} </h2>
+              <p className="text-sm sm:text-base lg:text-lg text-neutral-700 leading-relaxed"> {missionSection?.content || 'To promote integrity,accountability,and civic responsibility across Nigeria through education,advocacy,and community-led action,creating sustainable change from the grassroots up. We believe that lasting transformation comes from empowering citizens with the knowledge,tools,and networks needed to demand and create positive change in their communities.'} </p>
             </motion.div>
 
             <motion.div initial={{ opacity: 0, x: 50 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.2 }} viewport={{ once: true }}>
               <motion.div initial={{ scale: 0 }} whileInView={{ scale: 1 }} transition={{ duration: 0.6, type: "spring" }} viewport={{ once: true }} className="bg-accent w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full flex items-center justify-center mb-4 sm:mb-6">
                 <SafeIcon icon={FiEye} className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-neutral-900" />
               </motion.div>
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-neutral-900 mb-4 sm:mb-6"> Our Vision </h2>
-              <p className="text-sm sm:text-base lg:text-lg text-neutral-700 leading-relaxed mb-4 sm:mb-6"> A Nigeria where integrity is the norm,where citizens actively participate in governance,and where transparent,accountable leadership drives sustainable development for all. </p>
-              <p className="text-sm sm:text-base lg:text-lg text-neutral-700 leading-relaxed"> We envision communities empowered to hold their leaders accountable,institutions that serve the public interest,and a culture where doing right is celebrated and rewarded. </p>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-neutral-900 mb-4 sm:mb-6"> {visionSection?.title || 'Our Vision'} </h2>
+              <p className="text-sm sm:text-base lg:text-lg text-neutral-700 leading-relaxed"> {visionSection?.content || 'A Nigeria where integrity is the norm,where citizens actively participate in governance,and where transparent,accountable leadership drives sustainable development for all. We envision communities empowered to hold their leaders accountable,institutions that serve the public interest,and a culture where doing right is celebrated and rewarded.'} </p>
             </motion.div>
           </div>
 
           {/* Core Values */}
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }} className="text-center mb-12 sm:mb-16">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-neutral-900 mb-3 sm:mb-4"> Our Core Values </h2>
-            <p className="text-sm sm:text-lg text-neutral-700 max-w-2xl mx-auto"> These values guide everything we do and shape how we work with communities across Nigeria. </p>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-neutral-900 mb-3 sm:mb-4"> {valuesSection?.title || 'Our Core Values'} </h2>
+            <p className="text-sm sm:text-lg text-neutral-700 max-w-2xl mx-auto"> {valuesSection?.subtitle || 'These values guide everything we do and shape how we work with communities across Nigeria.'} </p>
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             {values.map((value, index) => (
               <motion.div key={value.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.1 }} viewport={{ once: true }} whileHover={{ y: -10, scale: 1.05 }} className="text-center group">
                 <motion.div initial={{ scale: 0 }} whileInView={{ scale: 1 }} transition={{ duration: 0.6, delay: index * 0.1 + 0.2, type: "spring" }} viewport={{ once: true }} className="bg-gradient-to-br from-neutral-100 to-neutral-200 w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:from-primary group-hover:to-primary-600 transition-all duration-300">
-                  <SafeIcon icon={value.icon} className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-primary group-hover:text-white transition-colors duration-300" />
+                  <SafeIcon icon={iconMap[value.icon] || FiTarget} className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-primary group-hover:text-white transition-colors duration-300" />
                 </motion.div>
                 <h3 className="text-base sm:text-lg lg:text-xl font-heading font-bold text-neutral-900 mb-3 sm:mb-4"> {value.title} </h3>
                 <p className="text-sm sm:text-base text-neutral-700 leading-relaxed"> {value.description} </p>
@@ -145,8 +167,8 @@ const About = () => {
       <section className="py-12 sm:py-16 lg:py-20 bg-white">
         <div className="max-w-container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }} className="text-center mb-12 sm:mb-16">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-neutral-900 mb-3 sm:mb-4"> Our Journey </h2>
-            <p className="text-sm sm:text-lg text-neutral-700 max-w-2xl mx-auto"> Key milestones in our mission to promote integrity and accountability across Nigeria. </p>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-neutral-900 mb-3 sm:mb-4"> {timelineSection?.title || 'Our Journey'} </h2>
+            <p className="text-sm sm:text-lg text-neutral-700 max-w-2xl mx-auto"> {timelineSection?.subtitle || 'Key milestones in our mission to promote integrity and accountability across Nigeria.'} </p>
           </motion.div>
           <div className="relative">
             <div className="absolute left-1/2 transform -translate-x-1/2 w-0.5 sm:w-1 bg-primary h-full hidden sm:block"></div>
@@ -176,19 +198,19 @@ const About = () => {
       <section className="py-12 sm:py-16 lg:py-20 bg-neutral-100">
         <div className="max-w-container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }} className="text-center mb-12 sm:mb-16">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-neutral-900 mb-3 sm:mb-4"> Meet Our Team </h2>
-            <p className="text-sm sm:text-lg text-neutral-700 max-w-2xl mx-auto"> The passionate individuals behind DRAI's mission to promote integrity and accountability across Nigeria. </p>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-neutral-900 mb-3 sm:mb-4"> {teamSection?.title || 'Meet Our Team'} </h2>
+            <p className="text-sm sm:text-lg text-neutral-700 max-w-2xl mx-auto"> {teamSection?.subtitle || 'The passionate individuals behind DRAI\'s mission to promote integrity and accountability across Nigeria.'} </p>
           </motion.div>
 
           {/* Team Photo */}
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="mb-12 sm:mb-16">
             <div className="relative overflow-hidden rounded-2xl shadow-2xl">
-              <img src="https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759575290797-DSC_0360-scaled-2-1536x1024.jpg" alt="DRAI team members in matching uniforms" className="w-full h-64 sm:h-80 lg:h-96 xl:h-[500px] object-cover" />
+              <img src={teamSection?.image_url || "https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759575290797-DSC_0360-scaled-2-1536x1024.jpg"} alt="DRAI team members in matching uniforms" className="w-full h-64 sm:h-80 lg:h-96 xl:h-[500px] object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
               <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 lg:p-8">
-                <motion.h3 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} viewport={{ once: true }} className="text-lg sm:text-2xl md:text-3xl font-heading font-bold text-white mb-2 sm:mb-3"> Our Dedicated Team </motion.h3>
+                <motion.h3 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} viewport={{ once: true }} className="text-lg sm:text-2xl md:text-3xl font-heading font-bold text-white mb-2 sm:mb-3"> {teamSection?.title || 'Our Dedicated Team'} </motion.h3>
                 <motion.p initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} viewport={{ once: true }} className="text-sm sm:text-base lg:text-lg text-neutral-200 leading-relaxed max-w-3xl">
-                  Meet the passionate DRAI team members who work tirelessly to promote integrity and civic responsibility across Nigerian communities. Together,we're building a movement that transforms lives and strengthens democracy.
+                  {teamSection?.content || 'Meet the passionate DRAI team members who work tirelessly to promote integrity and civic responsibility across Nigerian communities. Together,we\'re building a movement that transforms lives and strengthens democracy.'}
                 </motion.p>
               </div>
             </div>

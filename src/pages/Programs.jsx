@@ -1,18 +1,41 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
+import { getPageContent, getSectionByKey } from '../services/pageContentService';
 
 const { FiUsers, FiTarget, FiTrendingUp, FiShield, FiArrowRight, FiCheck } = FiIcons;
 
 const Programs = () => {
-  const programs = [
-    { title: 'Youth Mentorship', subtitle: 'Leadership for Tomorrow', description: 'Empowering the next generation of integrity champions through comprehensive mentorship programs,leadership workshops,and peer-led community projects in schools across Nigeria.', features: ['Interactive classroom sessions', 'One-on-one mentorship pairing', 'Student leadership development', 'Character building workshops', 'Peer-to-peer learning networks'], icon: FiUsers, color: 'from-primary to-primary-600', image: 'https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759595241762-Do-right-awarenss-initiative-school-project-7-scaled-2-1536x1024.jpg' },
-    { title: 'Community Campaigns', subtitle: 'Local Action for Change', description: 'Grassroots mobilization initiatives that promote civic awareness,accountability,and community pride through targeted campaigns and local projects.', features: ['Community awareness campaigns', 'Door-to-door civic education', 'Local government engagement sessions', 'Volunteer coordination and training', 'Public accountability forums'], icon: FiTarget, color: 'from-primary to-primary-600', image: 'https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759595235026-Do-right-awarenss-initiative-school-project-9-scaled-2-1536x1024.jpg' },
-    { title: 'Policy Advocacy', subtitle: 'Systemic Change Through Research', description: 'Evidence-based policy research and strategic engagement with stakeholders to create lasting institutional reforms and systemic improvements.', features: ['Policy research and analysis', 'Stakeholder engagement sessions', 'Legislative advocacy', 'Reform implementation monitoring', 'Coalition building with partners'], icon: FiTrendingUp, color: 'from-primary to-primary-600', image: 'https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759595248284-Do-right-awarenss-initiative-school-project-13-scaled-2-1536x1024.jpg' },
-    { title: 'Educational Outreach', subtitle: 'Knowledge Sharing & Resource Distribution', description: 'Comprehensive educational initiatives that provide learning materials,resources,and direct support to schools and communities across Nigeria.', features: ['Educational resource distribution', 'School partnership programs', 'Teacher training workshops', 'Student scholarship support', 'Community learning centers'], icon: FiShield, color: 'from-primary to-primary-600', image: 'https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759595280475-Do-right-awarenss-initiative-school-project-10-scaled-2-1536x1024.jpg' }
+  const [sections, setSections] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadContent();
+  }, []);
+
+  const loadContent = async () => {
+    setLoading(true);
+    const content = await getPageContent('programs');
+    setSections(content);
+    setLoading(false);
+  };
+
+  const iconMap = { FiUsers, FiTarget, FiTrendingUp, FiShield };
+
+  const heroSection = getSectionByKey(sections, 'hero');
+  const impactStatsSection = getSectionByKey(sections, 'impact_stats');
+  const programsListSection = getSectionByKey(sections, 'programs_list');
+  const howWeWorkSection = getSectionByKey(sections, 'how_we_work');
+
+  const programs = programsListSection?.content_data?.programs || [
+    { title: 'Youth Mentorship', subtitle: 'Leadership for Tomorrow', description: 'Empowering the next generation of integrity champions through comprehensive mentorship programs,leadership workshops,and peer-led community projects in schools across Nigeria.', features: ['Interactive classroom sessions', 'One-on-one mentorship pairing', 'Student leadership development', 'Character building workshops', 'Peer-to-peer learning networks'], icon: 'FiUsers', image: 'https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759595241762-Do-right-awarenss-initiative-school-project-7-scaled-2-1536x1024.jpg' },
+    { title: 'Community Campaigns', subtitle: 'Local Action for Change', description: 'Grassroots mobilization initiatives that promote civic awareness,accountability,and community pride through targeted campaigns and local projects.', features: ['Community awareness campaigns', 'Door-to-door civic education', 'Local government engagement sessions', 'Volunteer coordination and training', 'Public accountability forums'], icon: 'FiTarget', image: 'https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759595235026-Do-right-awarenss-initiative-school-project-9-scaled-2-1536x1024.jpg' },
+    { title: 'Policy Advocacy', subtitle: 'Systemic Change Through Research', description: 'Evidence-based policy research and strategic engagement with stakeholders to create lasting institutional reforms and systemic improvements.', features: ['Policy research and analysis', 'Stakeholder engagement sessions', 'Legislative advocacy', 'Reform implementation monitoring', 'Coalition building with partners'], icon: 'FiTrendingUp', image: 'https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759595248284-Do-right-awarenss-initiative-school-project-13-scaled-2-1536x1024.jpg' },
+    { title: 'Educational Outreach', subtitle: 'Knowledge Sharing & Resource Distribution', description: 'Comprehensive educational initiatives that provide learning materials,resources,and direct support to schools and communities across Nigeria.', features: ['Educational resource distribution', 'School partnership programs', 'Teacher training workshops', 'Student scholarship support', 'Community learning centers'], icon: 'FiShield', image: 'https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759595280475-Do-right-awarenss-initiative-school-project-10-scaled-2-1536x1024.jpg' }
   ];
-  const impact = [
+
+  const impact = impactStatsSection?.content_data?.stats || [
     { number: '5,000+', label: 'Citizens Engaged' },
     { number: '50+', label: 'Communities Reached' },
     { number: '100+', label: 'Leaders Trained' },
@@ -25,8 +48,8 @@ const Programs = () => {
       <section className="bg-gradient-to-r from-primary to-primary-600 text-white py-12 sm:py-16 lg:py-20">
         <div className="max-w-container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-center max-w-4xl mx-auto">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4 sm:mb-6 leading-tight"> Our Programs </h1>
-            <p className="text-base sm:text-lg md:text-xl text-neutral-300 leading-relaxed"> Comprehensive community-led solutions designed to promote integrity,accountability,and civic responsibility across Nigeria through education,advocacy,and grassroots action. </p>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4 sm:mb-6 leading-tight"> {heroSection?.title || 'Our Programs'} </h1>
+            <p className="text-base sm:text-lg md:text-xl text-neutral-300 leading-relaxed"> {heroSection?.content || 'Comprehensive community-led solutions designed to promote integrity,accountability,and civic responsibility across Nigeria through education,advocacy,and grassroots action.'} </p>
           </motion.div>
         </div>
       </section>
@@ -52,8 +75,8 @@ const Programs = () => {
             {programs.map((program, index) => (
               <motion.div key={program.title} initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: index * 0.1 }} viewport={{ once: true }} className={`grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 items-center ${index % 2 === 1 ? 'lg:grid-flow-col-dense' : ''}`}>
                 <div className={index % 2 === 1 ? 'lg:col-start-2' : ''}>
-                  <div className={`bg-gradient-to-r ${program.color} w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl flex items-center justify-center mb-4 sm:mb-6`}>
-                    <SafeIcon icon={program.icon} className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
+                  <div className="bg-gradient-to-r from-primary to-primary-600 w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl flex items-center justify-center mb-4 sm:mb-6">
+                    <SafeIcon icon={iconMap[program.icon] || FiTarget} className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
                   </div>
                   <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-neutral-900 mb-1 sm:mb-2"> {program.title} </h2>
                   <h3 className="text-base sm:text-lg md:text-xl font-semibold text-primary mb-4 sm:mb-6"> {program.subtitle} </h3>
@@ -94,8 +117,8 @@ const Programs = () => {
       <section className="py-12 sm:py-16 lg:py-20 bg-white">
         <div className="max-w-container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }} className="text-center mb-12 sm:mb-16">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-neutral-900 mb-4 sm:mb-6"> How We Create Change </h2>
-            <p className="text-sm sm:text-lg text-neutral-700 max-w-3xl mx-auto leading-relaxed"> Our integrated approach combines community mobilization with institutional engagement,creating sustainable change from the grassroots up while influencing policy at the highest levels. </p>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-neutral-900 mb-4 sm:mb-6"> {howWeWorkSection?.title || 'How We Create Change'} </h2>
+            <p className="text-sm sm:text-lg text-neutral-700 max-w-3xl mx-auto leading-relaxed"> {howWeWorkSection?.content || 'Our integrated approach combines community mobilization with institutional engagement,creating sustainable change from the grassroots up while influencing policy at the highest levels.'} </p>
           </motion.div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
             {[{ title: 'Community Engagement', description: 'We start at the grassroots level,working directly with communities to identify challenges and build local capacity for change.', icon: FiUsers }, { title: 'Evidence-Based Advocacy', description: 'Our research and data collection inform targeted advocacy efforts that address systemic issues and promote policy reform.', icon: FiTarget }, { title: 'Sustainable Impact', description: 'We measure outcomes and adapt our strategies to ensure lasting change that communities can maintain and expand.', icon: FiTrendingUp }].map((item, index) => (
