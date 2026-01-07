@@ -14,6 +14,7 @@ const ContentManagement = () => {
   const [programs, setPrograms] = useState([]);
   const [events, setEvents] = useState([]);
   const [siteSettings, setSiteSettings] = useState([]);
+  const [pagesData, setPagesData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -28,66 +29,60 @@ const ContentManagement = () => {
     { id: 'trustees', name: 'Trustees Page', icon: FiUsers }
   ];
 
+  useEffect(() => {
+    loadPages();
+  }, []);
+
+  const loadPages = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('pages')
+        .select('id, slug, title');
+
+      if (error) throw error;
+      setPagesData(data || []);
+    } catch (error) {
+      console.error('Error loading pages:', error);
+    }
+  };
+
+  const getPageIdBySlug = (slug) => {
+    const page = pagesData.find(p => p.slug === slug);
+    return page?.id;
+  };
+
   const tabs = [
-    { id: 'sections', name: 'Page Sections', icon: FiLayers },
-    { id: 'programs', name: 'Programs', icon: FiTarget },
-    { id: 'team', name: 'Team Members', icon: FiUsers },
-    { id: 'events', name: 'Events', icon: FiCalendar },
-    { id: 'settings', name: 'Site Settings', icon: FiSettings }
+    { id: 'sections', name: 'Page Sections', icon: FiLayers }
   ];
 
   useEffect(() => {
-    loadData();
-  }, [selectedPage, selectedTab]);
+    if (pagesData.length > 0) {
+      loadData();
+    }
+  }, [selectedPage, selectedTab, pagesData]);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      if (selectedTab === 'sections') {
-        const { data, error } = await supabase
-          .from('page_sections')
-          .select('*')
-          .eq('page_key', selectedPage)
-          .order('position', { ascending: true });
-
-        if (error) throw error;
-        setSections(data || []);
-      } else if (selectedTab === 'team') {
-        const { data, error } = await supabase
-          .from('team_members')
-          .select('*')
-          .order('position', { ascending: true });
-
-        if (error) throw error;
-        setTeamMembers(data || []);
-      } else if (selectedTab === 'programs') {
-        const { data, error } = await supabase
-          .from('programs')
-          .select('*')
-          .order('position', { ascending: true });
-
-        if (error) throw error;
-        setPrograms(data || []);
-      } else if (selectedTab === 'events') {
-        const { data, error } = await supabase
-          .from('events')
-          .select('*')
-          .order('event_date', { ascending: false });
-
-        if (error) throw error;
-        setEvents(data || []);
-      } else if (selectedTab === 'settings') {
-        const { data, error } = await supabase
-          .from('site_settings')
-          .select('*')
-          .order('setting_key', { ascending: true });
-
-        if (error) throw error;
-        setSiteSettings(data || []);
+      const pageId = getPageIdBySlug(selectedPage);
+      if (!pageId) {
+        console.error('Page not found:', selectedPage);
+        setSections([]);
+        setLoading(false);
+        return;
       }
+
+      const { data, error } = await supabase
+        .from('page_sections')
+        .select('*')
+        .eq('page_id', pageId)
+        .order('position', { ascending: true });
+
+      if (error) throw error;
+      setSections(data || []);
     } catch (error) {
       console.error('Error loading data:', error);
-      alert('Failed to load data: ' + error.message);
+      setSections([]);
     } finally {
       setLoading(false);
     }
@@ -117,97 +112,6 @@ const ContentManagement = () => {
     }
   };
 
-  const handleSaveProgram = async (program) => {
-    try {
-      setSaveStatus('saving');
-      const { error } = await supabase
-        .from('programs')
-        .upsert({
-          ...program,
-          updated_at: new Date().toISOString()
-        });
-
-      if (error) throw error;
-      setSaveStatus('saved');
-      setTimeout(() => setSaveStatus(''), 2000);
-      loadData();
-      setShowModal(false);
-      setEditingItem(null);
-    } catch (error) {
-      console.error('Error saving program:', error);
-      setSaveStatus('error');
-      alert('Failed to save: ' + error.message);
-    }
-  };
-
-  const handleSaveTeamMember = async (member) => {
-    try {
-      setSaveStatus('saving');
-      const { error } = await supabase
-        .from('team_members')
-        .upsert({
-          ...member,
-          updated_at: new Date().toISOString()
-        });
-
-      if (error) throw error;
-      setSaveStatus('saved');
-      setTimeout(() => setSaveStatus(''), 2000);
-      loadData();
-      setShowModal(false);
-      setEditingItem(null);
-    } catch (error) {
-      console.error('Error saving team member:', error);
-      setSaveStatus('error');
-      alert('Failed to save: ' + error.message);
-    }
-  };
-
-  const handleSaveEvent = async (event) => {
-    try {
-      setSaveStatus('saving');
-      const { error } = await supabase
-        .from('events')
-        .upsert({
-          ...event,
-          updated_at: new Date().toISOString()
-        });
-
-      if (error) throw error;
-      setSaveStatus('saved');
-      setTimeout(() => setSaveStatus(''), 2000);
-      loadData();
-      setShowModal(false);
-      setEditingItem(null);
-    } catch (error) {
-      console.error('Error saving event:', error);
-      setSaveStatus('error');
-      alert('Failed to save: ' + error.message);
-    }
-  };
-
-  const handleSaveSetting = async (setting) => {
-    try {
-      setSaveStatus('saving');
-      const { error } = await supabase
-        .from('site_settings')
-        .upsert({
-          ...setting,
-          updated_at: new Date().toISOString()
-        });
-
-      if (error) throw error;
-      setSaveStatus('saved');
-      setTimeout(() => setSaveStatus(''), 2000);
-      loadData();
-      setShowModal(false);
-      setEditingItem(null);
-    } catch (error) {
-      console.error('Error saving setting:', error);
-      setSaveStatus('error');
-      alert('Failed to save: ' + error.message);
-    }
-  };
 
   const handleToggleVisibility = async (id, table, field, currentValue) => {
     try {
@@ -242,62 +146,15 @@ const ContentManagement = () => {
   };
 
   const handleCreateNew = () => {
-    if (selectedTab === 'sections') {
-      setEditingItem({
-        page_key: selectedPage,
-        section_key: '',
-        section_type: 'text',
-        title: '',
-        subtitle: '',
-        content: '',
-        content_data: {},
-        image_url: '',
-        position: sections.length,
-        is_visible: true
-      });
-    } else if (selectedTab === 'programs') {
-      setEditingItem({
-        title: '',
-        subtitle: '',
-        description: '',
-        icon: 'FiTarget',
-        image_url: '',
-        features: [],
-        position: programs.length,
-        is_active: true
-      });
-    } else if (selectedTab === 'team') {
-      setEditingItem({
-        name: '',
-        role: '',
-        bio: '',
-        image_url: '',
-        email: '',
-        social_links: {},
-        position: teamMembers.length,
-        is_active: true
-      });
-    } else if (selectedTab === 'events') {
-      setEditingItem({
-        title: '',
-        description: '',
-        event_date: '',
-        end_date: '',
-        location: '',
-        image_url: '',
-        event_type: 'event',
-        registration_url: '',
-        is_featured: false,
-        is_active: true
-      });
-    } else if (selectedTab === 'settings') {
-      setEditingItem({
-        setting_key: '',
-        setting_value: '',
-        setting_type: 'text',
-        description: ''
-      });
-    }
+    const pageId = getPageIdBySlug(selectedPage);
+    setEditingItem({
+      page_id: pageId,
+      section_key: '',
+      section_type: 'content',
+      section_name: '',
+      position: sections.length,
+      is_active: true
+    });
     setShowModal(true);
   };
 
@@ -781,29 +638,15 @@ const ContentManagement = () => {
 
     const getTitle = () => {
       const isNew = !editingItem.id;
-      if (selectedTab === 'sections') return isNew ? 'Add Section' : 'Edit Section';
-      if (selectedTab === 'programs') return isNew ? 'Add Program' : 'Edit Program';
-      if (selectedTab === 'team') return isNew ? 'Add Team Member' : 'Edit Team Member';
-      if (selectedTab === 'events') return isNew ? 'Add Event' : 'Edit Event';
-      if (selectedTab === 'settings') return isNew ? 'Add Setting' : 'Edit Setting';
-      return 'Edit';
+      return isNew ? 'Add Section' : 'Edit Section';
     };
 
     const handleSave = () => {
-      if (selectedTab === 'sections') handleSaveSection(editingItem);
-      else if (selectedTab === 'programs') handleSaveProgram(editingItem);
-      else if (selectedTab === 'team') handleSaveTeamMember(editingItem);
-      else if (selectedTab === 'events') handleSaveEvent(editingItem);
-      else if (selectedTab === 'settings') handleSaveSetting(editingItem);
+      handleSaveSection(editingItem);
     };
 
     const renderEditor = () => {
-      if (selectedTab === 'sections') return renderSectionEditor();
-      if (selectedTab === 'programs') return renderProgramEditor();
-      if (selectedTab === 'team') return renderTeamMemberEditor();
-      if (selectedTab === 'events') return renderEventEditor();
-      if (selectedTab === 'settings') return renderSettingEditor();
-      return null;
+      return renderSectionEditor();
     };
 
     return (
