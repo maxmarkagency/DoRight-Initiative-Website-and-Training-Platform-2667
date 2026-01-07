@@ -17,49 +17,74 @@ export const TrainingProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchTrainingData = async () => {
-      if (!user) {
-        setCourses(mockCourses);
-        setLoading(false);
-        return;
-      }
-
       setLoading(true);
       setError(null);
 
       try {
-        // Fetch all courses
+        // Fetch all courses with instructor information
         const { data: coursesData, error: coursesError } = await supabase
           .from('courses')
-          .select('*');
+          .select(`
+            *,
+            instructor:instructor_id(id, full_name, email)
+          `)
+          .eq('status', 'published')
+          .order('created_at', { ascending: false });
+
         if (coursesError) throw coursesError;
-        setCourses(coursesData.length > 0 ? coursesData : mockCourses);
 
-        // Fetch user's enrollments
-        const { data: enrollmentsData, error: enrollmentsError } = await supabase
-          .from('enrollments')
-          .select('*, courses(*)')
-          .eq('user_id', user.id);
-        if (enrollmentsError) throw enrollmentsError;
-        setEnrollments(enrollmentsData);
+        // Map database courses to expected format
+        const formattedCourses = (coursesData || []).map(course => ({
+          id: course.id,
+          title: course.title,
+          slug: course.slug,
+          description: course.description || course.short_description,
+          category: 'Integrity & Leadership',
+          level: course.difficulty_level ? course.difficulty_level.charAt(0).toUpperCase() + course.difficulty_level.slice(1) : 'Beginner',
+          duration: course.estimated_duration ? `${Math.floor(course.estimated_duration / 60)}h ${course.estimated_duration % 60}m` : 'Self-paced',
+          instructor: course.instructor?.full_name || 'DoRight Team',
+          image: course.thumbnail_url,
+          price: course.price,
+          currency: course.currency,
+          tags: course.tags || [],
+          requirements: course.requirements || [],
+          learningObjectives: course.learning_objectives || [],
+          lessons: []
+        }));
 
-        // Fetch user's progress
-        const { data: progressData, error: progressError } = await supabase
-          .from('progress')
-          .select('*')
-          .eq('user_id', user.id);
+        setCourses(formattedCourses.length > 0 ? formattedCourses : mockCourses);
 
-        if (progressError) throw progressError;
+        if (user) {
+          // Fetch user's enrollments
+          const { data: enrollmentsData, error: enrollmentsError } = await supabase
+            .from('enrollments')
+            .select('*, courses(*)')
+            .eq('user_id', user.id);
+          if (enrollmentsError) throw enrollmentsError;
+          setEnrollments(enrollmentsData || []);
 
-        const progressMap = progressData.reduce((acc, p) => {
-            acc[p.lesson_id] = p;
-            return acc;
-        }, {});
-        setProgress(progressMap);
+          // Fetch user's progress
+          const { data: progressData, error: progressError } = await supabase
+            .from('progress')
+            .select('*')
+            .eq('user_id', user.id);
+
+          if (progressError) throw progressError;
+
+          const progressMap = (progressData || []).reduce((acc, p) => {
+              acc[p.lesson_id] = p;
+              return acc;
+          }, {});
+          setProgress(progressMap);
+        } else {
+          setEnrollments([]);
+          setProgress({});
+        }
 
       } catch (err) {
         console.error("Error fetching training data:", err);
         setError(err.message);
-        setCourses(mockCourses); // Fallback to mock data on error
+        setCourses(mockCourses);
       } finally {
         setLoading(false);
       }
@@ -72,9 +97,52 @@ export const TrainingProvider = ({ children }) => {
     return courses.find(c => c.id === courseId);
   };
 
-  const getLessonsForCourse = (courseId) => {
-    // This is still mock. In a real scenario, you'd fetch this from Supabase.
-    return mockLessons[courseId] || [];
+  const getLessonsForCourse = async (courseId) => {
+    try {
+      const { data, error } = await supabase
+        .from('modules')
+        .select(`
+          id,
+          title,
+          description,
+          position,
+          lessons (
+            id,
+            title,
+            description,
+            content_type,
+            content,
+            duration_seconds,
+            position,
+            is_preview
+          )
+        `)
+        .eq('course_id', courseId)
+        .order('position', { ascending: true });
+
+      if (error) throw error;
+
+      const lessons = (data || [])
+        .flatMap(module =>
+          (module.lessons || []).map(lesson => ({
+            id: lesson.id,
+            moduleId: module.id,
+            title: lesson.title,
+            description: lesson.description,
+            duration: lesson.duration_seconds ? `${Math.floor(lesson.duration_seconds / 60)} min` : '10 min',
+            type: lesson.content_type || 'video',
+            content: lesson.content,
+            isPreview: lesson.is_preview,
+            position: lesson.position
+          }))
+        )
+        .sort((a, b) => a.position - b.position);
+
+      return lessons;
+    } catch (error) {
+      console.error('Error fetching lessons:', error);
+      return mockLessons[courseId] || [];
+    }
   };
 
   const getLessonProgress = (lessonId) => {
