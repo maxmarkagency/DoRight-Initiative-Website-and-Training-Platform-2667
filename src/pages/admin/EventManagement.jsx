@@ -79,6 +79,13 @@ const EventManagement = () => {
     setShowModal(true);
   };
 
+  const handleUploadSuccess = (file) => {
+    setFormData(prev => ({
+      ...prev,
+      image_url: file.url
+    }));
+  };
+
   const handleEditEvent = (event) => {
     setEditingEvent(event);
     setFormData({
@@ -360,12 +367,26 @@ const EventManagement = () => {
                 </div>
 
                 <div>
+                  <label className="block text-sm font-medium mb-2">Upload Event Image</label>
+                  <MediaUpload
+                    onUploadSuccess={handleUploadSuccess}
+                    allowedTypes="image"
+                  />
+                  {formData.image_url && (
+                    <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm text-green-700">
+                      Image uploaded successfully!
+                    </div>
+                  )}
+                </div>
+
+                <div>
                   <label className="block text-sm font-medium mb-1">Image URL</label>
                   <input
                     type="url"
                     value={formData.image_url}
                     onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-400"
+                    placeholder="Upload an image or enter URL manually"
                   />
                 </div>
 

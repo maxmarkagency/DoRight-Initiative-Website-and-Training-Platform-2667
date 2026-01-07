@@ -17,15 +17,48 @@ const MediaManagement = () => {
     loadMediaFiles();
   }, []);
 
+  const getFileCategory = (fileName) => {
+    const ext = fileName.split('.').pop().toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'image';
+    if (['mp4', 'webm', 'ogg'].includes(ext)) return 'video';
+    if (['mp3', 'wav', 'ogg'].includes(ext)) return 'audio';
+    return 'document';
+  };
+
   const loadMediaFiles = async () => {
     setLoading(true);
     try {
-      // In a real implementation, you'd have a list endpoint
-      // For now, we'll start with an empty array
-      setMediaFiles([]);
+      const { data, error } = await supabase.storage
+        .from('media-library')
+        .list('', {
+          limit: 100,
+          offset: 0,
+          sortBy: { column: 'created_at', order: 'desc' }
+        });
+
+      if (error) throw error;
+
+      const filesWithUrls = data
+        .filter(file => file.name !== '.emptyFolderPlaceholder')
+        .map(file => {
+          const { data: { publicUrl } } = supabase.storage
+            .from('media-library')
+            .getPublicUrl(file.name);
+
+          return {
+            id: file.id,
+            name: file.name,
+            url: publicUrl,
+            category: getFileCategory(file.name),
+            size: file.metadata?.size || 0,
+            uploadedAt: file.created_at
+          };
+        });
+
+      setMediaFiles(filesWithUrls);
     } catch (error) {
       console.error('Error loading media files:', error);
-      alert('Failed to load media files');
+      alert('Failed to load media files: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -33,16 +66,7 @@ const MediaManagement = () => {
 
   const handleUploadSuccess = (uploadedFile) => {
     console.log('✅ Upload successful:', uploadedFile);
-    // Add the new file to our list
-    const newFile = {
-      id: uploadedFile.id,
-      url: uploadedFile.url,
-      category: uploadedFile.category,
-      originalName: uploadedFile.originalName,
-      uploadedAt: uploadedFile.uploadedAt,
-      size: uploadedFile.size
-    };
-    setMediaFiles(prev => [newFile, ...prev]);
+    loadMediaFiles();
   };
 
   const getFileIcon = (category) => {
@@ -72,18 +96,21 @@ const MediaManagement = () => {
     }
   };
 
-  const deleteFile = async (fileId) => {
+  const deleteFile = async (fileName) => {
     if (!confirm('Are you sure you want to delete this file?')) return;
 
     try {
-      // Note: You'll need to implement the delete endpoint in the backend
-      // await apiService.deleteMediaFile(fileId);
-      
-      setMediaFiles(prev => prev.filter(f => f.id !== fileId));
+      const { error } = await supabase.storage
+        .from('media-library')
+        .remove([fileName]);
+
+      if (error) throw error;
+
+      setMediaFiles(prev => prev.filter(f => f.name !== fileName));
       alert('File deleted successfully!');
     } catch (error) {
       console.error('Error deleting file:', error);
-      alert('Failed to delete file');
+      alert('Failed to delete file: ' + error.message);
     }
   };
 
@@ -170,7 +197,7 @@ const MediaManagement = () => {
                     {file.category === 'image' ? (
                       <img
                         src={file.url}
-                        alt={file.originalName}
+                        alt={file.name}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -197,7 +224,7 @@ const MediaManagement = () => {
                           <SafeIcon icon={FiExternalLink} className="h-4 w-4" />
                         </a>
                         <button
-                          onClick={() => deleteFile(file.id)}
+                          onClick={() => deleteFile(file.name)}
                           className="p-2 bg-white rounded-full text-gray-700 hover:text-red-600 transition-colors"
                           title="Delete"
                         >
@@ -210,13 +237,13 @@ const MediaManagement = () => {
                   {/* File Info */}
                   <div className="p-3">
                     <p className="text-sm font-medium text-gray-900 truncate">
-                      {file.originalName}
+                      {file.name}
                     </p>
                     <p className="text-xs text-gray-500">
                       {file.category} • {formatFileSize(file.size)}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">
-                      {new Date(file.uploadedAt).toLocaleDateString()}
+                      {file.uploadedAt ? new Date(file.uploadedAt).toLocaleDateString() : 'N/A'}
                     </p>
                   </div>
                 </motion.div>
