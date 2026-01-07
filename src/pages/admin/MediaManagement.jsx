@@ -20,27 +20,9 @@ const MediaManagement = () => {
   const loadMediaFiles = async () => {
     setLoading(true);
     try {
-      // Simulate loading existing media files
       // In a real implementation, you'd have a list endpoint
-      const mockFiles = [
-        {
-          id: '1',
-          url: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&h=600&fit=crop',
-          category: 'image',
-          originalName: 'hero-image.jpg',
-          uploadedAt: '2025-11-12T07:00:00.000Z',
-          size: 245678
-        },
-        {
-          id: '2',
-          url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=400&fit=crop',
-          category: 'image',
-          originalName: 'about-image.jpg',
-          uploadedAt: '2025-11-12T06:45:00.000Z',
-          size: 189432
-        }
-      ];
-      setMediaFiles(mockFiles);
+      // For now, we'll start with an empty array
+      setMediaFiles([]);
     } catch (error) {
       console.error('Error loading media files:', error);
       alert('Failed to load media files');

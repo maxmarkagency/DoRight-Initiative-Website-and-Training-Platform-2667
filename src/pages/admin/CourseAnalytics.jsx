@@ -20,66 +20,34 @@ const {
   FiEye
 } = FiIcons;
 
-// Mock analytics data
+// Mock analytics data - removed hardcoded mock data
 const courseAnalytics = {
   overview: {
-    totalEnrollments: 1520,
-    activeStudents: 1245,
-    completionRate: 68,
-    averageProgress: 72,
-    averageRating: 4.7,
-    totalReviews: 342,
-    averageTimeToComplete: 28,
-    certificatesIssued: 1034
+    totalEnrollments: 0,
+    activeStudents: 0,
+    completionRate: 0,
+    averageProgress: 0,
+    averageRating: 0,
+    totalReviews: 0,
+    averageTimeToComplete: 0,
+    certificatesIssued: 0
   },
-  enrollmentTrend: [
-    { month: 'Jan', enrollments: 120, completions: 45 },
-    { month: 'Feb', enrollments: 150, completions: 68 },
-    { month: 'Mar', enrollments: 180, completions: 92 },
-    { month: 'Apr', enrollments: 210, completions: 115 },
-    { month: 'May', enrollments: 240, completions: 148 },
-    { month: 'Jun', enrollments: 280, completions: 182 },
-    { month: 'Jul', enrollments: 340, completions: 224 }
-  ],
-  modulePerformance: [
-    { name: 'Module 1: Introduction', completionRate: 95, avgScore: 88, avgTime: 45 },
-    { name: 'Module 2: Core Concepts', completionRate: 87, avgScore: 82, avgTime: 65 },
-    { name: 'Module 3: Practical Applications', completionRate: 78, avgScore: 79, avgTime: 85 },
-    { name: 'Module 4: Case Studies', completionRate: 72, avgScore: 84, avgTime: 95 },
-    { name: 'Module 5: Final Assessment', completionRate: 68, avgScore: 86, avgTime: 120 }
-  ],
+  enrollmentTrend: [],
+  modulePerformance: [],
   studentEngagement: {
-    dailyActiveUsers: 342,
-    weeklyActiveUsers: 856,
-    monthlyActiveUsers: 1245,
-    avgSessionDuration: 42,
-    avgLessonsPerSession: 3.2,
-    discussionPosts: 1456,
-    questionsAsked: 234
+    dailyActiveUsers: 0,
+    weeklyActiveUsers: 0,
+    monthlyActiveUsers: 0,
+    avgSessionDuration: 0,
+    avgLessonsPerSession: 0,
+    discussionPosts: 0,
+    questionsAsked: 0
   },
   demographics: {
-    ageGroups: [
-      { range: '18-24', percentage: 25 },
-      { range: '25-34', percentage: 35 },
-      { range: '35-44', percentage: 22 },
-      { range: '45-54', percentage: 12 },
-      { range: '55+', percentage: 6 }
-    ],
-    locations: [
-      { city: 'Lagos', students: 456 },
-      { city: 'Abuja', students: 342 },
-      { city: 'Port Harcourt', students: 234 },
-      { city: 'Kano', students: 198 },
-      { city: 'Others', students: 290 }
-    ]
+    ageGroups: [],
+    locations: []
   },
-  topPerformers: [
-    { name: 'John Doe', progress: 100, score: 98, timeSpent: 24 },
-    { name: 'Jane Smith', progress: 100, score: 96, timeSpent: 26 },
-    { name: 'Michael Brown', progress: 95, score: 94, timeSpent: 22 },
-    { name: 'Sarah Chen', progress: 92, score: 93, timeSpent: 28 },
-    { name: 'David Lee', progress: 90, score: 91, timeSpent: 25 }
-  ]
+  topPerformers: []
 };
 
 const StatCard = ({ icon, title, value, subtitle, color, trend }) => (
@@ -470,19 +438,19 @@ const CourseAnalytics = () => {
             <ul className="space-y-2 text-sm opacity-90">
               <li className="flex items-start">
                 <span className="mr-2">•</span>
-                <span>Module 5 has the lowest completion rate (68%). Consider adding more support materials or breaking it into smaller sections.</span>
+                <span>No data available yet. Start by enrolling students in your courses to see analytics.</span>
               </li>
               <li className="flex items-start">
                 <span className="mr-2">•</span>
-                <span>Student engagement increased by 15% this month. The discussion forum feature is driving this growth.</span>
+                <span>Monitor enrollment trends to understand course popularity.</span>
               </li>
               <li className="flex items-start">
                 <span className="mr-2">•</span>
-                <span>Average completion time is 20% faster than industry standards. Your content structure is effective.</span>
+                <span>Track module completion rates to identify challenging content.</span>
               </li>
               <li className="flex items-start">
                 <span className="mr-2">•</span>
-                <span>Lagos has the highest concentration of students. Consider hosting in-person meetups or workshops there.</span>
+                <span>Engage with students through the discussion forum to boost participation.</span>
               </li>
             </ul>
           </div>

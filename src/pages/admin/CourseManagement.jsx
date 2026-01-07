@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import SafeIcon from '../../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
-import { mockCourses } from '../../data/adminMockData';
 
 const { FiSearch, FiFilter, FiPlus, FiMoreVertical, FiBarChart2, FiEye } = FiIcons;
 
@@ -66,40 +65,38 @@ const CourseManagement = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200">
-              {mockCourses.map(course => (
-                <tr key={course.id} className="hover:bg-neutral-50">
-                  <td className="p-4 font-medium text-neutral-800">{course.title}</td>
-                  <td className="p-4 text-neutral-600">{course.instructor}</td>
-                  <td className="p-4">
-                    <span className={`px-2 py-1 rounded-full font-medium text-xs ${getStatusBadge(course.status)}`}>
-                      {course.status}
-                    </span>
-                  </td>
-                  <td className="p-4 text-neutral-600">{course.enrolled.toLocaleString()}</td>
-                  <td className="p-4 text-neutral-600">{course.created}</td>
-                  <td className="p-4">
-                    <div className="flex items-center justify-end space-x-2">
-                      <button
-                        onClick={() => handleViewAnalytics(course.id)}
-                        className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                        title="View Analytics"
-                      >
-                        <SafeIcon icon={FiBarChart2} className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => alert('View course details')}
-                        className="p-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
-                        title="View Course"
-                      >
-                        <SafeIcon icon={FiEye} className="w-4 h-4" />
-                      </button>
-                      <button className="p-2 text-neutral-500 hover:bg-neutral-100 rounded-lg transition-colors">
-                        <SafeIcon icon={FiMoreVertical} className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              <tr className="hover:bg-neutral-50">
+                <td className="p-4 font-medium text-neutral-800">No courses found</td>
+                <td className="p-4 text-neutral-600">-</td>
+                <td className="p-4">
+                  <span className="px-2 py-1 rounded-full font-medium text-xs bg-neutral-200 text-neutral-800">
+                    -
+                  </span>
+                </td>
+                <td className="p-4 text-neutral-600">0</td>
+                <td className="p-4 text-neutral-600">-</td>
+                <td className="p-4">
+                  <div className="flex items-center justify-end space-x-2">
+                    <button
+                      onClick={() => handleViewAnalytics()}
+                      className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                      title="View Analytics"
+                    >
+                      <SafeIcon icon={FiBarChart2} className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => alert('View course details')}
+                      className="p-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+                      title="View Course"
+                    >
+                      <SafeIcon icon={FiEye} className="w-4 h-4" />
+                    </button>
+                    <button className="p-2 text-neutral-500 hover:bg-neutral-100 rounded-lg transition-colors">
+                      <SafeIcon icon={FiMoreVertical} className="w-4 h-4" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>

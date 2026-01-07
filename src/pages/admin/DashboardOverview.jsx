@@ -2,7 +2,6 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import SafeIcon from '../../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
-import { mockStats, mockRecentActivity } from '../../data/adminMockData';
 
 const { FiUsers, FiBookOpen, FiCheckSquare, FiDollarSign, FiBarChart2 } = FiIcons;
 
@@ -27,10 +26,10 @@ const StatCard = ({ icon, title, value, color, index }) => (
 
 const DashboardOverview = () => {
   const stats = [
-    { icon: FiUsers, title: 'Total Users', value: mockStats.totalUsers.toLocaleString(), color: { bg: 'bg-primary/10', text: 'text-neutral-800' } },
-    { icon: FiBookOpen, title: 'Active Courses', value: mockStats.activeCourses, color: { bg: 'bg-green-100', text: 'text-green-800' } },
-    { icon: FiCheckSquare, title: 'Completed Enrollments', value: mockStats.completedEnrollments.toLocaleString(), color: { bg: 'bg-accent/20', text: 'text-neutral-800' } },
-    { icon: FiDollarSign, title: 'Total Revenue', value: '₦' + mockStats.siteRevenue, color: { bg: 'bg-primary/10', text: 'text-neutral-800' } },
+    { icon: FiUsers, title: 'Total Users', value: '0', color: { bg: 'bg-primary/10', text: 'text-neutral-800' } },
+    { icon: FiBookOpen, title: 'Active Courses', value: '0', color: { bg: 'bg-green-100', text: 'text-green-800' } },
+    { icon: FiCheckSquare, title: 'Completed Enrollments', value: '0', color: { bg: 'bg-accent/20', text: 'text-neutral-800' } },
+    { icon: FiDollarSign, title: 'Total Revenue', value: '₦0', color: { bg: 'bg-primary/10', text: 'text-neutral-800' } },
   ];
 
   return (
@@ -67,19 +66,9 @@ const DashboardOverview = () => {
         >
           <h2 className="text-base sm:text-lg font-semibold text-neutral-800 mb-3 sm:mb-4">Recent Activity</h2>
           <ul className="space-y-3 sm:space-y-4">
-            {mockRecentActivity.map(activity => (
-              <li key={activity.id} className="flex items-start">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-neutral-100 flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
-                  <SafeIcon icon={FiUsers} className="w-3 h-3 sm:w-4 sm:h-4 text-neutral-500" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm text-neutral-700">
-                    <span className="font-semibold">{activity.user}</span> {activity.action}.
-                  </p>
-                  <p className="text-xs text-neutral-400">{activity.time}</p>
-                </div>
-              </li>
-            ))}
+            <li className="text-center text-neutral-400 py-4">
+              No recent activity
+            </li>
           </ul>
         </motion.div>
       </div>
