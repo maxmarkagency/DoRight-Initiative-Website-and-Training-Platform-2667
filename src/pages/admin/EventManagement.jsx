@@ -4,6 +4,8 @@ import SafeIcon from '../../common/SafeIcon';
 import MediaUpload from '../../components/admin/MediaUpload';
 import * as FiIcons from 'react-icons/fi';
 import supabase from '../../lib/supabase';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 const { FiPlus, FiSearch, FiEdit2, FiTrash2, FiCalendar } = FiIcons;
 
@@ -28,6 +30,25 @@ const EventManagement = () => {
     is_published: false,
     tags: []
   });
+
+  const quillModules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'align': [] }],
+      ['link', 'image'],
+      ['clean']
+    ]
+  };
+
+  const quillFormats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'list', 'bullet',
+    'align',
+    'link', 'image'
+  ];
 
   useEffect(() => {
     fetchEvents();
@@ -282,13 +303,17 @@ const EventManagement = () => {
 
                 <div>
                   <label className="block text-sm font-medium mb-1">Description</label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-400"
-                    rows="4"
-                    required
-                  />
+                  <div className="border rounded-lg overflow-hidden">
+                    <ReactQuill
+                      theme="snow"
+                      value={formData.description}
+                      onChange={(content) => setFormData({ ...formData, description: content })}
+                      modules={quillModules}
+                      formats={quillFormats}
+                      className="bg-white"
+                      style={{ minHeight: '200px' }}
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
