@@ -22,7 +22,7 @@ const BlogPost = () => {
     try {
       const { data: postData, error: postError } = await supabase
         .from('blog_posts')
-        .select('*, users(full_name)')
+        .select('*')
         .eq('id', postId)
         .eq('status', 'published')
         .maybeSingle();
@@ -36,7 +36,7 @@ const BlogPost = () => {
 
       const formattedPost = {
         ...postData,
-        author: postData.users?.full_name || 'DoRight Team',
+        author: postData.author_name || 'DoRight Team',
         image: postData.featured_image_url,
         date: postData.published_at || postData.created_at,
         category: postData.tags?.[0] || 'General',
@@ -49,7 +49,7 @@ const BlogPost = () => {
       if (postCategory) {
         const { data: related, error: relatedError } = await supabase
           .from('blog_posts')
-          .select('*, users(full_name)')
+          .select('*')
           .eq('status', 'published')
           .contains('tags', [postCategory])
           .neq('id', postId)
@@ -59,7 +59,7 @@ const BlogPost = () => {
 
         const formattedRelated = (related || []).map(post => ({
           ...post,
-          author: post.users?.full_name || 'DoRight Team',
+          author: post.author_name || 'DoRight Team',
           image: post.featured_image_url,
           date: post.published_at || post.created_at,
           category: post.tags?.[0] || 'General',
