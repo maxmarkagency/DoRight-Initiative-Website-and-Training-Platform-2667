@@ -1,23 +1,100 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
-import { blogPosts } from '../data/blog';
+import { supabase } from '../lib/supabase';
 
 const { FiCalendar, FiUser, FiClock, FiTag, FiArrowLeft, FiFacebook, FiTwitter, FiLinkedin } = FiIcons;
 
 const BlogPost = () => {
   const { postId } = useParams();
-  const post = blogPosts.find(p => p.id === parseInt(postId));
+  const [post, setPost] = useState(null);
+  const [relatedPosts, setRelatedPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-  if (!post) {
-    return <Navigate to="/blog" replace />;
+  useEffect(() => {
+    fetchBlogPost();
+  }, [postId]);
+
+  const fetchBlogPost = async () => {
+    try {
+      const { data: postData, error: postError } = await supabase
+        .from('blog_posts')
+        .select('*, users(full_name)')
+        .eq('id', postId)
+        .eq('status', 'published')
+        .maybeSingle();
+
+      if (postError) throw postError;
+
+      if (!postData) {
+        setNotFound(true);
+        return;
+      }
+
+      const formattedPost = {
+        ...postData,
+        author: postData.users?.full_name || 'DoRight Team',
+        image: postData.featured_image_url,
+        date: postData.published_at || postData.created_at,
+        category: postData.tags?.[0] || 'General',
+        readTime: calculateReadTime(postData.content)
+      };
+
+      setPost(formattedPost);
+
+      const postCategory = postData.tags?.[0];
+      if (postCategory) {
+        const { data: related, error: relatedError } = await supabase
+          .from('blog_posts')
+          .select('*, users(full_name)')
+          .eq('status', 'published')
+          .contains('tags', [postCategory])
+          .neq('id', postId)
+          .limit(3);
+
+        if (relatedError) throw relatedError;
+
+        const formattedRelated = (related || []).map(post => ({
+          ...post,
+          author: post.users?.full_name || 'DoRight Team',
+          image: post.featured_image_url,
+          date: post.published_at || post.created_at,
+          category: post.tags?.[0] || 'General',
+          readTime: calculateReadTime(post.content)
+        }));
+
+        setRelatedPosts(formattedRelated);
+      }
+    } catch (error) {
+      console.error('Error fetching blog post:', error);
+      setNotFound(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateReadTime = (content) => {
+    if (!content) return '5 min read';
+    const wordsPerMinute = 200;
+    const wordCount = content.split(/\s+/).length;
+    const minutes = Math.ceil(wordCount / wordsPerMinute);
+    return `${minutes} min read`;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
-  const relatedPosts = blogPosts
-    .filter(p => p.category === post.category && p.id !== post.id)
-    .slice(0, 3);
+  if (notFound || !post) {
+    return <Navigate to="/blog" replace />;
+  }
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {

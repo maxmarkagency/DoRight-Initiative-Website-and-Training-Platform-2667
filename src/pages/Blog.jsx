@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
-import { blogPosts } from '../data/blog';
+import { supabase } from '../lib/supabase';
 
 const { FiCalendar, FiUser, FiArrowRight, FiSearch, FiTag, FiCheck } = FiIcons;
 
@@ -12,6 +12,49 @@ const Blog = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [blogPosts, setBlogPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchBlogPosts();
+  }, []);
+
+  const fetchBlogPosts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*, users(full_name)')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false });
+
+      if (error) throw error;
+
+      const formattedPosts = (data || []).map(post => ({
+        ...post,
+        author: post.users?.full_name || 'DoRight Team',
+        image: post.featured_image_url,
+        featured: post.is_featured,
+        date: post.published_at || post.created_at,
+        category: post.tags?.[0] || 'General',
+        readTime: calculateReadTime(post.content)
+      }));
+
+      setBlogPosts(formattedPosts);
+    } catch (error) {
+      console.error('Error fetching blog posts:', error);
+      setBlogPosts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateReadTime = (content) => {
+    if (!content) return '5 min read';
+    const wordsPerMinute = 200;
+    const wordCount = content.split(/\s+/).length;
+    const minutes = Math.ceil(wordCount / wordsPerMinute);
+    return `${minutes} min read`;
+  };
 
   const categories = ['All', 'Integrity', 'Leadership', 'Governance', 'Community Action', 'Policy'];
 
@@ -19,7 +62,7 @@ const Blog = () => {
     const matchesCategory = selectedCategory === 'All' || post.category === selectedCategory;
     const matchesSearch =
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
+      (post.excerpt && post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesCategory && matchesSearch;
   });
 
@@ -154,7 +197,12 @@ const Blog = () => {
       {/* Articles Grid */}
       <section className="py-16 bg-neutral-100">
         <div className="max-w-container mx-auto px-5">
-          {regularPosts.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-16">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-4 text-neutral-600">Loading articles...</p>
+            </div>
+          ) : regularPosts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {regularPosts.map((post, index) => (
                 <Link to={`/blog/${post.id}`} key={post.id}>
