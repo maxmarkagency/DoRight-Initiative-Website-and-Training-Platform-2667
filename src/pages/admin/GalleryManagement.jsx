@@ -57,6 +57,15 @@ const GalleryManagement = () => {
     setShowModal(true);
   };
 
+  const handleUploadSuccess = (file) => {
+    setFormData(prev => ({
+      ...prev,
+      media_url: file.url,
+      media_type: file.type === 'video' ? 'video' : 'image',
+      thumbnail_url: file.type === 'image' ? file.url : prev.thumbnail_url
+    }));
+  };
+
   const handleEditItem = (item) => {
     setEditingItem(item);
     setFormData({
@@ -220,6 +229,19 @@ const GalleryManagement = () => {
                 </div>
 
                 <div>
+                  <label className="block text-sm font-medium mb-2">Upload Media</label>
+                  <MediaUpload
+                    onUploadSuccess={handleUploadSuccess}
+                    allowedTypes="image,video"
+                  />
+                  {formData.media_url && (
+                    <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm text-green-700">
+                      File uploaded successfully!
+                    </div>
+                  )}
+                </div>
+
+                <div>
                   <label className="block text-sm font-medium mb-1">Media Type</label>
                   <select
                     value={formData.media_type}
@@ -238,6 +260,7 @@ const GalleryManagement = () => {
                     value={formData.media_url}
                     onChange={(e) => setFormData({ ...formData, media_url: e.target.value })}
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-400"
+                    placeholder="Upload a file or enter URL manually"
                     required
                   />
                 </div>

@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import SafeIcon from '../../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
-import apiService from '../../services/api';
+import supabase from '../../lib/supabase';
 
 const { FiUpload, FiX, FiImage, FiVideo, FiFileText, FiMusic } = FiIcons;
 
@@ -28,7 +28,7 @@ const MediaUpload = ({ onUploadSuccess, allowedTypes = 'image,video,document,aud
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFiles(e.dataTransfer.files);
     }
@@ -49,7 +49,7 @@ const MediaUpload = ({ onUploadSuccess, allowedTypes = 'image,video,document,aud
   };
 
   const validateFile = (file) => {
-    const maxSize = 100 * 1024 * 1024; // 100MB
+    const maxSize = 100 * 1024 * 1024;
     const allowedTypes = {
       image: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
       video: ['video/mp4', 'video/webm', 'video/ogg'],
@@ -94,6 +94,14 @@ const MediaUpload = ({ onUploadSuccess, allowedTypes = 'image,video,document,aud
     }
   };
 
+  const getFileType = (file) => {
+    const type = file.type;
+    if (type.startsWith('image/')) return 'image';
+    if (type.startsWith('video/')) return 'video';
+    if (type.startsWith('audio/')) return 'audio';
+    return 'document';
+  };
+
   const uploadFiles = async (fileList) => {
     if (fileList.length === 0) return;
 
@@ -101,50 +109,46 @@ const MediaUpload = ({ onUploadSuccess, allowedTypes = 'image,video,document,aud
     setUploadProgress(0);
 
     try {
-      if (fileList.length === 1) {
-        // Single file upload
-        const formData = new FormData();
-        formData.append('file', fileList[0]);
+      const uploadPromises = Array.from(fileList).map(async (file, index) => {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `${fileName}`;
 
-        const response = await fetch(`${apiService.baseUrl}/upload`, {
-          method: 'POST',
-          headers: {
-            // Don't set Content-Type for FormData, let browser set it with boundary
-          },
-          body: formData,
-        });
-
-        const result = await response.json();
-        
-        if (result.success) {
-          console.log('✅ File uploaded:', result.file);
-          onUploadSuccess?.(result.file);
-        } else {
-          throw new Error(result.error || 'Upload failed');
-        }
-      } else {
-        // Multiple files upload
-        const formData = new FormData();
-        fileList.forEach(file => {
-          formData.append('files', file);
-        });
-
-        const response = await fetch(`${apiService.baseUrl}/upload/multiple`, {
-          method: 'POST',
-          body: formData,
-        });
-
-        const result = await response.json();
-        
-        if (result.success) {
-          console.log('✅ Multiple files uploaded:', result.files);
-          result.files.forEach(file => {
-            onUploadSuccess?.(file);
+        const { data, error } = await supabase.storage
+          .from('media-library')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
           });
-        } else {
-          throw new Error(result.error || 'Upload failed');
-        }
-      }
+
+        if (error) throw error;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('media-library')
+          .getPublicUrl(filePath);
+
+        const uploadedFile = {
+          id: data.id,
+          url: publicUrl,
+          path: filePath,
+          name: file.name,
+          size: file.size,
+          type: getFileType(file),
+          mimeType: file.type
+        };
+
+        setUploadProgress(((index + 1) / fileList.length) * 100);
+        return uploadedFile;
+      });
+
+      const uploadedFiles = await Promise.all(uploadPromises);
+
+      uploadedFiles.forEach(file => {
+        console.log('✅ File uploaded:', file);
+        onUploadSuccess?.(file);
+      });
+
+      alert(`Successfully uploaded ${uploadedFiles.length} file(s)!`);
     } catch (error) {
       console.error('❌ Upload error:', error);
       alert('Upload failed: ' + error.message);
@@ -172,11 +176,10 @@ const MediaUpload = ({ onUploadSuccess, allowedTypes = 'image,video,document,aud
 
   return (
     <div className="w-full">
-      {/* Upload Area */}
       <div
         className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all ${
-          dragActive 
-            ? 'border-blue-400 bg-blue-50' 
+          dragActive
+            ? 'border-blue-400 bg-blue-50'
             : 'border-gray-300 hover:border-gray-400'
         } ${uploading ? 'pointer-events-none opacity-50' : ''}`}
         onDragEnter={handleDrag}
@@ -193,12 +196,12 @@ const MediaUpload = ({ onUploadSuccess, allowedTypes = 'image,video,document,aud
           className="hidden"
           accept="image/*,video/*,audio/*,.pdf,.doc,.docx"
         />
-        
-        <SafeIcon 
-          icon={FiUpload} 
-          className="mx-auto h-12 w-12 text-gray-400 mb-4 cursor-pointer" 
+
+        <SafeIcon
+          icon={FiUpload}
+          className="mx-auto h-12 w-12 text-gray-400 mb-4 cursor-pointer"
         />
-        
+
         <h3 className="text-lg font-semibold text-gray-700 mb-2">
           Drop files here or click to browse
         </h3>
@@ -215,7 +218,7 @@ const MediaUpload = ({ onUploadSuccess, allowedTypes = 'image,video,document,aud
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
               <p className="text-sm text-gray-600">Uploading...</p>
               <div className="w-48 bg-gray-200 rounded-full h-2 mt-2">
-                <div 
+                <div
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 ></div>
@@ -225,7 +228,6 @@ const MediaUpload = ({ onUploadSuccess, allowedTypes = 'image,video,document,aud
         )}
       </div>
 
-      {/* File Preview */}
       {preview && (
         <div className="mt-4">
           <h4 className="text-sm font-semibold text-gray-700 mb-2">Selected Files:</h4>
