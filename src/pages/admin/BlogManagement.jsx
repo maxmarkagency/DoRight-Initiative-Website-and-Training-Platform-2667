@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import SafeIcon from '../../common/SafeIcon';
+import MediaUpload from '../../components/admin/MediaUpload';
 import * as FiIcons from 'react-icons/fi';
 import supabase from '../../lib/supabase';
 
