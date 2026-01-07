@@ -23,7 +23,7 @@ const Blog = () => {
     try {
       const { data, error } = await supabase
         .from('blog_posts')
-        .select('*, users(full_name)')
+        .select('*')
         .eq('status', 'published')
         .order('published_at', { ascending: false });
 
@@ -31,7 +31,7 @@ const Blog = () => {
 
       const formattedPosts = (data || []).map(post => ({
         ...post,
-        author: post.users?.full_name || 'DoRight Team',
+        author: post.author_name || 'DoRight Team',
         image: post.featured_image_url,
         featured: post.is_featured,
         date: post.published_at || post.created_at,
