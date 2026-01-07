@@ -2,7 +2,6 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import SafeIcon from '../../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
-import { mockUsers } from '../../data/adminMockData';
 
 const { FiSearch, FiFilter, FiPlus, FiMoreVertical } = FiIcons;
 
@@ -64,60 +63,36 @@ const UserManagement = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-200">
-                  {mockUsers.map(user => (
-                    <tr key={user.id} className="hover:bg-neutral-50">
-                      <td className="p-4 font-medium text-neutral-800">{user.name}</td>
-                      <td className="p-4 text-neutral-600">{user.email}</td>
-                      <td className="p-4">
-                        <span className={`px-2 py-1 rounded-full font-medium text-xs ${getRoleBadge(user.role)}`}>
-                          {user.role}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <span className={`flex items-center text-xs font-medium ${user.status === 'Active' ? 'text-green-600' : 'text-red-600'}`}>
-                          <span className={`w-2 h-2 rounded-full mr-2 ${user.status === 'Active' ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                          {user.status}
-                        </span>
-                      </td>
-                      <td className="p-4 text-neutral-600">{user.joined}</td>
-                      <td className="p-4 text-right">
-                        <button className="text-neutral-500 hover:text-neutral-800 p-2 rounded-full hover:bg-neutral-100">
-                          <SafeIcon icon={FiMoreVertical} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  <tr className="hover:bg-neutral-50">
+                    <td className="p-4 font-medium text-neutral-800">No users found</td>
+                    <td className="p-4 text-neutral-600">-</td>
+                    <td className="p-4">
+                      <span className="px-2 py-1 rounded-full font-medium text-xs bg-neutral-200 text-neutral-800">
+                        -
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span className="flex items-center text-xs font-medium text-neutral-500">
+                        <span className="w-2 h-2 rounded-full mr-2 bg-neutral-400"></span>
+                        -
+                      </span>
+                    </td>
+                    <td className="p-4 text-neutral-600">-</td>
+                    <td className="p-4 text-right">
+                      <button className="text-neutral-500 hover:text-neutral-800 p-2 rounded-full hover:bg-neutral-100">
+                        <SafeIcon icon={FiMoreVertical} />
+                      </button>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
 
             {/* Mobile Card Layout */}
             <div className="md:hidden space-y-4">
-              {mockUsers.map(user => (
-                <div key={user.id} className="bg-neutral-50 rounded-lg p-4 border border-neutral-200">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="font-medium text-neutral-800">{user.name}</h3>
-                      <p className="text-sm text-neutral-600">{user.email}</p>
-                    </div>
-                    <button className="text-neutral-500 hover:text-neutral-800 p-1 rounded-full hover:bg-neutral-200">
-                      <SafeIcon icon={FiMoreVertical} className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className={`px-2 py-1 rounded-full font-medium text-xs ${getRoleBadge(user.role)}`}>
-                        {user.role}
-                      </span>
-                      <span className={`flex items-center text-xs font-medium ${user.status === 'Active' ? 'text-green-600' : 'text-red-600'}`}>
-                        <span className={`w-2 h-2 rounded-full mr-1 ${user.status === 'Active' ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                        {user.status}
-                      </span>
-                    </div>
-                    <p className="text-xs text-neutral-400">{user.joined}</p>
-                  </div>
-                </div>
-              ))}
+              <div className="bg-neutral-50 rounded-lg p-4 border border-neutral-200 text-center text-neutral-500">
+                No users found
+              </div>
             </div>
           </div>
         </div>
