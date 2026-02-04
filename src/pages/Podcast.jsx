@@ -206,7 +206,7 @@ const Podcast = () => {
                                             </div>
                                         </div>
                                         <div className="flex-grow">
-                                            <Link to={`/programs/podcast/${episode.slug}`} className="block group">
+                                            <Link to={`/media/podcast/${episode.slug}`} className="block group">
                                                 <h3 className="text-xl font-heading font-bold text-neutral-900 mb-2 group-hover:text-primary transition-colors">
                                                     {episode.title}
                                                 </h3>

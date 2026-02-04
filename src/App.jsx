@@ -67,8 +67,9 @@ function AppContent() {
           <Route path="/webinars" element={<Webinars />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/events" element={<Events />} />
-          <Route path="/programs/podcast" element={<Podcast />} />
-          <Route path="/programs/podcast/:slug" element={<PodcastEpisode />} />
+          <Route path="/programs/podcast" element={<Navigate to="/media/podcast" replace />} /> {/* Redirect old route */}
+          <Route path="/media/podcast" element={<Podcast />} />
+          <Route path="/media/podcast/:slug" element={<PodcastEpisode />} />
 
           <Route path="/training/dashboard" element={<Navigate to="/dashboard" replace />} />
           <Route path="/training/course/:courseId" element={
