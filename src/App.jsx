@@ -47,9 +47,9 @@ function AppContent() {
       <AnimatePresence mode="wait">
         {isLoading && <LoadingTransition />}
       </AnimatePresence>
-      
+
       {!isAdminRoute && !isStudentRoute && <Header />}
-      
+
       <main className={!isAdminRoute && !isStudentRoute ? "pt-16 sm:pt-20" : ""}>
         <Routes>
           <Route path="/" element={<Home />} />
@@ -59,7 +59,7 @@ function AppContent() {
           <Route path="/join" element={<Join />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/blog" element={<Blog />} />
-          <Route path="/blog/:slug" element={<BlogPost />} />
+          <Route path="/blog/:postId" element={<BlogPost />} />
           <Route path="/login" element={<Login />} />
           <Route path="/trustees" element={<Trustees />} />
           <Route path="/webinars" element={<Webinars />} />
@@ -77,7 +77,7 @@ function AppContent() {
               <CoursePage />
             </ProtectedRoute>
           } />
-          
+
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Navigate to="/dashboard/dashboard" replace />
@@ -88,7 +88,7 @@ function AppContent() {
               <StudentLayout />
             </ProtectedRoute>
           } />
-          
+
           <Route path="/admin/*" element={
             <ProtectedRoute adminOnly>
               <AdminLayout />
