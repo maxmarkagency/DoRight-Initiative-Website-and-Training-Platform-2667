@@ -12,26 +12,27 @@ const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { user, loading } = useAuth();
-  
+
   const toggleMenu = () => setIsOpen(!isOpen);
 
   const navLinks = [
     { name: 'Home', path: '/' },
-    { 
-      name: 'About Us', 
+    {
+      name: 'About Us',
       dropdown: [
         { name: 'Our Story', path: '/about' },
         { name: 'Our Trustees', path: '/trustees' },
         { name: 'Gallery', path: '/gallery' },
       ]
     },
-    { 
-      name: 'Programs', 
+    {
+      name: 'Programs',
       dropdown: [
         { name: 'Our Programs', path: '/programs' },
         { name: 'Training', path: '/training' },
         { name: 'Webinars', path: '/webinars' },
         { name: 'Events', path: '/events' },
+        { name: 'Podcast', path: '/programs/podcast' },
       ]
     },
     { name: 'Blog', path: '/blog' },
@@ -41,20 +42,19 @@ const Header = () => {
   const NavLink = ({ to, children, isDropdown, onClick }) => {
     const isActive = location.pathname === to;
     return (
-      <Link 
+      <Link
         to={to}
         onClick={onClick}
-        className={`block px-4 py-2 text-sm rounded-md transition-colors duration-200 ${
-          isDropdown 
+        className={`block px-4 py-2 text-sm rounded-md transition-colors duration-200 ${isDropdown
             ? `text-gray-300 hover:bg-gray-700 hover:text-yellow-400`
             : `font-medium ${isActive ? 'text-yellow-400' : 'text-white hover:text-yellow-400'}`
-        }`}
+          }`}
       >
         {children}
       </Link>
     );
   };
-  
+
   const DropdownMenu = ({ item }) => {
     const [isSubDropdownOpen, setSubDropdownOpen] = useState(false);
     const timeoutRef = useRef(null);
@@ -69,19 +69,18 @@ const Header = () => {
         setSubDropdownOpen(false);
       }, 200);
     };
-    
+
     const isParentActive = item.dropdown.some(d => d.path === location.pathname);
 
     return (
-      <div 
+      <div
         className="relative"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
         <button
-          className={`font-medium flex items-center transition-colors duration-200 ${
-            isParentActive ? 'text-yellow-400' : 'text-white hover:text-yellow-400'
-          }`}
+          className={`font-medium flex items-center transition-colors duration-200 ${isParentActive ? 'text-yellow-400' : 'text-white hover:text-yellow-400'
+            }`}
         >
           {item.name}
           <SafeIcon icon={FiChevronDown} className={`ml-1 h-4 w-4 transition-transform duration-200 ${isSubDropdownOpen ? 'rotate-180' : ''}`} />
@@ -120,7 +119,7 @@ const Header = () => {
               />
             </Link>
           </div>
-          
+
           <div className="hidden md:flex md:items-center md:space-x-6 lg:space-x-8">
             {navLinks.map((item) => (
               item.dropdown ? (
@@ -150,7 +149,7 @@ const Header = () => {
                 </Link>
               )}
             </div>
-            
+
             <div className="md:hidden ml-2 sm:ml-4">
               <button onClick={toggleMenu} className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white touch-manipulation">
                 <span className="sr-only">Open main menu</span>
@@ -176,7 +175,7 @@ const Header = () => {
                     <h3 className="px-3 sm:px-4 py-2 text-sm font-semibold text-gray-400">{item.name}</h3>
                     {item.dropdown.map(subLink => (
                       <NavLink key={subLink.name} to={subLink.path} onClick={toggleMenu} isDropdown>
-                         <span className="ml-4 text-sm">{subLink.name}</span>
+                        <span className="ml-4 text-sm">{subLink.name}</span>
                       </NavLink>
                     ))}
                   </div>

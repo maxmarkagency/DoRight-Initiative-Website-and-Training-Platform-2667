@@ -1,0 +1,2213 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Podcast.co Public API
+  contact:
+    name: API Support
+    url: help.podcast.co
+    email: help@podcast.co
+tags:
+  - name: Introduction
+    description: |
+      Podcast.co Public API documentation
+servers:
+  - url: https://public-api.pod.co
+paths:
+  "/podcasts/{podcast_slug}":
+    parameters:
+      - $ref: "#/components/parameters/podcast_slug"
+    get:
+      summary: Get a podcast
+      operationId: getPodcast
+      tags:
+        - podcasts
+      responses:
+        "200":
+          description: A podcast
+          content:
+            application/json:
+              schema:
+                title: Single Podcast
+                description: A single podcast response
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        description: Standard GUID
+                        example: 123e4567-e89b-12d3-a456-426655440000
+                      title:
+                        type: string
+                        example: "Guardian: Football weekly"
+                        minLength: 1
+                        maxLength: 255
+                      slug:
+                        type: string
+                        example: guardian-football-weekly
+                        minLength: 1
+                        maxLength: 265
+                      categories:
+                        type: array
+                        items:
+                          anyOf:
+                            - type: object
+                              title: Arts
+                              description: Art category
+                              properties:
+                                main:
+                                  description: Main category
+                                  type: string
+                                  enum:
+                                    - Arts
+                                sub:
+                                  oneOf:
+                                    - type: string
+                                      title: subcategories
+                                      enum:
+                                        - Books
+                                        - Design
+                                        - Fashion & Beauty
+                                        - Food
+                                        - Performing Arts
+                                        - Visual Arts
+                                    - title: "null"
+                                      nullable: true
+                              required:
+                                - main
+                                - sub
+                            - type: object
+                              title: Business
+                              properties:
+                                main:
+                                  description: Main category
+                                  type: string
+                                  enum:
+                                    - Business
+                                sub:
+                                  oneOf:
+                                    - type: string
+                                      title: subcategories
+                                      enum:
+                                        - Careers
+                                        - Entrepreneurship
+                                        - Investing
+                                        - Management
+                                        - Marketing
+                                        - Non-Profit
+                                    - $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D\
+                                        /get/responses/200/content/application~\
+                                        1json/schema/properties/data/properties\
+                                        /categories/items/anyOf/0/properties/su\
+                                        b/oneOf/1"
+                              required:
+                                - main
+                                - sub
+                            - type: object
+                              title: Comedy
+                              properties:
+                                main:
+                                  description: Main category
+                                  type: string
+                                  enum:
+                                    - Comedy
+                                sub:
+                                  oneOf:
+                                    - type: string
+                                      title: subcategories
+                                      enum:
+                                        - Comedy Interviews
+                                        - Improv
+                                        - Stand-Up
+                                    - $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D\
+                                        /get/responses/200/content/application~\
+                                        1json/schema/properties/data/properties\
+                                        /categories/items/anyOf/0/properties/su\
+                                        b/oneOf/1"
+                              required:
+                                - main
+                                - sub
+                            - type: object
+                              title: Education
+                              properties:
+                                main:
+                                  description: Main category
+                                  type: string
+                                  enum:
+                                    - Education
+                                sub:
+                                  oneOf:
+                                    - type: string
+                                      title: subcategories
+                                      enum:
+                                        - Courses
+                                        - How To
+                                        - Language Learning
+                                        - Self-Improvement
+                                    - $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D\
+                                        /get/responses/200/content/application~\
+                                        1json/schema/properties/data/properties\
+                                        /categories/items/anyOf/0/properties/su\
+                                        b/oneOf/1"
+                              required:
+                                - main
+                                - sub
+                            - type: object
+                              title: Fiction
+                              properties:
+                                main:
+                                  description: Main category
+                                  type: string
+                                  enum:
+                                    - Fiction
+                                sub:
+                                  oneOf:
+                                    - type: string
+                                      title: subcategories
+                                      enum:
+                                        - Comedy Fiction
+                                        - Drama
+                                        - Science Fiction
+                                    - $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D\
+                                        /get/responses/200/content/application~\
+                                        1json/schema/properties/data/properties\
+                                        /categories/items/anyOf/0/properties/su\
+                                        b/oneOf/1"
+                              required:
+                                - main
+                                - sub
+                            - type: object
+                              title: Government
+                              properties:
+                                main:
+                                  description: Main category
+                                  type: string
+                                  enum:
+                                    - Government
+                                sub:
+                                  $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D/get\
+                                    /responses/200/content/application~1json/sc\
+                                    hema/properties/data/properties/categories/\
+                                    items/anyOf/0/properties/sub/oneOf/1"
+                              required:
+                                - main
+                                - sub
+                            - type: object
+                              title: Health & Fitness
+                              properties:
+                                main:
+                                  description: Main category
+                                  type: string
+                                  enum:
+                                    - Health & Fitness
+                                sub:
+                                  oneOf:
+                                    - type: string
+                                      title: subcategories
+                                      enum:
+                                        - Alternative Health
+                                        - Fitness
+                                        - Medicine
+                                        - Mental Health
+                                        - Nutrition
+                                        - Sexuality
+                                    - $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D\
+                                        /get/responses/200/content/application~\
+                                        1json/schema/properties/data/properties\
+                                        /categories/items/anyOf/0/properties/su\
+                                        b/oneOf/1"
+                              required:
+                                - main
+                                - sub
+                            - type: object
+                              title: History
+                              properties:
+                                main:
+                                  description: Main category
+                                  type: string
+                                  enum:
+                                    - History
+                                sub:
+                                  $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D/get\
+                                    /responses/200/content/application~1json/sc\
+                                    hema/properties/data/properties/categories/\
+                                    items/anyOf/0/properties/sub/oneOf/1"
+                              required:
+                                - main
+                                - sub
+                            - type: object
+                              title: Kids & Family
+                              properties:
+                                main:
+                                  description: Main category
+                                  type: string
+                                  enum:
+                                    - Kids & Family
+                                sub:
+                                  oneOf:
+                                    - type: string
+                                      title: subcategories
+                                      enum:
+                                        - Education for Kids
+                                        - Parenting
+                                        - Pets & Animals
+                                        - Stories for Kids
+                                    - $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D\
+                                        /get/responses/200/content/application~\
+                                        1json/schema/properties/data/properties\
+                                        /categories/items/anyOf/0/properties/su\
+                                        b/oneOf/1"
+                              required:
+                                - main
+                                - sub
+                            - type: object
+                              title: Leisure
+                              properties:
+                                main:
+                                  description: Main category
+                                  type: string
+                                  enum:
+                                    - Leisure
+                                sub:
+                                  oneOf:
+                                    - type: string
+                                      title: subcategories
+                                      enum:
+                                        - Animation & Manga
+                                        - Automotive
+                                        - Aviation
+                                        - Crafts
+                                        - Games
+                                        - Hobbies
+                                        - Home & Garden
+                                        - Video Games
+                                    - $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D\
+                                        /get/responses/200/content/application~\
+                                        1json/schema/properties/data/properties\
+                                        /categories/items/anyOf/0/properties/su\
+                                        b/oneOf/1"
+                              required:
+                                - main
+                                - sub
+                            - type: object
+                              title: Music
+                              properties:
+                                main:
+                                  description: Main category
+                                  type: string
+                                  enum:
+                                    - Music
+                                sub:
+                                  oneOf:
+                                    - type: string
+                                      title: subcategories
+                                      enum:
+                                        - Music Commentary
+                                        - Music History
+                                        - Music Interviews
+                                    - $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D\
+                                        /get/responses/200/content/application~\
+                                        1json/schema/properties/data/properties\
+                                        /categories/items/anyOf/0/properties/su\
+                                        b/oneOf/1"
+                              required:
+                                - main
+                                - sub
+                            - type: object
+                              title: News
+                              properties:
+                                main:
+                                  description: Main category
+                                  type: string
+                                  enum:
+                                    - News
+                                sub:
+                                  oneOf:
+                                    - type: string
+                                      title: subcategories
+                                      enum:
+                                        - Business News
+                                        - Daily News
+                                        - Entertainment News
+                                        - News Commentary
+                                        - Politics
+                                        - Sports News
+                                        - Tech News
+                                    - $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D\
+                                        /get/responses/200/content/application~\
+                                        1json/schema/properties/data/properties\
+                                        /categories/items/anyOf/0/properties/su\
+                                        b/oneOf/1"
+                              required:
+                                - main
+                                - sub
+                            - type: object
+                              title: Religion & Spirituality
+                              properties:
+                                main:
+                                  description: Main category
+                                  type: string
+                                  enum:
+                                    - Religion & Spirituality
+                                sub:
+                                  oneOf:
+                                    - type: string
+                                      title: subcategories
+                                      enum:
+                                        - Buddhism
+                                        - Christianity
+                                        - Hinduism
+                                        - Islam
+                                        - Judaism
+                                        - Religion
+                                        - Spirituality
+                                    - $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D\
+                                        /get/responses/200/content/application~\
+                                        1json/schema/properties/data/properties\
+                                        /categories/items/anyOf/0/properties/su\
+                                        b/oneOf/1"
+                              required:
+                                - main
+                                - sub
+                            - type: object
+                              title: Science
+                              properties:
+                                main:
+                                  description: Main category
+                                  type: string
+                                  enum:
+                                    - Science
+                                sub:
+                                  oneOf:
+                                    - type: string
+                                      title: subcategories
+                                      enum:
+                                        - Astronomy
+                                        - Chemistry
+                                        - Earth Sciences
+                                        - Life Sciences
+                                        - Mathematics
+                                        - Natural Sciences
+                                        - Nature
+                                        - Physics
+                                        - Social Sciences
+                                    - $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D\
+                                        /get/responses/200/content/application~\
+                                        1json/schema/properties/data/properties\
+                                        /categories/items/anyOf/0/properties/su\
+                                        b/oneOf/1"
+                              required:
+                                - main
+                                - sub
+                            - type: object
+                              title: Society & Culture
+                              properties:
+                                main:
+                                  description: Main category
+                                  type: string
+                                  enum:
+                                    - Society & Culture
+                                sub:
+                                  oneOf:
+                                    - type: string
+                                      title: subcategories
+                                      enum:
+                                        - Documentary
+                                        - Personal Journals
+                                        - Philosophy
+                                        - Places & Travel
+                                        - Relationships
+                                    - $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D\
+                                        /get/responses/200/content/application~\
+                                        1json/schema/properties/data/properties\
+                                        /categories/items/anyOf/0/properties/su\
+                                        b/oneOf/1"
+                              required:
+                                - main
+                                - sub
+                            - type: object
+                              title: Sports
+                              properties:
+                                main:
+                                  description: Main category
+                                  type: string
+                                  enum:
+                                    - Sports
+                                sub:
+                                  oneOf:
+                                    - type: string
+                                      title: subcategories
+                                      enum:
+                                        - Baseball
+                                        - Basketball
+                                        - Cricket
+                                        - Fantasy Sports
+                                        - Football
+                                        - Golf
+                                        - Hockey
+                                        - Rugby
+                                        - Running
+                                        - Soccer
+                                        - Swimming
+                                        - Tennis
+                                        - Volleyball
+                                        - Wilderness
+                                        - Wrestling
+                                    - $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D\
+                                        /get/responses/200/content/application~\
+                                        1json/schema/properties/data/properties\
+                                        /categories/items/anyOf/0/properties/su\
+                                        b/oneOf/1"
+                              required:
+                                - main
+                                - sub
+                            - type: object
+                              title: TV & Film
+                              properties:
+                                main:
+                                  description: Main category
+                                  type: string
+                                  enum:
+                                    - TV & Film
+                                sub:
+                                  oneOf:
+                                    - type: string
+                                      title: subcategories
+                                      enum:
+                                        - After Shows
+                                        - Film History
+                                        - Film Interviews
+                                        - Film Reviews
+                                        - TV Reviews
+                                    - $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D\
+                                        /get/responses/200/content/application~\
+                                        1json/schema/properties/data/properties\
+                                        /categories/items/anyOf/0/properties/su\
+                                        b/oneOf/1"
+                              required:
+                                - main
+                                - sub
+                            - type: object
+                              title: Technology
+                              properties:
+                                main:
+                                  description: Main category
+                                  type: string
+                                  enum:
+                                    - Technology
+                                sub:
+                                  $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D/get\
+                                    /responses/200/content/application~1json/sc\
+                                    hema/properties/data/properties/categories/\
+                                    items/anyOf/0/properties/sub/oneOf/1"
+                              required:
+                                - main
+                                - sub
+                            - type: object
+                              title: True Crime
+                              properties:
+                                main:
+                                  description: Main category
+                                  type: string
+                                  enum:
+                                    - True Crime
+                                sub:
+                                  $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D/get\
+                                    /responses/200/content/application~1json/sc\
+                                    hema/properties/data/properties/categories/\
+                                    items/anyOf/0/properties/sub/oneOf/1"
+                              required:
+                                - main
+                                - sub
+                            - title: Nullable
+                              nullable: true
+                        uniqueItems: true
+                      description:
+                        type: string
+                        example: Weekly show giving you all the insights into the
+                          Premier League and more.
+                        minLength: 1
+                      subtitle:
+                        oneOf:
+                          - type: string
+                            example: The pod squad bring you puns and punditry from the
+                              world of Football
+                            minLength: 1
+                            maxLength: 255
+                          - title: Nullable
+                            nullable: true
+                      author:
+                        oneOf:
+                          - type: string
+                            example: Guardian Boys
+                            minLength: 1
+                            maxLength: 255
+                          - title: Nullable
+                            nullable: true
+                      website_url:
+                        oneOf:
+                          - type: string
+                            description: Podcast website url
+                            format: uri
+                            example: https://www.theguardian.com/football/series/footballweekly
+                          - title: Nullable
+                            nullable: true
+                      type:
+                        type: string
+                        enum:
+                          - episodic
+                          - serial
+                        default: episodic
+                        description: The type of podcast. Episodic plays out most recent
+                          first.
+                      language:
+                        oneOf:
+                          - type: string
+                            description: ISO 6391 language code
+                            example: en
+                            format: ^([A-Za-z]{2})(-[A-Za-z]{2})?$
+                          - title: Nullable
+                            nullable: true
+                      content_rating:
+                        type: string
+                        enum:
+                          - clean
+                          - explicit
+                        description: optional content rating
+                        example: clean
+                      artwork:
+                        oneOf:
+                          - type: object
+                            title: Podcast artwork
+                            properties:
+                              type:
+                                type: string
+                                enum:
+                                  - podcast
+                                default: podcast
+                              urls:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    size:
+                                      type: string
+                                      format: ^[0-9]*x[0-9]*$
+                                      description: Size of the artwork
+                                      example: 200x200
+                                    url:
+                                      type: string
+                                      format: uri
+                                      description: Url for the artwork
+                                      example: https://artwork.pod.co/podcast/123.jpg
+                                  required:
+                                    - size
+                                    - url
+                            required:
+                              - type
+                              - urls
+                          - title: Nullable
+                            nullable: true
+                      copyright:
+                        type: string
+                        example: 2018 John Doe & Family
+                        minLength: 1
+                        maxLength: 255
+                      feed_url:
+                        type: string
+                        description: Podcast feed url
+                        format: uri
+                        example: https://www.feed.pod.co/podcasts/123e4567-e89b-12d3-a456-426655440000/feed
+                      time_zone:
+                        type: string
+                        description: The podcast time zone identifier
+                        example: Europe/London
+                      settings:
+                        type: object
+                        properties:
+                          podcastco_branding:
+                            type: boolean
+                            default: true
+                            description: Podcast.co branding on pages and players.
+                          private_podcast:
+                            type: boolean
+                            default: false
+                            description: Make podcast private
+                          pages_disabled:
+                            type: boolean
+                            default: false
+                            description: Disable Podcast.co pages
+                          weekly_digest_email:
+                            type: boolean
+                            default: false
+                            description: Enable weekly digest email.
+                        required:
+                          - podcastco_branding
+                          - private_podcast
+                          - pages_disabled
+                          - weekly_digest_email
+                    required:
+                      - id
+                      - title
+                      - slug
+                      - categories
+                      - description
+                      - subtitle
+                      - author
+                      - website_url
+                      - type
+                      - language
+                      - content_rating
+                      - artwork
+                      - copyright
+                      - feed_url
+                      - time_zone
+                      - settings
+                    additionalProperties: false
+        "403":
+          description: Account has been temporarily suspended
+          content:
+            application/json:
+              schema:
+                title: Invitation definitions
+                properties:
+                  type:
+                    oneOf:
+                      - type: string
+                        format: uri
+                        example: https://developers.podcast.co/problems/validation-error
+                        pattern: /problems/.+
+                      - type: string
+                        enum:
+                          - about:blank
+                        description: No additional semantics over status code
+                  title:
+                    type: string
+                    example: Not Found
+                  detail:
+                    type: string
+                    example: Unable to find media.
+                  status:
+                    type: integer
+                    example: 404
+  "/podcasts/{podcast_slug}/player":
+    parameters:
+      - $ref: "#/components/parameters/podcast_slug"
+    get:
+      summary: Get player
+      operationId: getPodcastPlayer
+      description: |
+        Get podcast specific player settings.
+      tags:
+        - podcasts
+      responses:
+        "200":
+          description: A player
+          content:
+            application/json:
+              schema:
+                title: Player
+                description: A player response
+                type: object
+                properties:
+                  data:
+                    type: object
+                    title: Player
+                    required:
+                      - theme
+                      - settings
+                    properties:
+                      theme:
+                        type: object
+                        title: Theme
+                        required:
+                          - background_color
+                          - text_color
+                          - accent_color
+                          - button_style
+                          - mini_player_style
+                        properties:
+                          background_color:
+                            type: string
+                            pattern: ^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$
+                            example: "#bada55"
+                          text_color:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1player/g\
+                              et/responses/200/content/application~1json/schema\
+                              /properties/data/properties/theme/properties/back\
+                              ground_color"
+                          accent_color:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1player/g\
+                              et/responses/200/content/application~1json/schema\
+                              /properties/data/properties/theme/properties/back\
+                              ground_color"
+                          button_style:
+                            type: string
+                            enum:
+                              - rounded
+                              - square
+                          mini_player_style:
+                            type: string
+                            enum:
+                              - rounded
+                              - square
+                      settings:
+                        type: object
+                        title: Settings
+                        required:
+                          - allow_share
+                          - allow_download
+                          - allow_subscribe
+                        properties:
+                          allow_share:
+                            type: boolean
+                            default: true
+                            description: Whether to allow social sharing or not
+                          allow_download:
+                            type: boolean
+                            default: true
+                            description: Whether to allow downloading the current episode
+                              or not
+                          allow_subscribe:
+                            type: boolean
+                            default: true
+                            description: Whether to show feed link or not
+        "403":
+          $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D/get/responses/403"
+  "/podcasts/{podcast_slug}/subscribe_button":
+    parameters:
+      - $ref: "#/components/parameters/podcast_slug"
+    get:
+      summary: Get subscribe button
+      operationId: getPodcastSubscribeButton
+      tags:
+        - subscribe button
+      responses:
+        "200":
+          description: A subscribe button
+          content:
+            application/json:
+              schema:
+                title: Subscribe button
+                description: A subscribe button response
+                type: object
+                properties:
+                  data:
+                    type: object
+                    title: Subscribe button
+                    required:
+                      - theme
+                      - services
+                    properties:
+                      theme:
+                        type: object
+                        title: Theme
+                        required:
+                          - background_color
+                          - text_color
+                        properties:
+                          background_color:
+                            type: string
+                            pattern: ^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$
+                            example: "#bada55"
+                          text_color:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1subscrib\
+                              e_button/get/responses/200/content/application~1j\
+                              son/schema/properties/data/properties/theme/prope\
+                              rties/background_color"
+                      services:
+                        type: object
+                        title: Services
+                        required:
+                          - apple
+                          - spotify
+                          - stitcher
+                          - acast
+                          - tunein
+                          - pocketcasts
+                          - deezer
+                          - iheart
+                          - amazon_music
+                          - listennotes
+                          - podchaser
+                          - youtube_music
+                          - feed
+                        properties:
+                          apple:
+                            type: string
+                            description: Apple service url
+                            format: uri
+                            example: https://itunes.apple.com/my-favourite-podcast
+                            nullable: true
+                          spotify:
+                            type: string
+                            description: Spotify service url
+                            format: uri
+                            example: https://spotify.com/my-favourite-podcast
+                            nullable: true
+                          stitcher:
+                            type: string
+                            description: Stitcher service url
+                            format: uri
+                            example: https://stitcher.com/my-favourite-podcast
+                            nullable: true
+                          acast:
+                            type: string
+                            description: Acast service url
+                            format: uri
+                            example: https://play.acast.com/my-favourite-podcast
+                            nullable: true
+                          tunein:
+                            type: string
+                            description: Tunein service url
+                            format: uri
+                            example: http://tunein.com/podcasts/my-favourite-podcast
+                            nullable: true
+                          pocketcasts:
+                            type: string
+                            description: Pocketcasts service url
+                            format: uri
+                            example: https://play.pocketcasts.com/my-favourite-podcast
+                            nullable: true
+                          deezer:
+                            type: string
+                            description: Deezer service url
+                            format: uri
+                            example: https://deezer.com/my-favourite-podcast
+                            nullable: true
+                          iheart:
+                            type: string
+                            description: Pocketcasts service url
+                            format: uri
+                            example: https://iheart/podcast/my-favourite-podcast
+                            nullable: true
+                          amazon_music:
+                            type: string
+                            description: Amazon Music service url
+                            format: uri
+                            example: https://music.amazon.com/podcasts/my-favourite-podcast
+                            nullable: true
+                          listennotes:
+                            type: string
+                            description: Listennotes service url
+                            format: uri
+                            example: https://www.listennotes.com/c/bc9546c04f7445e48d611112ec6438ca
+                            nullable: true
+                          podchaser:
+                            type: string
+                            description: Podchaser service url
+                            format: uri
+                            example: https://www.podchaser.com/podcasts/my-favourite-podcast
+                            nullable: true
+                          youtube_music:
+                            type: string
+                            description: Youtube Music service url
+                            format: uri
+                            example: https://music.youtube.com/playlist?list=123abc
+                            nullable: true
+                          feed:
+                            type: string
+                            description: Feed service url
+                            format: uri
+                            example: https://www.feed.pod.co/podcasts/123e4567-e89b-12d3-a456-426655440000/feed
+                            nullable: true
+        "403":
+          $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D/get/responses/403"
+  "/podcasts/{podcast_slug}/socials":
+    parameters:
+      - $ref: "#/components/parameters/podcast_slug"
+    get:
+      summary: Get socials
+      operationId: getPodcastSocials
+      tags:
+        - podcasts
+      responses:
+        "200":
+          description: Social details
+          content:
+            application/json:
+              schema:
+                title: Socials
+                description: A socials response
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      facebook:
+                        type: string
+                        description: This will be a facebook username
+                        example: podcastdotco
+                        nullable: true
+                      twitter:
+                        type: string
+                        description: This will be a twitter username
+                        example: podcastdotco
+                        nullable: true
+                      instagram:
+                        type: string
+                        description: This will be a Instagram handler
+                        example: podcastdotco
+                        nullable: true
+                      youtube:
+                        type: string
+                        description: This will be a youtube channel id/name
+                        example: podcast.co
+                        nullable: true
+                      linkedin:
+                        type: string
+                        description: This will be a LinkedIn username
+                        example: podcast-co
+                        nullable: true
+                      tiktok:
+                        type: string
+                        description: This will be a TikTok username
+                        example: podcastdotco
+                        nullable: true
+                    required:
+                      - facebook
+                      - twitter
+                      - instagram
+                      - youtube
+                      - linkedin
+                      - tiktok
+        "403":
+          $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D/get/responses/403"
+  "/podcasts/{podcast_slug}/directories":
+    parameters:
+      - $ref: "#/components/parameters/podcast_slug"
+    get:
+      summary: Get directories
+      operationId: getPodcastDirectories
+      tags:
+        - podcasts
+      responses:
+        "200":
+          description: Directories details
+          content:
+            application/json:
+              schema:
+                title: Directories
+                description: A directories response
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      apple_url:
+                        type: string
+                        description: Podcast apple url
+                        format: uri
+                        example: https://itunes.apple.com/my-favourite-podcast
+                        nullable: true
+                      spotify_url:
+                        type: string
+                        description: Podcast spotify url
+                        format: uri
+                        example: https://spotify.com/my-favourite-podcast
+                        nullable: true
+                      stitcher_url:
+                        type: string
+                        description: Podcast stitcher url
+                        format: uri
+                        example: https://stitcher.com/my-favourite-podcast
+                        nullable: true
+                      acast_url:
+                        type: string
+                        description: Podcast acast url
+                        format: uri
+                        example: https://play.acast.com/my-favourite-podcast
+                        nullable: true
+                      tunein_url:
+                        type: string
+                        description: Podcast tunein url
+                        format: uri
+                        example: http://tunein.com/podcasts/my-favourite-podcast
+                        nullable: true
+                      pocketcasts_url:
+                        type: string
+                        description: Podcast pocketcasts url
+                        format: uri
+                        example: https://play.pocketcasts.com/my-favourite-podcast
+                        nullable: true
+                      deezer_url:
+                        type: string
+                        description: Podcast deezer url
+                        format: uri
+                        example: https://deezer.com/my-favourite-podcast
+                        nullable: true
+                      iheart_url:
+                        type: string
+                        description: Podcast iheart url
+                        format: uri
+                        example: https://iheart.com/my-favourite-podcast
+                        nullable: true
+                      tidal_url:
+                        type: string
+                        description: Podcast tidal url
+                        format: uri
+                        example: https://tidal.com/my-favourite-podcast
+                        nullable: true
+                      amazon_music_url:
+                        type: string
+                        description: Podcast Amazon Music url
+                        format: uri
+                        example: https://music.amazon.com/my-favourite-podcast
+                        nullable: true
+                      listennotes_url:
+                        type: string
+                        description: Podcast Listennotes url
+                        format: uri
+                        example: https://www.listennotes.com/c/bc9546c04f7445e48d611112ec6438ca
+                        nullable: true
+                      podchaser_url:
+                        type: string
+                        description: Podcast Podchaser url
+                        format: uri
+                        example: https://www.podchaser.com/podcasts/my-favourite-podcast
+                        nullable: true
+                      jiosaavn_url:
+                        type: string
+                        description: Podcast JioSaavn url
+                        format: uri
+                        example: https://www.jiosaavn.com/shows/my-favourite-podcast/1/m0Gk9KaZFtc_
+                        nullable: true
+                      youtube_music_url:
+                        type: string
+                        description: Podcast Youtube Music url
+                        format: uri
+                        example: https://music.youtube.com/playlist?list=123abc
+                        nullable: true
+                    required:
+                      - apple_url
+                      - spotify_url
+                      - stitcher_url
+                      - acast_url
+                      - tunein_url
+                      - pocketcasts_url
+                      - deezer_url
+                      - iheart_url
+                      - tidal_url
+                      - amazon_music_url
+                      - listennotes_url
+                      - podchaser_url
+                      - jiosaavn_url
+                      - youtube_music_url
+  "/podcasts/{podcast_slug}/donations":
+    parameters:
+      - $ref: "#/components/parameters/podcast_slug"
+    get:
+      summary: Get donations
+      operationId: getPodcastDonations
+      tags:
+        - podcasts
+      responses:
+        "200":
+          description: Donations details
+          content:
+            application/json:
+              schema:
+                title: Donations
+                description: A donations response
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      patreon_url:
+                        type: string
+                        description: The patreon url
+                        example: https://www.patreon.com/help_me_survive
+                        format: uri
+                        nullable: true
+                      paypal_url:
+                        type: string
+                        description: The paypal url
+                        example: https://paypal.me/i_am_worth_it
+                        format: uri
+                        nullable: true
+                      custom_url:
+                        $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1donations/ge\
+                          t/responses/200/content/application~1json/schema/prop\
+                          erties/data/properties/paypal_url"
+                      text:
+                        type: string
+                        maxLength: 400
+                        description: Text for donation section
+                        example: We wouldn't be here if it wasn't for our loyal
+                          subscribers. Help us keep the show on the road by
+                          buying us a coffee!
+                        nullable: true
+                    required:
+                      - patreon_url
+                      - paypal_url
+                      - custom_url
+                      - text
+        "403":
+          $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D/get/responses/403"
+  "/podcasts/{podcast_slug}/page":
+    parameters:
+      - $ref: "#/components/parameters/podcast_slug"
+    get:
+      summary: Get settings
+      operationId: getPodcastPageSettings
+      tags:
+        - podcast page
+      responses:
+        "200":
+          description: Page settings
+          content:
+            application/json:
+              schema:
+                title: Page Settings
+                description: Page settings
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      theme:
+                        title: Theme
+                        type: object
+                        required:
+                          - background_color
+                          - text_color
+                          - accent_color
+                        properties:
+                          background_color:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1subscrib\
+                              e_button/get/responses/200/content/application~1j\
+                              son/schema/properties/data/properties/theme/prope\
+                              rties/background_color"
+                          text_color:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1subscrib\
+                              e_button/get/responses/200/content/application~1j\
+                              son/schema/properties/data/properties/theme/prope\
+                              rties/background_color"
+                          accent_color:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1subscrib\
+                              e_button/get/responses/200/content/application~1j\
+                              son/schema/properties/data/properties/theme/prope\
+                              rties/background_color"
+                      settings:
+                        title: Settings
+                        type: object
+                        required:
+                          - font
+                          - show_header
+                          - header_color
+                          - use_background_image
+                          - blur_background_image
+                          - overlay
+                          - wave
+                          - allow_contact
+                          - contact_email
+                          - google_analytics_id
+                          - hosts_section_title
+                        properties:
+                          font:
+                            type: string
+                            default: Sailec
+                            description: The font used for the page
+                          show_header:
+                            type: boolean
+                            default: true
+                            description: Whether to show header or not
+                          header_color:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1subscrib\
+                              e_button/get/responses/200/content/application~1j\
+                              son/schema/properties/data/properties/theme/prope\
+                              rties/background_color"
+                          use_background_image:
+                            type: boolean
+                            default: false
+                            description: Whether to use a background image or not
+                          blur_background_image:
+                            type: boolean
+                            default: true
+                            description: Whether to blur the background image or not
+                          overlay:
+                            type: boolean
+                            default: true
+                            description: Whether to blur the background image or not
+                          wave:
+                            type: boolean
+                            default: true
+                            description: Whether to show wave or not
+                          allow_contact:
+                            type: boolean
+                            default: true
+                            description: Whether to allow contact or not
+                          contact_email:
+                            type: string
+                            format: email
+                            description: The contact email
+                            nullable: true
+                          google_analytics_id:
+                            type: string
+                            example: UA-12345-6
+                            nullable: true
+                          hosts_section_title:
+                            type: string
+                            example: The hosts
+                            nullable: true
+                      about:
+                        title: About
+                        type: object
+                        required:
+                          - title
+                          - description
+                        properties:
+                          title:
+                            type: string
+                            description: The about section title
+                            example: "Guardian: Football weekly"
+                          description:
+                            type: string
+                            description: The about section description
+                            example: Weekly show giving you all the insights into the
+                              Premier League and more.
+                      banner:
+                        title: Banner
+                        type: object
+                        required:
+                          - urls
+                        properties:
+                          urls:
+                            type: array
+                            items:
+                              title: BannerImage
+                              type: object
+                              required:
+                                - url
+                                - size
+                              properties:
+                                url:
+                                  type: string
+                                  format: uri
+                                  example: https://assets.pod.co/banner.png
+                                size:
+                                  type: string
+                                  format: ^[0-9]*x[0-9]*$
+                                  description: Size of the image
+                                  example: 900x300
+                      title:
+                        type: string
+                        example: "Guardian: Football weekly"
+                        nullable: true
+                      logo:
+                        oneOf:
+                          - type: object
+                            title: Podcast logo
+                            properties:
+                              type:
+                                type: string
+                                enum:
+                                  - page-logo
+                                default: page-logo
+                              urls:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    size:
+                                      type: string
+                                      format: ^[0-9]*x[0-9]*$
+                                      description: Size of the artwork
+                                      example: 200x200
+                                    url:
+                                      type: string
+                                      format: uri
+                                      description: Url for the artwork
+                                      example: https://artwork.pod.co/podcast/123.jpg
+                                  required:
+                                    - size
+                                    - url
+                            required:
+                              - type
+                              - urls
+                          - title: Nullable
+                            nullable: true
+                    required:
+                      - theme
+                      - settings
+                      - about
+                      - banner
+                      - title
+                      - logo
+        "403":
+          $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D/get/responses/403"
+  "/podcasts/{podcast_slug}/hosts":
+    parameters:
+      - $ref: "#/components/parameters/podcast_slug"
+    get:
+      summary: List hosts
+      description: Get a list of hosts for a podcast
+      operationId: listPodcastHosts
+      tags:
+        - podcasts
+      responses:
+        "200":
+          description: A list of hosts
+          content:
+            application/json:
+              schema:
+                title: List hosts
+                description: List hosts
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D/get/respons\
+                            es/200/content/application~1json/schema/properties/\
+                            data/properties/id"
+                        name:
+                          type: string
+                          example: Bob Bits
+                          minLength: 1
+                          maxLength: 255
+                        role:
+                          type: string
+                          example: Builder
+                          minLength: 1
+                          maxLength: 255
+                          nullable: true
+                        bio:
+                          type: string
+                          example: To solve problems and get things done with a
+                            positive attitude, Bob the Builder and pals dig,
+                            haul and build together! With friends like Muck the
+                            dump truck and Dizzy the cement mixer, Bob and his
+                            business partner Wendy live in an imaginative world
+                            full of new experiences.
+                          nullable: true
+                        socials:
+                          type: object
+                          properties:
+                            facebook:
+                              type: string
+                              format: uri
+                              example: https://facebook.com/bob-bits
+                              nullable: true
+                            instagram:
+                              type: string
+                              format: uri
+                              example: https://instagram.com/bob-bits
+                              nullable: true
+                            twitter:
+                              type: string
+                              format: uri
+                              example: https://twitter.com/bob-bits
+                              nullable: true
+                            linkedin:
+                              type: string
+                              format: uri
+                              example: https://linkedin.com/bob-bits
+                              nullable: true
+                            youtube:
+                              type: string
+                              format: uri
+                              example: https://youtube.com/bob-bits
+                              nullable: true
+                            tiktok:
+                              type: string
+                              format: uri
+                              example: https://tiktok.com/@bob-bits
+                              nullable: true
+                          required:
+                            - facebook
+                            - instagram
+                            - twitter
+                            - linkedin
+                            - youtube
+                            - tiktok
+                        avatar_url:
+                          oneOf:
+                            - type: object
+                              title: Podcast artwork
+                              properties:
+                                type:
+                                  type: string
+                                  enum:
+                                    - avatar
+                                  default: avatar
+                                urls:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      size:
+                                        type: string
+                                        format: ^[0-9]*x[0-9]*$
+                                        description: Size of the artwork
+                                        example: 200x200
+                                      url:
+                                        type: string
+                                        format: uri
+                                        description: Url for the artwork
+                                        example: https://artwork.pod.co/podcast/123.jpg
+                                    required:
+                                      - size
+                                      - url
+                              required:
+                                - type
+                                - urls
+                            - title: Nullable
+                              nullable: true
+                        priority:
+                          type: integer
+                        created_at:
+                          type: string
+                          example: 1970-01-01T00:00
+                          format: date-time
+                        updated_at:
+                          type: string
+                          example: 1970-01-01T00:00
+                          format: date-time
+                      required:
+                        - id
+                        - name
+                        - role
+                        - bio
+                        - socials
+                        - priority
+                        - avatar_url
+                        - created_at
+                        - updated_at
+  "/podcasts/{podcast_slug}/episodes":
+    parameters:
+      - $ref: "#/components/parameters/podcast_slug"
+      - $ref: "#/components/parameters/page"
+      - $ref: "#/components/parameters/per_page"
+    get:
+      summary: List episodes
+      description: Get a list of episodes for a podcast
+      operationId: listPodcastsEpisodes
+      tags:
+        - podcasts
+        - episodes
+      responses:
+        "200":
+          description: A list of episodes
+          content:
+            application/json:
+              schema:
+                title: Episode List
+                description: A list of episodes response
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      title: Public episode
+                      properties:
+                        id:
+                          $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D/get/respons\
+                            es/200/content/application~1json/schema/properties/\
+                            data/properties/id"
+                        title:
+                          type: string
+                          example: German tears, Brazil cheers and England fears -
+                            World Cup Football Daily
+                          minLength: 1
+                          maxLength: 255
+                        slug:
+                          type: string
+                          example: german-tears-brazil-cheers-and-england-fears-world-cup-football-daily
+                          minLength: 1
+                          maxLength: 255
+                        description:
+                          type: string
+                          example: Max Rushden and the panel react to Germany’s shock
+                            exit at the hands of South Korea, assess Brazil’s
+                            latest win and look ahead to England’s shootout with
+                            Belgium for top spot.
+                          minLength: 1
+                        status:
+                          type: string
+                          enum:
+                            - public
+                          description: The status of episode.
+                        artwork:
+                          oneOf:
+                            - type: object
+                              title: Episode artwork
+                              properties:
+                                type:
+                                  type: string
+                                  enum:
+                                    - episode
+                                  default: episode
+                                urls:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      size:
+                                        type: string
+                                        format: ^[0-9]*x[0-9]*$
+                                        description: Size of the artwork
+                                        example: 200x200
+                                      url:
+                                        type: string
+                                        format: uri
+                                        description: Url for the artwork
+                                        example: https://artwork.pod.co/episode/123.jpg
+                                    required:
+                                      - size
+                                      - url
+                              required:
+                                - type
+                                - urls
+                            - type: object
+                              title: Podcast artwork
+                              properties:
+                                type:
+                                  type: string
+                                  enum:
+                                    - podcast
+                                  default: podcast
+                                urls:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      size:
+                                        type: string
+                                        format: ^[0-9]*x[0-9]*$
+                                        description: Size of the artwork
+                                        example: 200x200
+                                      url:
+                                        type: string
+                                        format: uri
+                                        description: Url for the artwork
+                                        example: https://artwork.pod.co/podcast/123.jpg
+                                    required:
+                                      - size
+                                      - url
+                              required:
+                                - type
+                                - urls
+                            - title: Nullable
+                              nullable: true
+                        season_number:
+                          type: integer
+                          example: 1
+                          description: Used with serial podcasts only.
+                          nullable: true
+                        number:
+                          type: integer
+                          example: 1
+                          description: Only applicable for 'full' type episodes.
+                          nullable: true
+                        content_rating:
+                          type: string
+                          enum:
+                            - clean
+                            - explicit
+                          description: Content rating
+                          example: clean
+                        type:
+                          type: string
+                          enum:
+                            - full
+                            - trailer
+                            - bonus
+                          description: Optional episode type
+                          default: full
+                        author:
+                          type: string
+                          example: Guardian Boys
+                          minLength: 1
+                          maxLength: 255
+                          nullable: true
+                        published_at:
+                          type: string
+                          example: 1970-01-01T00:00
+                          format: date-time
+                        content_type:
+                          type: string
+                          enum:
+                            - audio/mp3
+                            - audio/mpeg
+                            - audio/m4a
+                            - audio/x-m4a
+                            - audio/mp4
+                            - audio/wav
+                        duration:
+                          type: integer
+                          example: 12345
+                          description: The episode duration in milliseconds.
+                        size:
+                          type: number
+                          example: 12345.67
+                          description: The episode size in Mb.
+                        url:
+                          type: string
+                          format: uri
+                          example: https://media.pod.co/upload/ddc94207-fbfc-4508-b615-4c6a2eddc2b1.mp3
+                        website_url:
+                          type: string
+                          description: Episode website url
+                          format: uri
+                          example: https://www.theguardian.com/football/series/footballweekly/ep-1
+                          nullable: true
+                      required:
+                        - id
+                        - title
+                        - slug
+                        - description
+                        - status
+                        - artwork
+                        - season_number
+                        - number
+                        - content_rating
+                        - type
+                        - author
+                        - published_at
+                        - url
+                        - content_type
+                        - duration
+                        - size
+                        - website_url
+                      additionalProperties: false
+                  meta:
+                    type: object
+                    properties:
+                      pagination:
+                        type: object
+                        properties:
+                          total:
+                            type: integer
+                            example: 50
+                            description: The number of results available for the request.
+                          count:
+                            type: integer
+                            example: 10
+                            description: The number of results in the response.
+                          per_page:
+                            type: integer
+                            example: 10
+                            description: The number of results displayed per page.
+                          total_pages:
+                            type: integer
+                            example: 5
+                            description: The number of pages available.
+                          current_page:
+                            type: integer
+                            example: 2
+                            description: The current page.
+                          previous_page:
+                            type: integer
+                            example: 1
+                            description: The previous page.
+                          next_page:
+                            type: integer
+                            example: 3
+                            description: The next page.
+                          links:
+                            type: object
+                            properties:
+                              first:
+                                type: string
+                                example: https://api.pod.co/podcasts/123e4567-e89b-12d3-a456-426655440000/episodes?page=1&per_page=10
+                                format: uri
+                              last:
+                                type: string
+                                example: https://api.pod.co/podcasts/123e4567-e89b-12d3-a456-426655440000/episodes?page=5&per_page=10
+                                format: uri
+                              self:
+                                type: string
+                                example: https://api.pod.co/podcasts/123e4567-e89b-12d3-a456-426655440000/episodes?page=2&per_page=10
+                                format: uri
+                              next:
+                                type: string
+                                example: https://api.pod.co/podcasts/123e4567-e89b-12d3-a456-426655440000/episodes?page=3&per_page=10
+                                format: uri
+                              prev:
+                                type: string
+                                example: https://api.pod.co/podcasts/123e4567-e89b-12d3-a456-426655440000/episodes?page=1&per_page=0
+                                format: uri
+                        required:
+                          - total
+                          - count
+                          - per_page
+                          - total_pages
+                          - current_page
+                          - links
+        "403":
+          $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D/get/responses/403"
+  "/podcasts/{podcast_slug}/episodes/{episode_slug}":
+    parameters:
+      - $ref: "#/components/parameters/podcast_slug"
+      - $ref: "#/components/parameters/episode_slug"
+    get:
+      summary: Get an episode
+      operationId: getEpisode
+      tags:
+        - episodes
+      responses:
+        "200":
+          description: An episode
+          content:
+            application/json:
+              schema:
+                title: Single Episode
+                description: A single episode response
+                type: object
+                properties:
+                  data:
+                    oneOf:
+                      - type: object
+                        title: Public episode
+                        properties:
+                          id:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D/get/respo\
+                              nses/200/content/application~1json/schema/propert\
+                              ies/data/properties/id"
+                          title:
+                            type: string
+                            example: German tears, Brazil cheers and England fears -
+                              World Cup Football Daily
+                            minLength: 1
+                            maxLength: 255
+                          slug:
+                            type: string
+                            example: german-tears-brazil-cheers-and-england-fears-world-cup-football-daily
+                            minLength: 1
+                            maxLength: 255
+                          description:
+                            type: string
+                            example: Max Rushden and the panel react to Germany’s shock
+                              exit at the hands of South Korea, assess Brazil’s
+                              latest win and look ahead to England’s shootout
+                              with Belgium for top spot.
+                            minLength: 1
+                          status:
+                            type: string
+                            enum:
+                              - public
+                            description: The status of episode.
+                          artwork:
+                            oneOf:
+                              - type: object
+                                title: Episode artwork
+                                properties:
+                                  type:
+                                    type: string
+                                    enum:
+                                      - episode
+                                    default: episode
+                                  urls:
+                                    type: array
+                                    items:
+                                      type: object
+                                      properties:
+                                        size:
+                                          type: string
+                                          format: ^[0-9]*x[0-9]*$
+                                          description: Size of the artwork
+                                          example: 200x200
+                                        url:
+                                          type: string
+                                          format: uri
+                                          description: Url for the artwork
+                                          example: https://artwork.pod.co/episode/123.jpg
+                                      required:
+                                        - size
+                                        - url
+                                required:
+                                  - type
+                                  - urls
+                              - $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1epis\
+                                  odes/get/responses/200/content/application~1j\
+                                  son/schema/properties/data/items/properties/a\
+                                  rtwork/oneOf/1"
+                              - title: Nullable
+                                nullable: true
+                          season_number:
+                            type: integer
+                            example: 1
+                            description: Used with serial podcasts only.
+                            nullable: true
+                          number:
+                            type: integer
+                            example: 1
+                            description: Only applicable for 'full' type episodes.
+                            nullable: true
+                          content_rating:
+                            type: string
+                            enum:
+                              - clean
+                              - explicit
+                            description: Content rating
+                            example: clean
+                          type:
+                            type: string
+                            enum:
+                              - full
+                              - trailer
+                              - bonus
+                            description: Optional episode type
+                            default: full
+                          author:
+                            type: string
+                            example: Guardian Boys
+                            minLength: 1
+                            maxLength: 255
+                            nullable: true
+                          published_at:
+                            type: string
+                            example: 1970-01-01T00:00
+                            format: date-time
+                          content_type:
+                            type: string
+                            enum:
+                              - audio/mp3
+                              - audio/mpeg
+                              - audio/m4a
+                              - audio/x-m4a
+                              - audio/mp4
+                              - audio/wav
+                          duration:
+                            type: integer
+                            example: 12345
+                            description: The episode duration in milliseconds.
+                          size:
+                            type: number
+                            example: 12345.67
+                            description: The episode size in Mb.
+                          url:
+                            type: string
+                            format: uri
+                            example: https://media.pod.co/upload/ddc94207-fbfc-4508-b615-4c6a2eddc2b1.mp3
+                          website_url:
+                            type: string
+                            description: Episode website url
+                            format: uri
+                            example: https://www.theguardian.com/football/series/footballweekly/ep-1
+                            nullable: true
+                        required:
+                          - id
+                          - title
+                          - slug
+                          - description
+                          - status
+                          - artwork
+                          - season_number
+                          - number
+                          - content_rating
+                          - type
+                          - author
+                          - published_at
+                          - url
+                          - content_type
+                          - duration
+                          - size
+                          - website_url
+                        additionalProperties: false
+                      - type: object
+                        title: Unlisted episode
+                        properties:
+                          id:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D/get/respo\
+                              nses/200/content/application~1json/schema/propert\
+                              ies/data/properties/id"
+                          title:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/title"
+                          slug:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/slug"
+                          description:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/description"
+                          status:
+                            type: string
+                            enum:
+                              - unlisted
+                            description: The status of episode.
+                          artwork:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/artwork"
+                          season_number:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/season_number"
+                          number:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/number"
+                          content_rating:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/content_rating"
+                          type:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/type"
+                          author:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/author"
+                          content_type:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/content_type"
+                          duration:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/duration"
+                          size:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/size"
+                          url:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/url"
+                          website_url:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/website_url"
+                        required:
+                          - id
+                          - title
+                          - slug
+                          - description
+                          - status
+                          - artwork
+                          - season_number
+                          - number
+                          - content_rating
+                          - type
+                          - author
+                          - url
+                          - content_type
+                          - duration
+                          - size
+                          - website_url
+                        additionalProperties: false
+                      - type: object
+                        title: Scheduled episode
+                        properties:
+                          id:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D/get/respo\
+                              nses/200/content/application~1json/schema/propert\
+                              ies/data/properties/id"
+                          title:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/title"
+                          slug:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/slug"
+                          description:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/description"
+                          status:
+                            type: string
+                            enum:
+                              - scheduled
+                            description: The status of episode.
+                          artwork:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/artwork"
+                          season_number:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/season_number"
+                          number:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/number"
+                          content_rating:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/content_rating"
+                          type:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/type"
+                          author:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/author"
+                          content_type:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/content_type"
+                          duration:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/duration"
+                          size:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/size"
+                          url:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/url"
+                          website_url:
+                            $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1episodes\
+                              ~1%7Bepisode_slug%7D/get/responses/200/content/ap\
+                              plication~1json/schema/properties/data/oneOf/0/pr\
+                              operties/website_url"
+                        required:
+                          - id
+                          - title
+                          - slug
+                          - description
+                          - status
+                          - artwork
+                          - season_number
+                          - number
+                          - content_rating
+                          - type
+                          - author
+                          - url
+                          - content_type
+                          - duration
+                          - size
+                          - website_url
+                        additionalProperties: false
+        "403":
+          $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D/get/responses/403"
+  "/podcasts/{podcast_slug}/episodes/{episode_slug}/player":
+    parameters:
+      - $ref: "#/components/parameters/podcast_slug"
+      - $ref: "#/components/parameters/episode_slug"
+    get:
+      summary: Get player
+      operationId: getEpisodePlayer
+      description: >
+        Get episode specific player settings.  
+
+        Podcast player settings will be returned as defaults if this episode doesnt have custom settings.
+      tags:
+        - episodes
+      responses:
+        "200":
+          description: A player
+          content:
+            application/json:
+              schema:
+                $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D~1player/get/responses\
+                  /200/content/application~1json/schema"
+        "403":
+          $ref: "#/paths/~1podcasts~1%7Bpodcast_slug%7D/get/responses/403"
+components:
+  responses:
+    Forbidden:
+      description: Account has been temporarily suspended
+      content:
+        application/json:
+          schema:
+            title: Invitation definitions
+            properties:
+              type:
+                oneOf:
+                  - type: string
+                    format: uri
+                    example: https://developers.podcast.co/problems/validation-error
+                    pattern: /problems/.+
+                  - type: string
+                    enum:
+                      - about:blank
+                    description: No additional semantics over status code
+              title:
+                type: string
+                example: Not Found
+              detail:
+                type: string
+                example: Unable to find media.
+              status:
+                type: integer
+                example: 404
+  parameters:
+    podcast_slug:
+      in: path
+      name: podcast_slug
+      required: true
+      description: a podcast slug
+      schema:
+        type: string
+        pattern: ^[a-z0-9]+(?:-[a-z0-9]+)*$
+        example: guardian-football-weekly
+    episode_slug:
+      in: path
+      name: episode_slug
+      required: true
+      description: an episode slug
+      schema:
+        type: string
+        pattern: ^[a-z0-9]+(?:-[a-z0-9]+)*$
+        example: german-tears-brazil-cheers-and-england-fears-world-cup-football-daily
+    podcast_id:
+      in: path
+      name: podcast_id
+      required: true
+      description: a podcast id
+      schema:
+        type: string
+        format: uuid
+    page:
+      in: query
+      name: page
+      description: The result page, defaults to 1 if invalid
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+    per_page:
+      in: query
+      name: per_page
+      description: The number of results per page, defaults to 10 if invalid
+      schema:
+        type: integer
+        default: 10
+        minimum: 1
+        maximum: 100
+security: []
