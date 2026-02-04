@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
@@ -205,9 +206,11 @@ const Podcast = () => {
                                             </div>
                                         </div>
                                         <div className="flex-grow">
-                                            <h3 className="text-xl font-heading font-bold text-neutral-900 mb-2">
-                                                {episode.title}
-                                            </h3>
+                                            <Link to={`/programs/podcast/${episode.slug}`} className="block group">
+                                                <h3 className="text-xl font-heading font-bold text-neutral-900 mb-2 group-hover:text-primary transition-colors">
+                                                    {episode.title}
+                                                </h3>
+                                            </Link>
                                             <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-500 mb-4">
                                                 <div className="flex items-center">
                                                     <SafeIcon icon={FiCalendar} className="w-4 h-4 mr-1.5" />

@@ -25,6 +25,7 @@ import CoursePage from './pages/CoursePage';
 import Gallery from './pages/Gallery';
 import Events from './pages/Events';
 import Podcast from './pages/Podcast';
+import PodcastEpisode from './pages/PodcastEpisode';
 
 import AdminLayout from './components/admin/AdminLayout';
 import StudentLayout from './components/student/StudentLayout';
@@ -67,6 +68,7 @@ function AppContent() {
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/events" element={<Events />} />
           <Route path="/programs/podcast" element={<Podcast />} />
+          <Route path="/programs/podcast/:slug" element={<PodcastEpisode />} />
 
           <Route path="/training/dashboard" element={<Navigate to="/dashboard" replace />} />
           <Route path="/training/course/:courseId" element={
