@@ -120,7 +120,7 @@ const PodcastEpisode = () => {
                 <div className="max-w-2xl mx-auto text-center">
                     <h2 className="text-2xl font-bold text-neutral-800 mb-4">Error Loading Episode</h2>
                     <p className="text-neutral-600 mb-8">{error}</p>
-                    <Link to="/programs/podcast" className="text-primary hover:underline">
+                    <Link to="/media/podcast" className="text-primary hover:underline">
                         &larr; Back to Podcast List
                     </Link>
                 </div>
@@ -137,7 +137,7 @@ const PodcastEpisode = () => {
 
             <div className="max-w-4xl mx-auto px-5 pt-24 relative z-10 pb-20">
                 {/* Back Link */}
-                <Link to="/programs/podcast" className="inline-flex items-center text-white/80 hover:text-white mb-8 transition-colors">
+                <Link to="/media/podcast" className="inline-flex items-center text-white/80 hover:text-white mb-8 transition-colors">
                     <SafeIcon icon={FiArrowLeft} className="w-5 h-5 mr-2" />
                     Back to All Episodes
                 </Link>

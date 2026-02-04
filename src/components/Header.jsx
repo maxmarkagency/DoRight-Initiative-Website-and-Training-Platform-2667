@@ -22,7 +22,6 @@ const Header = () => {
       dropdown: [
         { name: 'Our Story', path: '/about' },
         { name: 'Our Trustees', path: '/trustees' },
-        { name: 'Gallery', path: '/gallery' },
       ]
     },
     {
@@ -32,10 +31,16 @@ const Header = () => {
         { name: 'Training', path: '/training' },
         { name: 'Webinars', path: '/webinars' },
         { name: 'Events', path: '/events' },
-        { name: 'Podcast', path: '/programs/podcast' },
       ]
     },
     { name: 'Blog', path: '/blog' },
+    {
+      name: 'Media',
+      dropdown: [
+        { name: 'Gallery', path: '/gallery' },
+        { name: 'Podcast', path: '/media/podcast' },
+      ]
+    },
     { name: 'Contact', path: '/contact' },
   ];
 
@@ -46,8 +51,8 @@ const Header = () => {
         to={to}
         onClick={onClick}
         className={`block px-4 py-2 text-sm rounded-md transition-colors duration-200 ${isDropdown
-            ? `text-gray-300 hover:bg-gray-700 hover:text-yellow-400`
-            : `font-medium ${isActive ? 'text-yellow-400' : 'text-white hover:text-yellow-400'}`
+          ? `text-gray-300 hover:bg-gray-700 hover:text-yellow-400`
+          : `font-medium ${isActive ? 'text-yellow-400' : 'text-white hover:text-yellow-400'}`
           }`}
       >
         {children}
