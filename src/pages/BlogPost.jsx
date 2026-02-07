@@ -6,7 +6,7 @@ import * as FiIcons from 'react-icons/fi';
 import { supabase } from '../lib/supabase';
 import BlogSidebar from '../components/BlogSidebar';
 
-const { FiCalendar, FiUser, FiClock, FiShare2, FiFacebook, FiTwitter, FiLinkedin, FiInstagram } = FiIcons;
+const { FiCalendar, FiUser, FiClock, FiShare2, FiFacebook, FiTwitter, FiLinkedin, FiInstagram, FiMessageCircle } = FiIcons;
 
 const BlogPost = () => {
   const { postId } = useParams();
@@ -167,6 +167,14 @@ const BlogPost = () => {
                 <button className="bg-[#bd081c] text-white px-4 py-2 rounded text-sm font-medium flex items-center hover:bg-opacity-90 transition-opacity">
                   <SafeIcon icon={FiInstagram} className="w-4 h-4 mr-2" /> Share
                 </button>
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(post.title + ' ' + window.location.href)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-[#25D366] text-white px-4 py-2 rounded text-sm font-medium flex items-center hover:bg-opacity-90 transition-opacity"
+                >
+                  <SafeIcon icon={FiMessageCircle} className="w-4 h-4 mr-2" /> WhatsApp
+                </a>
               </div>
               <div className="flex gap-2">
                 {/* Tags mock */}

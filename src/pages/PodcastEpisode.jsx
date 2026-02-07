@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 
-const { FiPlay, FiPause, FiClock, FiCalendar, FiHeadphones, FiArrowLeft, FiShare2, FiFacebook, FiTwitter, FiLinkedin, FiLink, FiCheck } = FiIcons;
+const { FiPlay, FiPause, FiClock, FiCalendar, FiHeadphones, FiArrowLeft, FiShare2, FiFacebook, FiTwitter, FiLinkedin, FiLink, FiCheck, FiMessageCircle } = FiIcons;
 
 const PodcastEpisode = () => {
     const { slug } = useParams();
@@ -219,6 +219,9 @@ const PodcastEpisode = () => {
                                         </a>
                                         <a href={shareLinks.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-[#0A66C2]/10 text-[#0A66C2] hover:bg-[#0A66C2] hover:text-white transition-colors">
                                             <SafeIcon icon={FiLinkedin} className="w-5 h-5" />
+                                        </a>
+                                        <a href={`https://wa.me/?text=${encodeURIComponent(title + ' ' + shareUrl)}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white transition-colors">
+                                            <SafeIcon icon={FiMessageCircle} className="w-5 h-5" />
                                         </a>
                                         <button onClick={handleCopyLink} className="p-2 rounded-full bg-neutral-100 text-neutral-600 hover:bg-neutral-200 transition-colors relative">
                                             <SafeIcon icon={copied ? FiCheck : FiLink} className="w-5 h-5" />
