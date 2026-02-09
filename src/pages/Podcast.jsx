@@ -5,7 +5,7 @@ import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import LoadingTransition from '../components/LoadingTransition';
 
-const { FiPlay, FiPause, FiClock, FiCalendar, FiHeadphones, FiAlertCircle } = FiIcons;
+const { FiPlay, FiPause, FiClock, FiCalendar, FiHeadphones, FiAlertCircle, FiFacebook, FiTwitter, FiLinkedin, FiMessageCircle, FiShare2, FiArrowRight } = FiIcons;
 
 const Podcast = () => {
     const [episodes, setEpisodes] = useState([]);
@@ -225,16 +225,65 @@ const Podcast = () => {
                                                 className="text-neutral-600 leading-relaxed mb-4 line-clamp-2"
                                                 dangerouslySetInnerHTML={{ __html: episode.description }}
                                             />
-                                            <button
-                                                onClick={() => handlePlay(episode)}
-                                                className={`inline-flex items-center font-semibold text-sm transition-colors ${currentEpisode?.id === episode.id && isPlaying
-                                                    ? 'text-primary'
-                                                    : 'text-neutral-900 hover:text-primary'
-                                                    }`}
-                                            >
-                                                <SafeIcon icon={currentEpisode?.id === episode.id && isPlaying ? FiPause : FiPlay} className="w-4 h-4 mr-2" />
-                                                {currentEpisode?.id === episode.id && isPlaying ? 'Pause Episode' : 'Play Episode'}
-                                            </button>
+                                            <div className="flex flex-wrap items-center justify-between gap-4">
+                                                <div className="flex items-center gap-3">
+                                                    <button
+                                                        onClick={() => handlePlay(episode)}
+                                                        className={`inline-flex items-center font-semibold text-sm transition-colors ${currentEpisode?.id === episode.id && isPlaying
+                                                            ? 'text-primary'
+                                                            : 'text-neutral-900 hover:text-primary'
+                                                            }`}
+                                                    >
+                                                        <SafeIcon icon={currentEpisode?.id === episode.id && isPlaying ? FiPause : FiPlay} className="w-4 h-4 mr-2" />
+                                                        {currentEpisode?.id === episode.id && isPlaying ? 'Pause Episode' : 'Play Episode'}
+                                                    </button>
+                                                    <Link
+                                                        to={`/media/podcast/${episode.slug}`}
+                                                        className="inline-flex items-center font-semibold text-sm text-neutral-900 hover:text-primary transition-colors"
+                                                    >
+                                                        View More
+                                                        <SafeIcon icon={FiArrowRight} className="w-4 h-4 ml-2" />
+                                                    </Link>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <a
+                                                        href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin + '/media/podcast/' + episode.slug)}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-2 rounded-full bg-[#3b5998]/10 text-[#3b5998] hover:bg-[#3b5998] hover:text-white transition-colors"
+                                                        title="Share on Facebook"
+                                                    >
+                                                        <SafeIcon icon={FiFacebook} className="w-4 h-4" />
+                                                    </a>
+                                                    <a
+                                                        href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.origin + '/media/podcast/' + episode.slug)}&text=${encodeURIComponent(episode.title)}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-2 rounded-full bg-[#1DA1F2]/10 text-[#1DA1F2] hover:bg-[#1DA1F2] hover:text-white transition-colors"
+                                                        title="Share on Twitter"
+                                                    >
+                                                        <SafeIcon icon={FiTwitter} className="w-4 h-4" />
+                                                    </a>
+                                                    <a
+                                                        href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.origin + '/media/podcast/' + episode.slug)}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-2 rounded-full bg-[#0A66C2]/10 text-[#0A66C2] hover:bg-[#0A66C2] hover:text-white transition-colors"
+                                                        title="Share on LinkedIn"
+                                                    >
+                                                        <SafeIcon icon={FiLinkedin} className="w-4 h-4" />
+                                                    </a>
+                                                    <a
+                                                        href={`https://wa.me/?text=${encodeURIComponent(episode.title + ' ' + window.location.origin + '/media/podcast/' + episode.slug)}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-2 rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white transition-colors"
+                                                        title="Share on WhatsApp"
+                                                    >
+                                                        <SafeIcon icon={FiMessageCircle} className="w-4 h-4" />
+                                                    </a>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </motion.div>
