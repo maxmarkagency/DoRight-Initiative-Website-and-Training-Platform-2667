@@ -12,6 +12,7 @@ const GalleryManagement = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [batchFiles, setBatchFiles] = useState([]); // [NEW] Track multiple files
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -46,6 +47,7 @@ const GalleryManagement = () => {
 
   const handleCreateItem = () => {
     setEditingItem(null);
+    setBatchFiles([]); // [NEW] Clear batch
     setFormData({
       title: '',
       description: '',
@@ -59,16 +61,35 @@ const GalleryManagement = () => {
   };
 
   const handleUploadSuccess = (file) => {
-    setFormData(prev => ({
-      ...prev,
-      media_url: file.url,
-      media_type: file.type === 'video' ? 'video' : 'image',
-      thumbnail_url: file.type === 'image' ? file.url : prev.thumbnail_url
-    }));
+    if (editingItem) {
+      setFormData(prev => ({
+        ...prev,
+        media_url: file.url,
+        media_type: file.type === 'video' ? 'video' : 'image',
+        thumbnail_url: file.type === 'image' ? file.url : prev.thumbnail_url
+      }));
+    } else {
+      // [NEW] Accumulate files for batch creation
+      setBatchFiles(prev => [...prev, file]);
+
+      // Update form data with the first file just for preview if needed, or keep latest
+      // For now, let's just keep the latest for the simple URL field, but we will use batchFiles on submit
+      setFormData(prev => ({
+        ...prev,
+        media_url: file.url,
+        media_type: file.type === 'video' ? 'video' : 'image',
+        thumbnail_url: file.type === 'image' ? file.url : prev.thumbnail_url
+      }));
+    }
+  };
+
+  const handleRemoveFile = (file) => {
+    setBatchFiles(prev => prev.filter(f => f.url !== file.url));
   };
 
   const handleEditItem = (item) => {
     setEditingItem(item);
+    setBatchFiles([]); // Clear batch when editing
     setFormData({
       title: item.title,
       description: item.description || '',
@@ -90,15 +111,35 @@ const GalleryManagement = () => {
           .update({ ...formData, updated_at: new Date().toISOString() })
           .eq('id', editingItem.id);
 
-        if (error) throw error;
-        alert('Gallery item updated successfully!');
       } else {
-        const { error } = await supabase
-          .from('gallery_items')
-          .insert([formData]);
+        // [NEW] Handle batch creation
+        if (batchFiles.length > 0) {
+          const groupId = batchFiles.length > 1 ? crypto.randomUUID() : null; // Generate group ID if multiple files
 
-        if (error) throw error;
-        alert('Gallery item created successfully!');
+          const newItems = batchFiles.map(file => ({
+            ...formData,
+            title: batchFiles.length > 1 ? `${formData.title} - ${file.name}` : formData.title, // Append filename if multiple
+            media_url: file.url,
+            media_type: file.type === 'video' ? 'video' : 'image',
+            thumbnail_url: file.type === 'image' ? file.url : formData.thumbnail_url,
+            group_id: groupId // Add group ID
+          }));
+
+          const { error } = await supabase
+            .from('gallery_items')
+            .insert(newItems);
+
+          if (error) throw error;
+          alert(`${batchFiles.length} gallery items created successfully!`);
+        } else {
+          // Fallback for manual URL entry without specific file upload object
+          const { error } = await supabase
+            .from('gallery_items')
+            .insert([formData]);
+
+          if (error) throw error;
+          alert('Gallery item created successfully!');
+        }
       }
       setShowModal(false);
       fetchItems();
@@ -135,7 +176,7 @@ const GalleryManagement = () => {
     >
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Gallery Management</h1>
-        <button 
+        <button
           onClick={handleCreateItem}
           className="flex items-center bg-yellow-400 text-black font-bold py-2 px-4 rounded-lg hover:bg-yellow-500 transition-colors"
         >
@@ -154,9 +195,9 @@ const GalleryManagement = () => {
             {items.map(item => (
               <div key={item.id} className="group relative overflow-hidden rounded-lg shadow-md">
                 {item.media_type === 'image' ? (
-                  <img 
-                    src={item.thumbnail_url || item.media_url} 
-                    alt={item.title} 
+                  <img
+                    src={item.thumbnail_url || item.media_url}
+                    alt={item.title}
                     className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-300"
                   />
                 ) : (
@@ -164,7 +205,7 @@ const GalleryManagement = () => {
                     <SafeIcon icon={FiVideo} className="text-white text-4xl" />
                   </div>
                 )}
-                
+
                 <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <h3 className="text-white font-bold text-lg">{item.title}</h3>
                   {item.category && (
@@ -174,13 +215,13 @@ const GalleryManagement = () => {
                     <span className="text-yellow-400 text-xs mt-1">⭐ Featured</span>
                   )}
                   <div className="mt-2 flex gap-2">
-                    <button 
+                    <button
                       onClick={() => handleEditItem(item)}
                       className="text-xs bg-yellow-400 text-black px-3 py-1 rounded hover:bg-yellow-500"
                     >
                       Edit
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleDeleteItem(item.id)}
                       className="text-xs bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
                     >
@@ -205,7 +246,7 @@ const GalleryManagement = () => {
             <h2 className="text-2xl font-bold mb-4">
               {editingItem ? 'Edit Gallery Item' : 'Upload New Media'}
             </h2>
-            
+
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div>
@@ -233,11 +274,22 @@ const GalleryManagement = () => {
                   <label className="block text-sm font-medium mb-2">Upload Media</label>
                   <MediaUpload
                     onUploadSuccess={handleUploadSuccess}
+                    onRemove={handleRemoveFile}
                     allowedTypes="image,video"
                   />
-                  {formData.media_url && (
+                  {!editingItem && batchFiles.length > 0 && (
                     <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm text-green-700">
-                      File uploaded successfully!
+                      {batchFiles.length} file(s) ready to upload.
+                      <ul className="list-disc ml-5 mt-1 text-xs">
+                        {batchFiles.map((f, i) => (
+                          <li key={i}>{f.name}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {editingItem && formData.media_url && (
+                    <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm text-green-700">
+                      File updated successfully!
                     </div>
                   )}
                 </div>

@@ -18,6 +18,9 @@ const Gallery = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [currentGroup, setCurrentGroup] = useState([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     fetchGalleryItems();
@@ -29,28 +32,122 @@ const Gallery = () => {
       const { data, error } = await supabase
         .from('gallery_items')
         .select('*')
-        .order('display_order', { ascending: true });
+        .order('created_at', { ascending: false }); // Sort by newest first
 
       if (error) throw error;
 
-      const formattedImages = (data || []).map(item => ({
-        id: item.id,
-        src: item.thumbnail_url || item.media_url,
-        fullSrc: item.media_url,
-        alt: item.title,
-        description: item.description,
-        category: item.category || 'General',
-        mediaType: item.media_type,
-        isFeatured: item.is_featured
-      }));
+      // Group items
+      const groupedItems = {};
+      const standaloneItems = [];
 
-      setGalleryImages(formattedImages);
+      (data || []).forEach(item => {
+        const formattedItem = {
+          id: item.id,
+          src: item.thumbnail_url || item.media_url,
+          fullSrc: item.media_url,
+          alt: item.title,
+          description: item.description,
+          category: item.category || 'General',
+          mediaType: item.media_type,
+          isFeatured: item.is_featured,
+          groupId: item.group_id
+        };
+
+        if (item.group_id) {
+          if (!groupedItems[item.group_id]) {
+            groupedItems[item.group_id] = [];
+          }
+          groupedItems[item.group_id].push(formattedItem);
+        } else {
+          standaloneItems.push(formattedItem);
+        }
+      });
+
+      // Combine groups (represented by first item) and standalone items
+      // For groups, we attach the full array of items to the first item
+      const displayItems = [
+        ...standaloneItems,
+        ...Object.values(groupedItems).map(group => ({
+          ...group[0], // Use first item as thumbnail
+          isGroup: true,
+          groupItems: group,
+          itemCount: group.length,
+          alt: group[0].alt.split(' - ')[0] // Clean up title for group display if it has appended filename
+        }))
+      ];
+
+      // Sort display items by ID or created_at (assuming newer IDs/dates are first)
+      // Since we can't easily sort mixed array by original created_at without keeping it, 
+      // let's just use the ID or push order if data was sorted from DB.
+      // DB sort was created_at desc, so simple push order is roughly correct, 
+      // but we separated them. Let's re-sort based on ID for consistency if needed, 
+      // or just trust the fetch order if we process sequentially. 
+      // Actually, since we want mixed order, we should have processed the original list 
+      // and skipped items if their group was already processed.
+
+      const processedGroupIds = new Set();
+      const finalDisplayList = [];
+
+      (data || []).forEach(item => {
+        if (item.group_id) {
+          if (processedGroupIds.has(item.group_id)) return; // Already added this group
+
+          processedGroupIds.add(item.group_id);
+          const group = groupedItems[item.group_id];
+          finalDisplayList.push({
+            ...group[0],
+            isGroup: true,
+            groupItems: group,
+            itemCount: group.length,
+            alt: group[0].alt.split(' - ')[0]
+          });
+        } else {
+          finalDisplayList.push({
+            id: item.id,
+            src: item.thumbnail_url || item.media_url,
+            fullSrc: item.media_url,
+            alt: item.title,
+            description: item.description,
+            category: item.category || 'General',
+            mediaType: item.media_type,
+            isFeatured: item.is_featured,
+            groupId: null
+          });
+        }
+      });
+
+      setGalleryImages(finalDisplayList);
     } catch (error) {
       console.error('Error fetching gallery items:', error);
       setError('Failed to load gallery items. Please try again later.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const openLightbox = (item) => {
+    if (item.isGroup) {
+      setCurrentGroup(item.groupItems);
+    } else {
+      setCurrentGroup([item]);
+    }
+    setCurrentImageIndex(0);
+    setLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+    setCurrentGroup([]);
+  };
+
+  const nextImage = (e) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev + 1) % currentGroup.length);
+  };
+
+  const prevImage = (e) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev - 1 + currentGroup.length) % currentGroup.length);
   };
 
   const categories = ['All', ...new Set(galleryImages.map(img => img.category).filter(Boolean))];
@@ -121,11 +218,10 @@ const Gallery = () => {
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  selectedCategory === category
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedCategory === category
                     ? 'bg-yellow-400 text-black'
                     : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                }`}
+                  }`}
               >
                 {category}
               </button>
@@ -149,13 +245,28 @@ const Gallery = () => {
                 animate="in"
                 transition={{ duration: 0.5, delay: index * 0.05 }}
                 whileHover={{ scale: 1.05, y: -5 }}
+                onClick={() => openLightbox(image)}
               >
                 <img src={image.src} alt={image.alt} className="w-full h-64 object-cover" />
+
+                {/* Group Indicator */}
+                {image.isGroup && (
+                  <div className="absolute top-4 left-4 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs font-semibold flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    +{image.itemCount}
+                  </div>
+                )}
+
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-70 transition-all duration-300 flex items-end justify-center p-4">
                   <div className="text-white text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform group-hover:translate-y-0 translate-y-4">
                     <p className="font-semibold text-sm mb-1">{image.alt}</p>
                     {image.description && (
                       <p className="text-xs text-gray-300">{image.description}</p>
+                    )}
+                    {image.isGroup && (
+                      <p className="text-xs text-yellow-400 mt-2 font-semibold">Click to view all {image.itemCount} photos</p>
                     )}
                   </div>
                 </div>
@@ -171,6 +282,88 @@ const Gallery = () => {
           </div>
         )}
       </div>
+
+      {/* Lightbox Modal */}
+      {lightboxOpen && currentGroup.length > 0 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-95 p-4" onClick={closeLightbox}>
+          <button
+            className="absolute top-4 right-4 text-white hover:text-gray-300 z-50 p-2"
+            onClick={closeLightbox}
+          >
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          <div className="relative w-full max-w-5xl max-h-[90vh] flex flex-col items-center" onClick={e => e.stopPropagation()}>
+            {currentGroup[currentImageIndex].mediaType === 'video' ? (
+              <video
+                src={currentGroup[currentImageIndex].fullSrc}
+                controls
+                className="max-w-full max-h-[80vh] object-contain"
+                autoPlay
+              />
+            ) : (
+              <img
+                src={currentGroup[currentImageIndex].fullSrc}
+                alt={currentGroup[currentImageIndex].alt}
+                className="max-w-full max-h-[80vh] object-contain"
+              />
+            )}
+
+            <div className="mt-4 text-center text-white">
+              <h3 className="text-xl font-bold">{currentGroup[currentImageIndex].alt}</h3>
+              {currentGroup[currentImageIndex].description && (
+                <p className="text-gray-400 mt-1">{currentGroup[currentImageIndex].description}</p>
+              )}
+              {currentGroup.length > 1 && (
+                <p className="text-gray-500 text-sm mt-2">{currentImageIndex + 1} / {currentGroup.length}</p>
+              )}
+            </div>
+
+            {/* Navigation Buttons */}
+            {currentGroup.length > 1 && (
+              <>
+                <button
+                  className="absolute left-0 top-1/2 transform -translate-y-1/2 -ml-4 md:-ml-12 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-2 rounded-full"
+                  onClick={prevImage}
+                >
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  className="absolute right-0 top-1/2 transform -translate-y-1/2 -mr-4 md:-mr-12 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-2 rounded-full"
+                  onClick={nextImage}
+                >
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </>
+            )}
+
+            {/* Thumbnails Strip */}
+            {currentGroup.length > 1 && (
+              <div className="flex gap-2 mt-4 overflow-x-auto max-w-full pb-2">
+                {currentGroup.map((item, idx) => (
+                  <button
+                    key={item.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentImageIndex(idx);
+                    }}
+                    className={`flex-shrink-0 w-16 h-16 border-2 rounded overflow-hidden transition-colors ${currentImageIndex === idx ? 'border-yellow-400' : 'border-transparent opacity-60 hover:opacity-100'
+                      }`}
+                  >
+                    <img src={item.src} alt={item.alt} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 };
