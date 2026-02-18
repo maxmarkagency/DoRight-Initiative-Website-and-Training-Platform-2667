@@ -36,8 +36,6 @@ const Gallery = () => {
 
       if (error) throw error;
 
-      console.log('Fetched Gallery Data:', data);
-
 
       // Group items
       const groupedItems = {};
