@@ -36,6 +36,9 @@ const Gallery = () => {
 
       if (error) throw error;
 
+      console.log('Fetched Gallery Data:', data);
+
+
       // Group items
       const groupedItems = {};
       const standaloneItems = [];
@@ -219,8 +222,8 @@ const Gallery = () => {
                 key={category}
                 onClick={() => setSelectedCategory(category)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedCategory === category
-                    ? 'bg-yellow-400 text-black'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  ? 'bg-yellow-400 text-black'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                   }`}
               >
                 {category}
@@ -285,9 +288,9 @@ const Gallery = () => {
 
       {/* Lightbox Modal */}
       {lightboxOpen && currentGroup.length > 0 && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-95 p-4" onClick={closeLightbox}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-95 p-4" onClick={closeLightbox}>
           <button
-            className="absolute top-4 right-4 text-white hover:text-gray-300 z-50 p-2"
+            className="absolute top-4 right-4 text-white hover:text-gray-300 z-[110] p-2"
             onClick={closeLightbox}
           >
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">

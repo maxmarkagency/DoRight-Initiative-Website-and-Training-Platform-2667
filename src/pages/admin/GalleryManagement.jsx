@@ -114,7 +114,15 @@ const GalleryManagement = () => {
       } else {
         // [NEW] Handle batch creation
         if (batchFiles.length > 0) {
-          const groupId = batchFiles.length > 1 ? crypto.randomUUID() : null; // Generate group ID if multiple files
+          // Generate a UUID (compatible with non-secure contexts)
+          const generateUUID = () => {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+              var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+              return v.toString(16);
+            });
+          };
+
+          const groupId = batchFiles.length > 1 ? generateUUID() : null; // Generate group ID if multiple files
 
           const newItems = batchFiles.map(file => ({
             ...formData,
