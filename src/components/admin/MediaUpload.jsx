@@ -6,7 +6,7 @@ import supabase from '../../lib/supabase';
 
 const { FiUpload, FiX, FiImage, FiVideo, FiFileText, FiMusic } = FiIcons;
 
-const MediaUpload = ({ onUploadSuccess, allowedTypes = 'image,video,document,audio' }) => {
+const MediaUpload = ({ onUploadSuccess, onRemove, allowedTypes = 'image,video,document,audio' }) => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [dragActive, setDragActive] = useState(false);
@@ -161,6 +161,7 @@ const MediaUpload = ({ onUploadSuccess, allowedTypes = 'image,video,document,aud
   };
 
   const removeFile = (index) => {
+    const fileToRemove = files[index];
     const newFiles = files.filter((_, i) => i !== index);
     setFiles(newFiles);
     if (index === 0 && newFiles.length > 0) {
@@ -168,6 +169,7 @@ const MediaUpload = ({ onUploadSuccess, allowedTypes = 'image,video,document,aud
     } else if (newFiles.length === 0) {
       setPreview(null);
     }
+    if (onRemove) onRemove(fileToRemove);
   };
 
   const openFileDialog = () => {
@@ -177,11 +179,10 @@ const MediaUpload = ({ onUploadSuccess, allowedTypes = 'image,video,document,aud
   return (
     <div className="w-full">
       <div
-        className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all ${
-          dragActive
+        className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all ${dragActive
             ? 'border-blue-400 bg-blue-50'
             : 'border-gray-300 hover:border-gray-400'
-        } ${uploading ? 'pointer-events-none opacity-50' : ''}`}
+          } ${uploading ? 'pointer-events-none opacity-50' : ''}`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
