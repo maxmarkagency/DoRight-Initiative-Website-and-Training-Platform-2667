@@ -168,7 +168,7 @@ const BlogPost = () => {
                   <SafeIcon icon={FiInstagram} className="w-4 h-4 mr-2" /> Share
                 </button>
                 <a
-                  href={`https://wa.me/?text=${encodeURIComponent(post.title + ' ' + window.location.href)}`}
+                  href={`https://wa.me/?text=${encodeURIComponent(post.title + ' ' + window.location.origin + '/#/blog/' + postId)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-[#25D366] text-white px-4 py-2 rounded text-sm font-medium flex items-center hover:bg-opacity-90 transition-opacity"
