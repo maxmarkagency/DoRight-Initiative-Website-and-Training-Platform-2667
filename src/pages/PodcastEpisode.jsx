@@ -91,7 +91,7 @@ const PodcastEpisode = () => {
         });
     };
 
-    const shareUrl = window.location.origin + '/#/media/podcast/' + slug;
+    const shareUrl = 'https://doright.ng/#/media/podcast/' + slug;
     const title = episode?.title || 'DoRight Podcast';
 
     const handleCopyLink = () => {

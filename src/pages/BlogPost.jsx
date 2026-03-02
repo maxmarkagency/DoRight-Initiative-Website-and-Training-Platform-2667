@@ -158,17 +158,26 @@ const BlogPost = () => {
             {/* Article Footer / Share */}
             <div className="mt-12 py-8 border-t border-b border-neutral-200 flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex gap-2">
-                <button className="bg-[#3b5998] text-white px-4 py-2 rounded text-sm font-medium flex items-center hover:bg-opacity-90 transition-opacity">
-                  <SafeIcon icon={FiFacebook} className="w-4 h-4 mr-2" /> Share
-                </button>
-                <button className="bg-[#1da1f2] text-white px-4 py-2 rounded text-sm font-medium flex items-center hover:bg-opacity-90 transition-opacity">
-                  <SafeIcon icon={FiTwitter} className="w-4 h-4 mr-2" /> Tweet
-                </button>
-                <button className="bg-[#bd081c] text-white px-4 py-2 rounded text-sm font-medium flex items-center hover:bg-opacity-90 transition-opacity">
-                  <SafeIcon icon={FiInstagram} className="w-4 h-4 mr-2" /> Share
-                </button>
                 <a
-                  href={`https://wa.me/?text=${encodeURIComponent(post.title + ' ' + window.location.origin + '/#/blog/' + postId)}`}
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://doright.ng/#/blog/' + postId)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="bg-[#3b5998] text-white px-4 py-2 rounded text-sm font-medium flex items-center hover:bg-opacity-90 transition-opacity">
+                  <SafeIcon icon={FiFacebook} className="w-4 h-4 mr-2" /> Share
+                </a>
+                <a
+                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent('https://doright.ng/#/blog/' + postId)}&text=${encodeURIComponent(post.title)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="bg-[#1da1f2] text-white px-4 py-2 rounded text-sm font-medium flex items-center hover:bg-opacity-90 transition-opacity">
+                  <SafeIcon icon={FiTwitter} className="w-4 h-4 mr-2" /> Tweet
+                </a>
+                <a
+                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://doright.ng/#/blog/' + postId)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="bg-[#0A66C2] text-white px-4 py-2 rounded text-sm font-medium flex items-center hover:bg-opacity-90 transition-opacity">
+                  <SafeIcon icon={FiLinkedin} className="w-4 h-4 mr-2" /> Share
+                </a>
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(post.title + ' https://doright.ng/#/blog/' + postId)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-[#25D366] text-white px-4 py-2 rounded text-sm font-medium flex items-center hover:bg-opacity-90 transition-opacity"
