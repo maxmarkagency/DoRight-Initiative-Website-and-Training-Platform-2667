@@ -102,15 +102,33 @@ const GalleryManagement = () => {
     setShowModal(true);
   };
 
+  const getYouTubeId = (url) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      let finalFormData = { ...formData };
+      const youtubeId = getYouTubeId(formData.media_url);
+
+      if (youtubeId) {
+        finalFormData.media_type = 'video';
+        if (!finalFormData.thumbnail_url) {
+          finalFormData.thumbnail_url = `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+        }
+      }
+
       if (editingItem) {
         const { error } = await supabase
           .from('gallery_items')
-          .update({ ...formData, updated_at: new Date().toISOString() })
+          .update({ ...finalFormData, updated_at: new Date().toISOString() })
           .eq('id', editingItem.id);
 
+        if (error) throw error;
+        alert('Gallery item updated successfully!');
       } else {
         // [NEW] Handle batch creation
         if (batchFiles.length > 0) {
@@ -125,11 +143,11 @@ const GalleryManagement = () => {
           const groupId = batchFiles.length > 1 ? generateUUID() : null; // Generate group ID if multiple files
 
           const newItems = batchFiles.map(file => ({
-            ...formData,
-            title: batchFiles.length > 1 ? `${formData.title} - ${file.name}` : formData.title, // Append filename if multiple
+            ...finalFormData,
+            title: batchFiles.length > 1 ? `${finalFormData.title} - ${file.name}` : finalFormData.title, // Append filename if multiple
             media_url: file.url,
             media_type: file.type === 'video' ? 'video' : 'image',
-            thumbnail_url: file.type === 'image' ? file.url : formData.thumbnail_url,
+            thumbnail_url: file.type === 'image' ? file.url : finalFormData.thumbnail_url,
             group_id: groupId // Add group ID
           }));
 
@@ -143,7 +161,7 @@ const GalleryManagement = () => {
           // Fallback for manual URL entry without specific file upload object
           const { error } = await supabase
             .from('gallery_items')
-            .insert([formData]);
+            .insert([finalFormData]);
 
           if (error) throw error;
           alert('Gallery item created successfully!');

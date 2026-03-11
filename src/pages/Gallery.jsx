@@ -151,11 +151,19 @@ const Gallery = () => {
     setCurrentImageIndex((prev) => (prev - 1 + currentGroup.length) % currentGroup.length);
   };
 
-  const categories = ['All', ...new Set(galleryImages.map(img => img.category).filter(Boolean))];
+  const getYouTubeId = (url) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+
+  const categories = ['All', 'Videos', ...new Set(galleryImages.map(img => img.category).filter(c => c && c !== 'Videos'))];
 
   const filteredImages = selectedCategory === 'All'
     ? galleryImages
-    : galleryImages.filter(img => img.category === selectedCategory);
+    : selectedCategory === 'Videos'
+      ? galleryImages.filter(img => img.mediaType === 'video')
+      : galleryImages.filter(img => img.category === selectedCategory && img.mediaType !== 'video');
 
   if (loading) {
     return (
@@ -250,6 +258,17 @@ const Gallery = () => {
               >
                 <img src={image.src} alt={image.alt} className="w-full h-64 object-cover" />
 
+                {/* Video Overlay */}
+                {image.mediaType === 'video' && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="bg-yellow-400 bg-opacity-80 rounded-full p-3 shadow-lg transform group-hover:scale-110 transition-transform">
+                      <svg className="w-8 h-8 text-black" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M4.5 3.5v13l11-6.5-11-6.5z"></path>
+                      </svg>
+                    </div>
+                  </div>
+                )}
+
                 {/* Group Indicator */}
                 {image.isGroup && (
                   <div className="absolute top-4 left-4 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs font-semibold flex items-center">
@@ -298,12 +317,27 @@ const Gallery = () => {
 
           <div className="relative w-full max-w-5xl max-h-[90vh] flex flex-col items-center" onClick={e => e.stopPropagation()}>
             {currentGroup[currentImageIndex].mediaType === 'video' ? (
-              <video
-                src={currentGroup[currentImageIndex].fullSrc}
-                controls
-                className="max-w-full max-h-[80vh] object-contain"
-                autoPlay
-              />
+              getYouTubeId(currentGroup[currentImageIndex].fullSrc) ? (
+                <div className="w-full aspect-video max-w-4xl mx-auto shadow-2xl rounded-lg overflow-hidden flex items-center justify-center bg-black">
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    src={`https://www.youtube.com/embed/${getYouTubeId(currentGroup[currentImageIndex].fullSrc)}?autoplay=1`}
+                    title={currentGroup[currentImageIndex].alt}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full"
+                  ></iframe>
+                </div>
+              ) : (
+                <video
+                  src={currentGroup[currentImageIndex].fullSrc}
+                  controls
+                  className="max-w-full max-h-[80vh] object-contain"
+                  autoPlay
+                />
+              )
             ) : (
               <img
                 src={currentGroup[currentImageIndex].fullSrc}
