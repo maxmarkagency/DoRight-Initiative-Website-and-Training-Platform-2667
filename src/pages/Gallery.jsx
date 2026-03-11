@@ -41,12 +41,23 @@ const Gallery = () => {
       const groupedItems = {};
       const standaloneItems = [];
 
+      const cleanTitle = (title) => {
+        if (!title.includes(' - ')) return title;
+        const parts = title.split(' - ');
+        const lastPart = parts[parts.length - 1].toLowerCase();
+        const extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.mp4', '.mov', '.avi'];
+        if (extensions.some(ext => lastPart.endsWith(ext))) {
+          return parts.slice(0, -1).join(' - ');
+        }
+        return title;
+      };
+
       (data || []).forEach(item => {
         const formattedItem = {
           id: item.id,
           src: item.thumbnail_url || item.media_url,
           fullSrc: item.media_url,
-          alt: item.title,
+          alt: cleanTitle(item.title),
           description: item.description,
           category: item.category || 'General',
           mediaType: item.media_type,
@@ -64,28 +75,6 @@ const Gallery = () => {
         }
       });
 
-      // Combine groups (represented by first item) and standalone items
-      // For groups, we attach the full array of items to the first item
-      const displayItems = [
-        ...standaloneItems,
-        ...Object.values(groupedItems).map(group => ({
-          ...group[0], // Use first item as thumbnail
-          isGroup: true,
-          groupItems: group,
-          itemCount: group.length,
-          alt: group[0].alt.split(' - ')[0] // Clean up title for group display if it has appended filename
-        }))
-      ];
-
-      // Sort display items by ID or created_at (assuming newer IDs/dates are first)
-      // Since we can't easily sort mixed array by original created_at without keeping it, 
-      // let's just use the ID or push order if data was sorted from DB.
-      // DB sort was created_at desc, so simple push order is roughly correct, 
-      // but we separated them. Let's re-sort based on ID for consistency if needed, 
-      // or just trust the fetch order if we process sequentially. 
-      // Actually, since we want mixed order, we should have processed the original list 
-      // and skipped items if their group was already processed.
-
       const processedGroupIds = new Set();
       const finalDisplayList = [];
 
@@ -100,14 +89,14 @@ const Gallery = () => {
             isGroup: true,
             groupItems: group,
             itemCount: group.length,
-            alt: group[0].alt.split(' - ')[0]
+            alt: cleanTitle(group[0].alt) // ensure it's clean (it should already be from formattedItem)
           });
         } else {
           finalDisplayList.push({
             id: item.id,
             src: item.thumbnail_url || item.media_url,
             fullSrc: item.media_url,
-            alt: item.title,
+            alt: cleanTitle(item.title),
             description: item.description,
             category: item.category || 'General',
             mediaType: item.media_type,

@@ -144,7 +144,7 @@ const GalleryManagement = () => {
 
           const newItems = batchFiles.map(file => ({
             ...finalFormData,
-            title: batchFiles.length > 1 ? `${finalFormData.title} - ${file.name}` : finalFormData.title, // Append filename if multiple
+            title: finalFormData.title, // Use same title for all in batch
             media_url: file.url,
             media_type: file.type === 'video' ? 'video' : 'image',
             thumbnail_url: file.type === 'image' ? file.url : finalFormData.thumbnail_url,
@@ -233,7 +233,19 @@ const GalleryManagement = () => {
                 )}
 
                 <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <h3 className="text-white font-bold text-lg">{item.title}</h3>
+                  <h3 className="text-white font-bold text-lg">
+                    {(() => {
+                      const title = item.title;
+                      if (!title.includes(' - ')) return title;
+                      const parts = title.split(' - ');
+                      const lastPart = parts[parts.length - 1].toLowerCase();
+                      const extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.mp4', '.mov', '.avi'];
+                      if (extensions.some(ext => lastPart.endsWith(ext))) {
+                        return parts.slice(0, -1).join(' - ');
+                      }
+                      return title;
+                    })()}
+                  </h3>
                   {item.category && (
                     <p className="text-gray-300 text-sm">{item.category}</p>
                   )}
