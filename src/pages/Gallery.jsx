@@ -17,7 +17,7 @@ const Gallery = () => {
   const [galleryImages, setGalleryImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState('Images');
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentGroup, setCurrentGroup] = useState([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -59,7 +59,7 @@ const Gallery = () => {
           fullSrc: item.media_url,
           alt: cleanTitle(item.title),
           description: item.description,
-          category: item.category || 'General',
+          category: item.category || 'Images',
           mediaType: item.media_type,
           isFeatured: item.is_featured,
           groupId: item.group_id
@@ -98,7 +98,7 @@ const Gallery = () => {
             fullSrc: item.media_url,
             alt: cleanTitle(item.title),
             description: item.description,
-            category: item.category || 'General',
+            category: item.category || 'Images',
             mediaType: item.media_type,
             isFeatured: item.is_featured,
             groupId: null
@@ -146,13 +146,11 @@ const Gallery = () => {
     return (match && match[2].length === 11) ? match[2] : null;
   };
 
-  const categories = ['All', 'Videos', ...new Set(galleryImages.map(img => img.category).filter(c => c && c !== 'Videos'))];
+  const categories = ['Images', 'Videos'];
 
-  const filteredImages = selectedCategory === 'All'
-    ? galleryImages
-    : selectedCategory === 'Videos'
-      ? galleryImages.filter(img => img.mediaType === 'video')
-      : galleryImages.filter(img => img.category === selectedCategory && img.mediaType !== 'video');
+  const filteredImages = selectedCategory === 'Videos'
+    ? galleryImages.filter(img => img.mediaType === 'video')
+    : galleryImages.filter(img => img.mediaType !== 'video');
 
   if (loading) {
     return (
