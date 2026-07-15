@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import SafeIcon from '../../common/SafeIcon';
 import MediaUpload from '../../components/admin/MediaUpload';
 import * as FiIcons from 'react-icons/fi';
-import apiService from '../../services/api';
+import supabase from '../../lib/supabase';
 
 const { FiTrash2, FiCopy, FiImage, FiVideo, FiMusic, FiFileText, FiExternalLink } = FiIcons;
 
