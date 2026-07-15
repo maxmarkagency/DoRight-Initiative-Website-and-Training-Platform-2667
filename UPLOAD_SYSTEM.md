@@ -1,227 +1,91 @@
 # Media Upload System
 
-A comprehensive file upload system for the DoRight LMS platform that allows administrators to upload and manage media files.
+File uploads go straight from the browser to **Supabase Storage** — there is no upload API route,
+no `multer`, and no server-side file handling of any kind. The frontend calls
+`supabase.storage.from('media-library')` directly.
 
-## 🚀 Features
+## Where This Lives
 
-### Backend Upload System (`/api/upload`)
-- **Single File Upload**: `/api/upload` - Upload one file at a time
-- **Multiple Files Upload**: `/api/upload/multiple` - Upload up to 10 files simultaneously
-- **File Management**: `/api/upload/:filename` - Delete uploaded files
+- **`src/components/admin/MediaUpload.jsx`** — the drag-and-drop upload widget. Validates files
+  client-side, then uploads each one straight to the `media-library` bucket.
+- **`src/pages/admin/MediaManagement.jsx`** — the Media Library admin page. Lists, previews, and
+  deletes files in the bucket, and embeds `MediaUpload` for adding new ones.
 
-### Supported File Types
-- **Images**: JPG, JPEG, PNG, GIF, WebP, SVG
-- **Videos**: MP4, WebM, OGG
-- **Audio**: MP3, WAV, OGG
-- **Documents**: PDF, DOC, DOCX
+Both import the shared client from `src/lib/supabase.js` and call `supabase.storage` methods
+directly — there's no intermediate service layer.
 
-### Security Features
-- **File Type Validation**: Only allows whitelisted file types
-- **Size Limits**: Maximum 100MB per file
-- **Secure Storage**: Files stored in `/uploads/` directory
-- **Unique Filenames**: Prevents filename conflicts
-- **CORS Protection**: Configured for the application domains
+## The Bucket
 
-## 🔧 Backend Implementation
+Everything lives in one Storage bucket: **`media-library`**. It is **not** created or configured
+by `supabase/migrations/` — it must exist in the Supabase project already (create it via
+Dashboard → Storage → New bucket if it doesn't). Its access policies are configured in
+Storage → `media-library` → Policies, not tracked in this repo's migrations, so treat the
+Dashboard as the source of truth for who can read/write it.
 
-### Dependencies
-```bash
-npm install multer
+Recommended policy shape: public (or authenticated) read for serving media on the public site,
+writes (`INSERT`/`UPDATE`/`DELETE`) restricted to authenticated admins.
+
+## Upload Flow
+
+`MediaUpload.jsx` validates each file client-side before uploading:
+
+- **Size limit:** 100MB per file
+- **Allowed types:** images (jpeg, png, gif, webp), video (mp4, webm, ogg), audio (mpeg, wav,
+  ogg), documents (pdf, doc)
+
+For each valid file, it generates a unique filename (`Date.now()` + a random suffix, keeping the
+original extension) and calls:
+
+```js
+const { data, error } = await supabase.storage
+  .from('media-library')
+  .upload(filePath, file, { cacheControl: '3600', upsert: false });
+
+const { data: { publicUrl } } = supabase.storage
+  .from('media-library')
+  .getPublicUrl(filePath);
 ```
 
-### Route Structure
-```javascript
-// Upload endpoints
-POST /api/upload - Single file upload
-POST /api/upload/multiple - Multiple files upload
-DELETE /api/upload/:filename - Delete file
+The resulting `publicUrl` is what gets stored elsewhere (e.g. a blog post's
+`featured_image_url`, a gallery item's `media_url`) and what the browser renders directly.
 
-// File serving
-GET /uploads/:filename - Access uploaded files
+This client-side validation is a UX convenience, not a security boundary — since there's no
+server in the path, the bucket's own Storage policies are what actually enforce file-type and
+access rules. Client-side checks can be bypassed by anyone calling the Supabase API directly.
+
+## Listing and Deleting
+
+`MediaManagement.jsx` lists the bucket's contents and derives each file's category from its
+extension (there's no stored metadata table — everything about a file is inferred from what
+Storage returns):
+
+```js
+const { data, error } = await supabase.storage
+  .from('media-library')
+  .list('', { limit: 100, offset: 0, sortBy: { column: 'created_at', order: 'desc' } });
 ```
 
-### File Validation
-```javascript
-const allowedTypes = {
-  image: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
-  video: ['video/mp4', 'video/webm', 'video/ogg'],
-  document: ['application/pdf', 'application/msword'],
-  audio: ['audio/mpeg', 'audio/wav', 'audio/ogg']
-};
+Deleting a file:
+
+```js
+const { error } = await supabase.storage
+  .from('media-library')
+  .remove([fileName]);
 ```
 
-## 🎨 Frontend Implementation
+## Using Uploaded Media Elsewhere
 
-### MediaUpload Component
-Location: `src/components/admin/MediaUpload.jsx`
+Blog and gallery admin pages just store the `publicUrl` returned by the upload call as a plain
+text field — e.g. `BlogManagement.jsx` sets `featured_image_url`, `GalleryManagement.jsx` sets
+`media_url`. There's no linking table between `media-library` objects and the rows that reference
+them; deleting a file from the Media Library does not automatically clear references to it
+elsewhere.
 
-**Features:**
-- **Drag & Drop**: Drop files directly into the upload area
-- **File Preview**: Visual preview of selected files
-- **Progress Tracking**: Upload progress with animated spinner
-- **Multi-file Support**: Select and upload multiple files
-- **File Validation**: Client-side validation with error handling
-- **File Management**: Remove files before upload
+## Known Limitations
 
-### MediaManagement Page
-Location: `src/pages/admin/MediaManagement.jsx`
-
-**Features:**
-- **Upload Interface**: Integrated MediaUpload component
-- **File Library**: Grid view of uploaded files
-- **Filter System**: Filter by file type (all, image, video, audio, documents)
-- **File Actions**: Copy URL, open in new tab, delete files
-- **File Details**: File size, upload date, file type
-
-## 📁 Directory Structure
-
-```
-backend/
-├── uploads/          # Uploaded files storage
-├── logs/            # Upload logs
-└── routes/
-    └── upload.js    # Upload API routes
-```
-
-```
-src/
-├── components/admin/
-│   └── MediaUpload.jsx     # Upload component
-└── pages/admin/
-    └── MediaManagement.jsx # Media management page
-```
-
-## 🔗 API Integration
-
-### Single File Upload
-```javascript
-const formData = new FormData();
-formData.append('file', file);
-
-const response = await fetch('/api/upload', {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bearer ${token}`
-  },
-  body: formData
-});
-
-const result = await response.json();
-```
-
-### Multiple Files Upload
-```javascript
-const formData = new FormData();
-files.forEach(file => {
-  formData.append('files', file);
-});
-
-const response = await fetch('/api/upload/multiple', {
-  method: 'POST',
-  body: formData
-});
-```
-
-## 🎯 Usage in Blog & Gallery
-
-### Blog Management Integration
-```javascript
-// Use uploaded images in blog posts
-const blogData = {
-  title: "Blog Title",
-  content: "Blog content with images",
-  featured_image_url: uploadedFile.url, // From upload system
-  status: "published"
-};
-```
-
-### Gallery Management Integration
-```javascript
-// Add uploaded media to gallery
-const galleryData = {
-  title: "Gallery Item",
-  media_url: uploadedFile.url, // From upload system
-  category: "Events",
-  is_featured: true
-};
-```
-
-## 🛠️ Setup Instructions
-
-1. **Install Dependencies**
-   ```bash
-   cd backend
-   npm install multer
-   ```
-
-2. **Create Directories**
-   ```bash
-   mkdir -p uploads logs
-   ```
-
-3. **Restart Backend Server**
-   ```bash
-   npm run dev
-   ```
-
-4. **Access Media Management**
-   - Login as admin
-   - Navigate to: `/admin/media`
-   - Or use sidebar menu: "Media"
-
-## 🔒 Security Considerations
-
-### File Validation
-- Server-side MIME type validation
-- File extension checking
-- File size limits (100MB max)
-- Unique filename generation
-
-### Storage Security
-- Files stored outside public directory initially
-- Serves via Express static middleware
-- Proper CORS configuration
-- Input sanitization
-
-### Access Control
-- Authentication required for uploads
-- Admin-only access to media management
-- Token-based API authentication
-
-## 📊 File Structure Response
-
-### Upload Success Response
-```json
-{
-  "success": true,
-  "file": {
-    "id": "file_1734025200000_abc123def",
-    "originalName": "image.jpg",
-    "filename": "image-1734025200000-123456789.jpg",
-    "url": "http://localhost:4000/uploads/image-1734025200000-123456789.jpg",
-    "size": 245678,
-    "mimetype": "image/jpeg",
-    "category": "image",
-    "uploadedAt": "2025-11-12T07:13:17.441Z"
-  }
-}
-```
-
-## 🚀 Future Enhancements
-
-- **Cloud Storage Integration**: AWS S3, Google Cloud Storage
-- **Image Processing**: Thumbnails, compression, format conversion
-- **Video Processing**: Transcoding, streaming
-- **CDN Integration**: Faster global file delivery
-- **Metadata Extraction**: Automatic file metadata reading
-- **Virus Scanning**: File security scanning
-- **Advanced Analytics**: Upload tracking and reporting
-
-## 🎉 Benefits
-
-1. **Centralized Media Management**: All files in one place
-2. **Easy Integration**: Use in blog posts and gallery
-3. **User-Friendly Interface**: Drag-and-drop upload
-4. **Security**: Proper file validation and storage
-5. **Scalable**: Supports multiple file types and sizes
-6. **Admin Control**: Full administrative control over media
+- No image processing (thumbnails, compression, format conversion) — files are stored and served
+  as-is.
+- No CDN beyond whatever Supabase Storage provides by default.
+- No virus/malware scanning.
+- No usage tracking — deleting a file that's still referenced by a blog post or gallery item will
+  break that reference (the URL will 404).
