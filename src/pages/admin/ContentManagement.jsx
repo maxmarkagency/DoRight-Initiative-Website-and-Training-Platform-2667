@@ -654,7 +654,7 @@ const ContentManagement = () => {
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+          className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-center mb-6">
@@ -688,7 +688,7 @@ const ContentManagement = () => {
 
   const renderSections = () => {
     if (loading) {
-      return <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400"></div></div>;
+      return <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div></div>;
     }
 
     if (sections.length === 0) {
@@ -732,7 +732,7 @@ const ContentManagement = () => {
 
   const renderPrograms = () => {
     if (loading) {
-      return <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400"></div></div>;
+      return <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div></div>;
     }
 
     if (programs.length === 0) {
@@ -770,7 +770,7 @@ const ContentManagement = () => {
 
   const renderTeamMembers = () => {
     if (loading) {
-      return <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400"></div></div>;
+      return <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div></div>;
     }
 
     if (teamMembers.length === 0) {
@@ -807,7 +807,7 @@ const ContentManagement = () => {
 
   const renderEvents = () => {
     if (loading) {
-      return <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400"></div></div>;
+      return <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div></div>;
     }
 
     if (events.length === 0) {
@@ -848,7 +848,7 @@ const ContentManagement = () => {
 
   const renderSettings = () => {
     if (loading) {
-      return <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400"></div></div>;
+      return <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div></div>;
     }
 
     if (siteSettings.length === 0) {

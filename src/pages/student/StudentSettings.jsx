@@ -57,7 +57,7 @@ const StudentSettings = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gray-800 p-6 rounded-xl"
+          className="bg-gray-800 p-6 rounded-lg"
         >
           <div className="flex items-center space-x-3 mb-6">
             <SafeIcon icon={FiBell} className="w-6 h-6 text-accent" />
@@ -126,7 +126,7 @@ const StudentSettings = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-gray-800 p-6 rounded-xl"
+          className="bg-gray-800 p-6 rounded-lg"
         >
           <div className="flex items-center space-x-3 mb-6">
             <SafeIcon icon={FiLock} className="w-6 h-6 text-accent" />
@@ -173,7 +173,7 @@ const StudentSettings = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-gray-800 p-6 rounded-xl"
+          className="bg-gray-800 p-6 rounded-lg"
         >
           <div className="flex items-center space-x-3 mb-6">
             <SafeIcon icon={FiEye} className="w-6 h-6 text-accent" />

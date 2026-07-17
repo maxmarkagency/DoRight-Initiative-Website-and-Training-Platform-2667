@@ -131,7 +131,7 @@ const MediaManagement = () => {
       </div>
 
       {/* Upload Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-neutral-200 dark:border-gray-700 p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4">Upload New Media</h2>
         <MediaUpload 
           onUploadSuccess={handleUploadSuccess}
@@ -140,7 +140,7 @@ const MediaManagement = () => {
       </div>
 
       {/* Filter Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-neutral-200 dark:border-gray-700 p-6 mb-8">
         <div className="flex flex-wrap gap-2">
           {[
             { key: 'all', label: 'All Files', icon: FiFileText },
@@ -154,7 +154,7 @@ const MediaManagement = () => {
               onClick={() => setFilter(key)}
               className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 filter === key
-                  ? 'bg-yellow-400 text-black'
+                  ? 'bg-accent text-black'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -166,14 +166,14 @@ const MediaManagement = () => {
       </div>
 
       {/* Media Grid */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-neutral-200 dark:border-gray-700 p-6">
         <h2 className="text-xl font-semibold mb-4">
           Media Library ({filteredFiles.length} files)
         </h2>
 
         {loading ? (
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent mx-auto"></div>
             <p className="text-gray-500 mt-2">Loading media files...</p>
           </div>
         ) : filteredFiles.length === 0 ? (

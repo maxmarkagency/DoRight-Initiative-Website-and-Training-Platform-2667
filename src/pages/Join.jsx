@@ -21,9 +21,9 @@ const Join = () => {
   };
 
   const ways = [
-    { title: 'Volunteer', description: 'Join our community of dedicated volunteers working on the ground to promote integrity and accountability.', features: ['Community outreach programs', 'Event organization support', 'Training and mentorship', 'Flexible time commitment', 'Skills development opportunities'], icon: FiUsers, color: 'from-primary to-primary-600', ctaText: 'Become a Volunteer' },
+    { title: 'Volunteer', description: 'Join our community of dedicated volunteers working on the ground to promote integrity and accountability.', features: ['Community outreach programs', 'Event organization support', 'Training and mentorship', 'Flexible time commitment', 'Skills development opportunities'], icon: FiUsers, color: 'bg-primary', ctaText: 'Become a Volunteer' },
     { title: 'Donate', description: 'Support our mission with financial contributions that help us expand our reach and impact across Nigeria.', features: ['Monthly or one-time donations', 'Transparent fund allocation', 'Regular impact reports', 'Tax-deductible receipts', 'Direct community impact'], icon: FiHeart, color: 'bg-accent', ctaText: 'Make a Donation' },
-    { title: 'Partner', description: 'Collaborate with us as an organization,institution,or business to amplify our collective impact.', features: ['Strategic partnerships', 'Joint program development', 'Resource sharing', 'Co-branded initiatives', 'Network expansion'], icon: FiHandshake, color: 'from-primary to-primary-600', ctaText: 'Partner With Us' }
+    { title: 'Partner', description: 'Collaborate with us as an organization,institution,or business to amplify our collective impact.', features: ['Strategic partnerships', 'Joint program development', 'Resource sharing', 'Co-branded initiatives', 'Network expansion'], icon: FiHandshake, color: 'bg-primary', ctaText: 'Partner With Us' }
   ];
 
   const interestOptions = ['Volunteering', 'Donating', 'Partnership', 'Youth Programs', 'Community Campaigns', 'Policy Advocacy', 'Training Programs', 'Other'];
@@ -38,7 +38,7 @@ const Join = () => {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary to-primary-600 text-white py-20">
+      <section className="bg-primary text-white py-20">
         <div className="max-w-container mx-auto px-5">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-center max-w-4xl mx-auto">
             <h1 className="text-h1 font-heading font-bold mb-6 leading-tight"> Join the Movement </h1>
@@ -75,7 +75,7 @@ const Join = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {ways.map((way, index) => (
               <motion.div key={way.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.1 }} viewport={{ once: true }} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-                <div className={` p-6 ${way.color.startsWith('from-') ? 'bg-gradient-to-r' : ''} ${way.color}`}>
+                <div className={`p-6 ${way.color}`}>
                   <SafeIcon icon={way.icon} className={`w-12 h-12 ${way.title === 'Donate' ? 'text-neutral-900' : 'text-white'} mb-4`} />
                   <h3 className={`text-h3 font-heading font-bold ${way.title === 'Donate' ? 'text-neutral-900' : 'text-white'} mb-2`}> {way.title} </h3>
                 </div>
@@ -189,7 +189,7 @@ const Join = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-primary to-primary-600 text-white">
+      <section className="py-20 bg-primary text-white">
         <div className="max-w-container mx-auto px-5 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }}>
             <h2 className="text-h2 font-heading font-bold mb-6"> Every Action Counts </h2>

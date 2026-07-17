@@ -142,7 +142,7 @@ const PodcastEpisode = () => {
                     Back to All Episodes
                 </Link>
 
-                <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div className="bg-white rounded-lg shadow-xl overflow-hidden">
                     <div className="p-8 md:p-12">
                         <div className="flex flex-col md:flex-row gap-8">
                             {/* Artwork */}
@@ -179,7 +179,7 @@ const PodcastEpisode = () => {
                                 </div>
 
                                 {/* Player Controls */}
-                                <div className="bg-neutral-50 rounded-xl p-4 border border-neutral-100 mb-8">
+                                <div className="bg-neutral-50 rounded-lg p-4 border border-neutral-100 mb-8">
                                     <div className="flex items-center gap-4">
                                         <button
                                             onClick={handlePlay}

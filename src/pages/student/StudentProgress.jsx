@@ -39,7 +39,7 @@ const StudentProgress = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gray-800 p-6 rounded-xl"
+          className="bg-gray-800 p-6 rounded-lg"
         >
           <div className="flex items-center space-x-4">
             <div className="p-3 bg-accent/20 rounded-full text-accent">
@@ -56,7 +56,7 @@ const StudentProgress = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-gray-800 p-6 rounded-xl"
+          className="bg-gray-800 p-6 rounded-lg"
         >
           <div className="flex items-center space-x-4">
             <div className="p-3 bg-green-500/20 rounded-full text-green-400">
@@ -73,7 +73,7 @@ const StudentProgress = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-gray-800 p-6 rounded-xl"
+          className="bg-gray-800 p-6 rounded-lg"
         >
           <div className="flex items-center space-x-4">
             <div className="p-3 bg-blue-500/20 rounded-full text-blue-400">
@@ -90,7 +90,7 @@ const StudentProgress = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-gray-800 p-6 rounded-xl"
+          className="bg-gray-800 p-6 rounded-lg"
         >
           <div className="flex items-center space-x-4">
             <div className="p-3 bg-purple-500/20 rounded-full text-purple-400">
@@ -108,7 +108,7 @@ const StudentProgress = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="bg-gray-800 p-8 rounded-xl text-center"
+        className="bg-gray-800 p-8 rounded-lg text-center"
       >
         <SafeIcon icon={FiTrendingUp} className="text-6xl text-accent mx-auto mb-4" />
         <h3 className="text-2xl font-bold text-white mb-4">Progress Tracking</h3>

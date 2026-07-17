@@ -53,7 +53,7 @@ const StudentForum = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-gray-800 p-6 rounded-xl hover:bg-gray-750 transition-colors cursor-pointer"
+                className="bg-gray-800 p-6 rounded-lg hover:bg-gray-750 transition-colors cursor-pointer"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -89,7 +89,7 @@ const StudentForum = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-gray-800 p-6 rounded-xl"
+            className="bg-gray-800 p-6 rounded-lg"
           >
             <h3 className="text-lg font-bold text-white mb-4">Forum Stats</h3>
             <div className="space-y-3">
@@ -112,7 +112,7 @@ const StudentForum = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-gray-800 p-6 rounded-xl"
+            className="bg-gray-800 p-6 rounded-lg"
           >
             <h3 className="text-lg font-bold text-white mb-4">Popular Courses</h3>
             <div className="space-y-2">

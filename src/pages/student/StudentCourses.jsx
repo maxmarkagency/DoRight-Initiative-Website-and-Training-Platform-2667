@@ -46,10 +46,10 @@ const StudentCourses = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-gray-800 rounded-xl overflow-hidden hover:shadow-xl transition-shadow duration-300"
+              className="bg-gray-800 rounded-lg overflow-hidden hover:shadow-[0_4px_12px_rgba(13,14,22,0.15)] transition-shadow duration-300"
             >
               <div className="relative">
-                <div className="h-40 sm:h-48 bg-gradient-to-r from-primary to-accent flex items-center justify-center">
+                <div className="h-40 sm:h-48 bg-primary flex items-center justify-center">
                   <SafeIcon icon={FiBookOpen} className="text-4xl sm:text-6xl text-white opacity-80" />
                 </div>
                 <div className="absolute top-3 sm:top-4 right-3 sm:right-4">
@@ -89,7 +89,7 @@ const StudentCourses = () => {
           ))}
         </div>
       ) : (
-        <div className="bg-gray-800 rounded-xl p-6 sm:p-12 text-center">
+        <div className="bg-gray-800 rounded-lg p-6 sm:p-12 text-center">
           <SafeIcon icon={FiBookOpen} className="text-4xl sm:text-6xl text-gray-500 mx-auto mb-4" />
           <h3 className="text-xl sm:text-2xl font-bold text-white mb-4">No Courses Yet</h3>
           <p className="text-gray-400 mb-4 sm:mb-6 text-sm sm:text-base">Start your learning journey by enrolling in a course</p>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
@@ -45,7 +46,7 @@ const Programs = () => {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary to-primary-600 text-white py-12 sm:py-16 lg:py-20">
+      <section className="bg-primary text-white py-12 sm:py-16 lg:py-20">
         <div className="max-w-container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-center max-w-4xl mx-auto">
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4 sm:mb-6 leading-tight"> {heroSection?.title || 'Our Programs'} </h1>
@@ -75,7 +76,7 @@ const Programs = () => {
             {programs.map((program, index) => (
               <motion.div key={program.title} initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: index * 0.1 }} viewport={{ once: true }} className={`grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 items-center ${index % 2 === 1 ? 'lg:grid-flow-col-dense' : ''}`}>
                 <div className={index % 2 === 1 ? 'lg:col-start-2' : ''}>
-                  <div className="bg-gradient-to-r from-primary to-primary-600 w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl flex items-center justify-center mb-4 sm:mb-6">
+                  <div className="bg-primary w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
                     <SafeIcon icon={iconMap[program.icon] || FiTarget} className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
                   </div>
                   <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-neutral-900 mb-1 sm:mb-2"> {program.title} </h2>
@@ -100,7 +101,7 @@ const Programs = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent rounded-lg"></div>
                     {/* Overlay with program info */}
                     <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
-                      <div className="bg-white/90 backdrop-blur-sm rounded-lg p-3 sm:p-4">
+                      <div className="bg-white rounded-lg p-3 sm:p-4">
                         <h3 className="text-lg sm:text-xl font-heading font-bold text-neutral-900 mb-1"> {program.title} </h3>
                         <p className="text-xs sm:text-sm text-neutral-600"> {program.subtitle} </p>
                       </div>
@@ -135,14 +136,14 @@ const Programs = () => {
       </section>
 
       {/* Real Impact Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-neutral-50 to-neutral-100">
+      <section className="py-12 sm:py-16 lg:py-20 bg-neutral-50">
         <div className="max-w-container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }} className="text-center mb-12 sm:mb-16">
             <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-neutral-900 mb-4 sm:mb-6"> Real Programs,Real Impact </h2>
             <p className="text-sm sm:text-lg text-neutral-700 max-w-3xl mx-auto leading-relaxed"> These images showcase our actual work in Nigerian schools and communities - from classroom mentorship sessions to community outreach programs and educational resource distribution. </p>
           </motion.div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="bg-white rounded-lg border border-neutral-200 p-6 sm:p-8">
               <div className="bg-primary/10 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-4 sm:mb-6">
                 <SafeIcon icon={FiUsers} className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               </div>
@@ -155,7 +156,7 @@ const Programs = () => {
                 <li>• Peer learning facilitation</li>
               </ul>
             </motion.div>
-            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.2 }} viewport={{ once: true }} className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.2 }} viewport={{ once: true }} className="bg-white rounded-lg border border-neutral-200 p-6 sm:p-8">
               <div className="bg-accent/10 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-4 sm:mb-6">
                 <SafeIcon icon={FiTarget} className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
               </div>
@@ -173,17 +174,17 @@ const Programs = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-r from-primary to-primary-600 text-white">
+      <section className="py-12 sm:py-16 lg:py-20 bg-primary text-white">
         <div className="max-w-container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }}>
             <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-heading font-bold mb-4 sm:mb-6"> Get Involved in Our Programs </h2>
             <p className="text-base sm:text-lg md:text-xl text-neutral-300 mb-6 sm:mb-8 max-w-2xl mx-auto"> Whether you're interested in volunteering,partnering with us,or starting a program in your community,we'd love to work with you. </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-              <button className="bg-accent text-neutral-900 px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold hover:brightness-90 transition-colors inline-flex items-center justify-center text-sm sm:text-base w-full sm:w-auto">
+              <Link to="/join" className="bg-accent text-neutral-900 px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold hover:brightness-90 transition-colors inline-flex items-center justify-center text-sm sm:text-base w-full sm:w-auto">
                 Volunteer Now
                 <SafeIcon icon={FiArrowRight} className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-              <button className="border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold hover:bg-white hover:text-primary transition-colors inline-flex items-center justify-center text-sm sm:text-base w-full sm:w-auto"> Partner With Us </button>
+              </Link>
+              <Link to="/join" className="border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold hover:bg-white hover:text-primary transition-colors inline-flex items-center justify-center text-sm sm:text-base w-full sm:w-auto"> Partner With Us </Link>
             </div>
           </motion.div>
         </div>

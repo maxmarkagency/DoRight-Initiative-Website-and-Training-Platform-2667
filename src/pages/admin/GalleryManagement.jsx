@@ -211,7 +211,7 @@ const GalleryManagement = () => {
         </button>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-neutral-200 dark:border-gray-700 p-6">
         {loading ? (
           <div className="text-center py-8">Loading...</div>
         ) : items.length === 0 ? (
@@ -279,7 +279,7 @@ const GalleryManagement = () => {
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
           >
             <h2 className="text-2xl font-bold mb-4">
               {editingItem ? 'Edit Gallery Item' : 'Upload New Media'}

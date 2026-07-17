@@ -92,7 +92,7 @@ const Blog = () => {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary to-primary-600 text-white py-20">
+      <section className="bg-primary text-white py-20">
         <div className="max-w-container mx-auto px-5">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -149,7 +149,7 @@ const Blog = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              className="bg-gradient-to-r from-neutral-50 to-neutral-100 rounded-2xl overflow-hidden shadow-lg"
+              className="bg-neutral-50 rounded-lg overflow-hidden border border-neutral-200"
             >
               <Link to={`/blog/${featuredPost.id}`}>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
@@ -211,7 +211,7 @@ const Blog = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: index * 0.1 }}
                     viewport={{ once: true }}
-                    className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow h-full flex flex-col"
+                    className="bg-white rounded-lg border border-neutral-200 overflow-hidden hover:shadow-[0_4px_12px_rgba(13,14,22,0.15)] transition-shadow h-full flex flex-col"
                   >
                     <div className="relative">
                       <img src={post.image} alt={post.title} className="w-full h-48 object-cover" />

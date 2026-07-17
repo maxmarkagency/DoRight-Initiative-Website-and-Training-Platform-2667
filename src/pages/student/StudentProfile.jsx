@@ -32,7 +32,7 @@ const StudentProfile = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gray-800 p-4 sm:p-6 rounded-xl text-center"
+            className="bg-gray-800 p-4 sm:p-6 rounded-lg text-center"
           >
             <div className="relative inline-block mb-4">
               <div className="w-20 h-20 sm:w-24 sm:h-24 bg-accent text-black rounded-full flex items-center justify-center text-xl sm:text-2xl font-bold mx-auto">
@@ -60,7 +60,7 @@ const StudentProfile = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-gray-800 p-4 sm:p-6 rounded-xl"
+            className="bg-gray-800 p-4 sm:p-6 rounded-lg"
           >
             <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Personal Information</h3>
             <div className="space-y-3 sm:space-y-4">

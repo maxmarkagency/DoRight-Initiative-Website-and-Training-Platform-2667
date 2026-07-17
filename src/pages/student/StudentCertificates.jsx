@@ -37,7 +37,7 @@ const StudentCertificates = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-gray-800 p-6 rounded-xl"
+              className="bg-gray-800 p-6 rounded-lg"
             >
               <div className="text-center">
                 <div className="p-4 bg-accent/20 rounded-full text-accent w-16 h-16 mx-auto mb-4 flex items-center justify-center">
@@ -67,7 +67,7 @@ const StudentCertificates = () => {
           ))}
         </div>
       ) : (
-        <div className="bg-gray-800 p-12 rounded-xl text-center">
+        <div className="bg-gray-800 p-12 rounded-lg text-center">
           <SafeIcon icon={FiAward} className="text-6xl text-gray-500 mx-auto mb-4" />
           <h3 className="text-2xl font-bold text-white mb-4">No Certificates Yet</h3>
           <p className="text-gray-400 mb-6">Complete your first course to earn a certificate</p>

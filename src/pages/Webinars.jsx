@@ -91,7 +91,7 @@ const Webinars = () => {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary to-primary-600 text-white py-20">
+      <section className="bg-primary text-white py-20">
         <div className="max-w-container mx-auto px-5">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

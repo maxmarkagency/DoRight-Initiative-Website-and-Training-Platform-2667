@@ -173,7 +173,7 @@ const StudentCalendar = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gray-800 p-6 rounded-xl"
+            className="bg-gray-800 p-6 rounded-lg"
           >
             {/* Calendar Header */}
             <div className="flex items-center justify-between mb-6">
@@ -271,7 +271,7 @@ const StudentCalendar = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-gray-800 p-6 rounded-xl mb-6"
+            className="bg-gray-800 p-6 rounded-lg mb-6"
           >
             <h3 className="text-lg font-bold text-white mb-4">
               {selectedDate.toLocaleDateString('en-US', { 
@@ -315,7 +315,7 @@ const StudentCalendar = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-gray-800 p-6 rounded-xl"
+            className="bg-gray-800 p-6 rounded-lg"
           >
             <h3 className="text-lg font-bold text-white mb-4">Upcoming Events</h3>
             <div className="space-y-3">

@@ -191,7 +191,7 @@ const BlogManagement = () => {
         </button>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-neutral-200 dark:border-gray-700 p-6">
         <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
           <div className="relative w-full sm:w-64">
             <input
@@ -277,7 +277,7 @@ const BlogManagement = () => {
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
           >
             <h2 className="text-2xl font-bold mb-4">
               {editingPost ? 'Edit Post' : 'Create New Post'}

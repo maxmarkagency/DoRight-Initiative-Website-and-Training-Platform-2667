@@ -18,7 +18,7 @@ const Trustees = () => {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary to-primary-600 text-white py-20">
+      <section className="bg-primary text-white py-20">
         <div className="max-w-container mx-auto px-5">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-center max-w-4xl mx-auto">
             <h1 className="text-h1 font-heading font-bold mb-6 leading-tight"> OUR TRUSTEES </h1>
@@ -48,7 +48,7 @@ const Trustees = () => {
               <motion.div key={trustee.id} initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: index * 0.1 }} viewport={{ once: true }} className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center ${index % 2 === 1 ? 'lg:grid-flow-col-dense' : ''}`}>
                 {/* Profile Content */}
                 <div className={index % 2 === 1 ? 'lg:col-start-2' : ''}>
-                  <div className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow">
+                  <div className="bg-white rounded-lg border border-neutral-200 p-8 hover:shadow-[0_4px_12px_rgba(13,14,22,0.15)] transition-shadow">
                     <div className="flex items-center mb-6">
                       <div className="bg-primary w-12 h-12 rounded-full flex items-center justify-center mr-4">
                         <SafeIcon icon={FiTarget} className="w-6 h-6 text-white" />
@@ -71,12 +71,12 @@ const Trustees = () => {
                 {/* Profile Image */}
                 <div className={index % 2 === 1 ? 'lg:col-start-1 lg:row-start-1' : ''}>
                   <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.3 }} className="relative">
-                    <div className="relative overflow-hidden rounded-2xl shadow-xl">
+                    <div className="relative overflow-hidden rounded-lg shadow-xl">
                       <img src={trustee.image} alt={trustee.name} className="w-full h-96 lg:h-[500px] object-cover" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
                       {/* Overlay with name */}
                       <div className="absolute bottom-0 left-0 right-0 p-6">
-                        <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4">
+                        <div className="bg-white rounded-lg p-4">
                           <h3 className="text-xl font-heading font-bold text-neutral-900 mb-1"> {trustee.name} </h3>
                           <p className="text-sm text-neutral-600"> Trustee #{String(index + 1).padStart(2, '0')} </p>
                         </div>
@@ -94,7 +94,7 @@ const Trustees = () => {
       </section>
 
       {/* Call to Action Section */}
-      <section className="py-20 bg-gradient-to-r from-primary to-primary-600 text-white">
+      <section className="py-20 bg-primary text-white">
         <div className="max-w-container mx-auto px-5 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }}>
             <h2 className="text-h2 font-heading font-bold mb-6"> Guided by Excellence </h2>

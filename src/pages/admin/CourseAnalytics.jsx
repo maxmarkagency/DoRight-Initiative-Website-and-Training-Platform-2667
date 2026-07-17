@@ -55,7 +55,7 @@ const StatCard = ({ icon, title, value, subtitle, color, trend }) => (
     initial={{ opacity: 0, scale: 0.9 }}
     animate={{ opacity: 1, scale: 1 }}
     transition={{ duration: 0.3 }}
-    className="bg-white p-6 rounded-xl shadow-sm border border-neutral-200 hover:shadow-md transition-shadow"
+    className="bg-white p-6 rounded-lg border border-neutral-200 hover:shadow-[0_4px_12px_rgba(13,14,22,0.15)] transition-shadow"
   >
     <div className="flex items-start justify-between mb-3">
       <div className={`p-3 rounded-lg ${color}`}>
@@ -231,7 +231,7 @@ const CourseAnalytics = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="bg-white p-6 rounded-xl shadow-sm border border-neutral-200"
+        className="bg-white p-6 rounded-lg border border-neutral-200"
       >
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -250,7 +250,7 @@ const CourseAnalytics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="bg-white p-6 rounded-xl shadow-sm border border-neutral-200"
+          className="bg-white p-6 rounded-lg border border-neutral-200"
         >
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -282,7 +282,7 @@ const CourseAnalytics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="bg-white p-6 rounded-xl shadow-sm border border-neutral-200"
+          className="bg-white p-6 rounded-lg border border-neutral-200"
         >
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -349,7 +349,7 @@ const CourseAnalytics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="bg-white p-6 rounded-xl shadow-sm border border-neutral-200"
+          className="bg-white p-6 rounded-lg border border-neutral-200"
         >
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -394,7 +394,7 @@ const CourseAnalytics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.5 }}
-          className="bg-white p-6 rounded-xl shadow-sm border border-neutral-200"
+          className="bg-white p-6 rounded-lg border border-neutral-200"
         >
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -430,7 +430,7 @@ const CourseAnalytics = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.6 }}
-        className="bg-gradient-to-br from-primary to-primary-600 p-6 rounded-xl text-white"
+        className="bg-primary p-6 rounded-lg text-white"
       >
         <div className="flex items-start justify-between">
           <div className="flex-1">

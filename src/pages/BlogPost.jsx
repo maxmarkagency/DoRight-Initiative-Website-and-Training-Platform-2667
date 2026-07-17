@@ -145,13 +145,13 @@ const BlogPost = () => {
             </div>
 
             {/* Featured Image */}
-            <div className="rounded-xl overflow-hidden mb-8 shadow-sm">
+            <div className="rounded-lg overflow-hidden mb-8">
               <img src={post.image} alt={post.title} className="w-full h-auto object-cover" />
             </div>
 
             {/* Article Content */}
             <article
-              className="prose prose-lg max-w-none prose-headings:font-heading prose-headings:font-bold prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl"
+              className="prose prose-lg max-w-none prose-headings:font-heading prose-headings:font-bold prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-img:rounded-lg"
               dangerouslySetInnerHTML={{ __html: post.content }}
             />
 
@@ -195,7 +195,7 @@ const BlogPost = () => {
             </div>
 
             {/* Author Bio */}
-            <div className="bg-white p-8 rounded-xl shadow-sm border border-neutral-100 mt-12 flex flex-col sm:flex-row gap-6 items-center sm:items-start text-center sm:text-left">
+            <div className="bg-white p-8 rounded-lg border border-neutral-100 mt-12 flex flex-col sm:flex-row gap-6 items-center sm:items-start text-center sm:text-left">
               <div className="w-20 h-20 rounded-full bg-neutral-200 flex-shrink-0 overflow-hidden">
                 <SafeIcon icon={FiUser} className="w-full h-full p-4 text-neutral-400" />
               </div>
@@ -210,10 +210,10 @@ const BlogPost = () => {
 
             {/* Comment Section (Placeholder) */}
             <div className="mt-12">
-              <h3 className="text-2xl font-heading font-bold text-neutral-900 mb-8 border-l-4 border-primary pl-4">
+              <h3 className="text-2xl font-heading font-bold text-neutral-900 mb-8">
                 Write a Comment
               </h3>
-              <form className="bg-white p-8 rounded-xl shadow-sm border border-neutral-100">
+              <form className="bg-white p-8 rounded-lg border border-neutral-100">
                 <div className="mb-6">
                   <textarea
                     placeholder="Tell us what you think..."
@@ -224,7 +224,7 @@ const BlogPost = () => {
                   <input type="text" placeholder="Name" className="w-full bg-neutral-50 border border-neutral-200 rounded-lg p-4 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
                   <input type="email" placeholder="Email" className="w-full bg-neutral-50 border border-neutral-200 rounded-lg p-4 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
                 </div>
-                <button type="button" className="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold shadow-lg shadow-blue-600/30 hover:bg-blue-700 transition-all transform hover:-translate-y-1">
+                <button type="button" className="bg-accent text-black px-8 py-3 rounded-lg font-bold hover:brightness-90 transition-all">
                   Post Comment
                 </button>
               </form>
@@ -246,7 +246,7 @@ const BlogPost = () => {
         <section className="py-20 bg-white border-t border-neutral-100">
           <div className="max-w-container mx-auto px-5">
             <div className="flex items-center justify-between mb-12">
-              <h2 className="text-2xl font-heading font-bold text-neutral-900 relative pl-4 border-l-4 border-primary">
+              <h2 className="text-2xl font-heading font-bold text-neutral-900">
                 Related Posts
               </h2>
               <div className="flex gap-2">

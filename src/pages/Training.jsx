@@ -36,7 +36,7 @@ const Training = () => {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen">
       {/* Hero Section with Real Training Image */}
-      <section className="bg-gradient-to-r from-primary to-primary-600 text-white py-12 sm:py-16 lg:py-20">
+      <section className="bg-primary text-white py-12 sm:py-16 lg:py-20">
         <div className="max-w-container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 items-center">
             <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="text-center lg:text-left order-2 lg:order-1">
@@ -84,7 +84,7 @@ const Training = () => {
           </motion.div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {/* Interactive Learning */}
-            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="bg-white rounded-lg border border-neutral-200 overflow-hidden hover:shadow-[0_4px_12px_rgba(13,14,22,0.15)] transition-shadow">
               <div className="relative">
                 <img src="https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759686439881-Do-right-awarenss-initiative-school-project-12-scaled-2-1536x1024.jpg" alt="Interactive DoingRight training session" className="w-full h-40 sm:h-48 object-cover" />
                 <div className="absolute top-4 left-4 bg-primary text-white px-3 py-1 rounded-full text-sm font-medium"> Interactive Learning </div>
@@ -98,7 +98,7 @@ const Training = () => {
               </div>
             </motion.div>
             {/* Resource Distribution */}
-            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }} viewport={{ once: true }} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }} viewport={{ once: true }} className="bg-white rounded-lg border border-neutral-200 overflow-hidden hover:shadow-[0_4px_12px_rgba(13,14,22,0.15)] transition-shadow">
               <div className="relative">
                 <img src="https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759686560981-Do-right-awarenss-initiative-school-project-10-scaled-2-1536x1024.jpg" alt="DoingRight educational resource distribution" className="w-full h-40 sm:h-48 object-cover" />
                 <div className="absolute top-4 left-4 bg-accent text-neutral-900 px-3 py-1 rounded-full text-sm font-medium"> Resource Sharing </div>
@@ -112,7 +112,7 @@ const Training = () => {
               </div>
             </motion.div>
             {/* Community Mentorship */}
-            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} viewport={{ once: true }} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} viewport={{ once: true }} className="bg-white rounded-lg border border-neutral-200 overflow-hidden hover:shadow-[0_4px_12px_rgba(13,14,22,0.15)] transition-shadow">
               <div className="relative">
                 <img src="https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759686583500-Do-right-awarenss-initiative-school-project-9-scaled-2-1536x1024.jpg" alt="DoingRight community mentorship and engagement" className="w-full h-40 sm:h-48 object-cover" />
                 <div className="absolute top-4 left-4 bg-primary text-white px-3 py-1 rounded-full text-sm font-medium"> Mentorship </div>
@@ -134,7 +134,7 @@ const Training = () => {
         <section className="py-12 sm:py-16 bg-neutral-50">
           <div className="max-w-container mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }} className="text-center max-w-3xl mx-auto">
-              <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+              <div className="bg-white rounded-lg border border-neutral-200 p-6 sm:p-8">
                 <div className="bg-primary w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
                   <SafeIcon icon={FiUser} className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                 </div>
