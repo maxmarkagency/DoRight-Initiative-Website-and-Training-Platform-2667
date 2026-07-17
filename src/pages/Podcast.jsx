@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import LoadingTransition from '../components/LoadingTransition';
+import liquidGlass from '../lib/liquid-glass';
 
 const { FiPlay, FiPause, FiClock, FiCalendar, FiHeadphones, FiAlertCircle, FiFacebook, FiTwitter, FiLinkedin, FiMessageCircle, FiShare2, FiArrowRight } = FiIcons;
 
@@ -14,6 +15,15 @@ const Podcast = () => {
     const [currentEpisode, setCurrentEpisode] = useState(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const audioRef = React.useRef(new Audio());
+    const playerBarRef = React.useRef(null);
+
+    // Liquid glass on the sticky player bar, which only mounts once an
+    // episode is selected — re-run whenever it appears.
+    useEffect(() => {
+        if (!currentEpisode || !playerBarRef.current) return;
+        const glass = liquidGlass(playerBarRef.current, { scale: -60, chroma: 4, blur: 6, saturate: 1.3 });
+        return () => glass.destroy();
+    }, [currentEpisode]);
 
     // Placeholder slug - user to update if different
     const PODCAST_SLUG = 'doright';
@@ -96,7 +106,7 @@ const Podcast = () => {
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen bg-neutral-50">
             {/* Hero Section */}
-            <section className="bg-neural-900 text-white py-20 bg-gradient-to-r from-neutral-900 to-neutral-800">
+            <section className="bg-primary text-white py-20">
                 <div className="max-w-container mx-auto px-5">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -104,9 +114,9 @@ const Podcast = () => {
                         transition={{ duration: 0.8 }}
                         className="text-center max-w-4xl mx-auto"
                     >
-                        <div className="inline-flex items-center bg-white/10 rounded-full px-4 py-2 mb-6 backdrop-blur-sm">
-                            <SafeIcon icon={FiHeadphones} className="w-5 h-5 mr-2 text-accent" />
-                            <span className="text-accent font-semibold">DoRight Podcast</span>
+                        <div className="inline-flex items-center bg-accent text-black rounded-full px-4 py-2 mb-6">
+                            <SafeIcon icon={FiHeadphones} className="w-5 h-5 mr-2" />
+                            <span className="font-semibold">DoRight Podcast</span>
                         </div>
                         <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold mb-6 leading-tight">
                             Voices of Integrity
@@ -126,7 +136,7 @@ const Podcast = () => {
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                         </div>
                     ) : error ? (
-                        <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-neutral-200">
+                        <div className="text-center py-20 bg-white rounded-lg border border-neutral-200">
                             <SafeIcon icon={FiAlertCircle} className="w-16 h-16 text-neutral-400 mx-auto mb-4" />
                             <h3 className="text-2xl font-bold text-neutral-800 mb-2">Oops!</h3>
                             <p className="text-neutral-600 mb-4">{error}</p>
@@ -143,7 +153,7 @@ const Podcast = () => {
                             )}
                         </div>
                     ) : episodes.length === 0 ? (
-                        <div className="text-center py-20 bg-white rounded-2xl shadow-sm">
+                        <div className="text-center py-20 bg-white rounded-lg border border-neutral-200">
                             <p className="text-xl text-neutral-600">No episodes found. Check back soon!</p>
                         </div>
                     ) : (
@@ -151,9 +161,10 @@ const Podcast = () => {
                             {/* Now Playing Bar - Sticky if playing */}
                             {currentEpisode && (
                                 <motion.div
+                                    ref={playerBarRef}
                                     initial={{ y: 50, opacity: 0 }}
                                     animate={{ y: 0, opacity: 1 }}
-                                    className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 shadow-2xl p-4 z-50 flex items-center justify-between backdrop-blur-lg bg-white/90"
+                                    className="liquid-glass-player fixed bottom-0 left-0 right-0 p-4 z-50 flex items-center justify-between"
                                 >
                                     <div className="max-w-container mx-auto w-full flex items-center justify-between px-5">
                                         <div className="flex items-center gap-4">
@@ -184,7 +195,7 @@ const Podcast = () => {
                                     initial={{ opacity: 0, y: 10 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
-                                    className={`bg-white rounded-xl p-6 shadow-sm border transition-all duration-300 ${currentEpisode?.id === episode.id ? 'border-primary ring-1 ring-primary shadow-md' : 'border-neutral-200 hover:border-neutral-300 hover:shadow-md'
+                                    className={`bg-white rounded-lg p-6 border transition-all duration-300 ${currentEpisode?.id === episode.id ? 'border-primary ring-1 ring-primary' : 'border-neutral-200 hover:border-neutral-300 hover:shadow-[0_4px_12px_rgba(13,14,22,0.15)]'
                                         }`}
                                 >
                                     <div className="flex flex-col sm:flex-row gap-6">

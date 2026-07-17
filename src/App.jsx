@@ -42,6 +42,7 @@ function AppContent() {
 
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isStudentRoute = location.pathname.startsWith('/dashboard');
+  const isHomeRoute = location.pathname === '/';
 
   return (
     <>
@@ -52,7 +53,9 @@ function AppContent() {
 
       {!isAdminRoute && !isStudentRoute && <Header />}
 
-      <main className={!isAdminRoute && !isStudentRoute ? "pt-16 sm:pt-20" : ""}>
+      {/* Home's hero is full-bleed behind the header; every other page's
+          hero starts as a solid block and needs the header's height offset. */}
+      <main className={!isAdminRoute && !isStudentRoute && !isHomeRoute ? "pt-16 sm:pt-20" : ""}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />

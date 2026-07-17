@@ -5,13 +5,36 @@ import { useAuth } from '../context/AuthContext';
 import UserMenu from './UserMenu';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
+import liquidGlass from '../lib/liquid-glass';
 
 const { FiMenu, FiX, FiChevronDown, FiLogIn, FiArrowRight } = FiIcons;
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const { user, loading } = useAuth();
+  const headerRef = useRef(null);
+
+  const isHome = location.pathname === '/';
+  // Only the home route has a full-bleed hero behind the header, so only
+  // there can the header start fully transparent; every other page needs
+  // the glass background right away or nav text has nothing to contrast against.
+  const showGlass = isScrolled || !isHome;
+
+  useEffect(() => {
+    if (!isHome) return;
+    const onScroll = () => setIsScrolled(window.scrollY > 40);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [isHome]);
+
+  useEffect(() => {
+    if (!headerRef.current || !showGlass) return;
+    const glass = liquidGlass(headerRef.current, { scale: -60, chroma: 4, blur: 6, saturate: 1.4 });
+    return () => glass.destroy();
+  }, [showGlass]);
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
@@ -112,7 +135,10 @@ const Header = () => {
   }
 
   return (
-    <header className="bg-black bg-opacity-80 backdrop-blur-md text-white fixed w-full z-50 shadow-lg">
+    <header
+      ref={headerRef}
+      className={`site-header text-white fixed w-full z-50 ${showGlass ? 'liquid-glass-nav' : ''}`}
+    >
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
           <div className="flex-shrink-0">

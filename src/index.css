@@ -183,3 +183,38 @@ img {
 .ql-toolbar.ql-snow .ql-formats {
   margin-right: 10px;
 }
+
+/* Transparent at rest on the home hero, fades to the glass treatment on scroll. */
+.site-header {
+  background: transparent;
+  box-shadow: none;
+  transition: background 0.3s ease, box-shadow 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+/* Liquid glass material dressing (optics come from src/lib/liquid-glass.js).
+   Reserved for the two functional blur exceptions DESIGN.md sanctions:
+   the header nav bar and the podcast sticky player bar. Not a general pattern. */
+.liquid-glass-nav {
+  background: linear-gradient(180deg, rgba(13, 14, 22, 0.55), rgba(13, 14, 22, 0.7));
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.35),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.liquid-glass-nav.lg-fallback {
+  background: rgba(13, 14, 22, 0.8);
+}
+
+.liquid-glass-player {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.75));
+  box-shadow:
+    0 -8px 30px rgba(13, 14, 22, 0.12),
+    inset 0 1px 1px rgba(255, 255, 255, 0.8),
+    inset 0 0 0 1px rgba(13, 14, 22, 0.06);
+}
+
+.liquid-glass-player.lg-fallback {
+  background: rgba(255, 255, 255, 0.92);
+}
