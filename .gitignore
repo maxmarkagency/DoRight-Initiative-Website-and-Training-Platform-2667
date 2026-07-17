@@ -26,3 +26,7 @@ dist-ssr
 
 # Local tool caches
 .impeccable/
+.gstack/
+
+# Supabase CLI local artifacts
+supabase/.temp/
