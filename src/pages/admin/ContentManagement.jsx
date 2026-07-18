@@ -6,15 +6,20 @@ import supabase from '../../lib/supabase';
 
 const { FiEdit, FiSave, FiX, FiPlus, FiTrash2, FiEye, FiEyeOff, FiSettings, FiUsers, FiCalendar, FiTarget, FiLayers, FiBook } = FiIcons;
 
+const TABLE_BY_TAB = {
+  sections: 'page_sections',
+  programs: 'programs',
+  team: 'team_members',
+  settings: 'site_settings'
+};
+
 const ContentManagement = () => {
   const [selectedPage, setSelectedPage] = useState('home');
   const [selectedTab, setSelectedTab] = useState('sections');
   const [sections, setSections] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
   const [programs, setPrograms] = useState([]);
-  const [events, setEvents] = useState([]);
   const [siteSettings, setSiteSettings] = useState([]);
-  const [pagesData, setPagesData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -29,74 +34,66 @@ const ContentManagement = () => {
     { id: 'trustees', name: 'Trustees Page', icon: FiUsers }
   ];
 
-  useEffect(() => {
-    loadPages();
-  }, []);
-
-  const loadPages = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('pages')
-        .select('id, slug, title');
-
-      if (error) throw error;
-      setPagesData(data || []);
-    } catch (error) {
-      console.error('Error loading pages:', error);
-    }
-  };
-
-  const getPageIdBySlug = (slug) => {
-    const page = pagesData.find(p => p.slug === slug);
-    return page?.id;
-  };
-
   const tabs = [
-    { id: 'sections', name: 'Page Sections', icon: FiLayers }
+    { id: 'sections', name: 'Page Sections', icon: FiLayers },
+    { id: 'programs', name: 'Programs', icon: FiBook },
+    { id: 'team', name: 'Team Members', icon: FiUsers },
+    { id: 'settings', name: 'Site Settings', icon: FiSettings }
   ];
 
   useEffect(() => {
-    if (pagesData.length > 0) {
-      loadData();
-    }
-  }, [selectedPage, selectedTab, pagesData]);
+    loadData();
+  }, [selectedPage, selectedTab]);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const pageId = getPageIdBySlug(selectedPage);
-      if (!pageId) {
-        console.error('Page not found:', selectedPage);
-        setSections([]);
-        setLoading(false);
-        return;
+      if (selectedTab === 'sections') {
+        const { data, error } = await supabase
+          .from('page_sections')
+          .select('*')
+          .eq('page_key', selectedPage)
+          .order('position', { ascending: true });
+        if (error) throw error;
+        setSections(data || []);
+      } else if (selectedTab === 'programs') {
+        const { data, error } = await supabase
+          .from('programs')
+          .select('*')
+          .order('position', { ascending: true });
+        if (error) throw error;
+        setPrograms(data || []);
+      } else if (selectedTab === 'team') {
+        const { data, error } = await supabase
+          .from('team_members')
+          .select('*')
+          .order('position', { ascending: true });
+        if (error) throw error;
+        setTeamMembers(data || []);
+      } else if (selectedTab === 'settings') {
+        const { data, error } = await supabase
+          .from('site_settings')
+          .select('*')
+          .order('setting_key', { ascending: true });
+        if (error) throw error;
+        setSiteSettings(data || []);
       }
-
-      const { data, error } = await supabase
-        .from('page_sections')
-        .select('*')
-        .eq('page_id', pageId)
-        .order('position', { ascending: true });
-
-      if (error) throw error;
-      setSections(data || []);
     } catch (error) {
       console.error('Error loading data:', error);
-      setSections([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSaveSection = async (section) => {
+  const handleSaveItem = async (item) => {
     try {
       setSaveStatus('saving');
-      const { error } = await supabase
-        .from('page_sections')
-        .upsert({
-          ...section,
-          updated_at: new Date().toISOString()
-        });
+      const table = TABLE_BY_TAB[selectedTab];
+      const payload = selectedTab === 'sections'
+        ? { ...item, page_key: selectedPage, updated_at: new Date().toISOString() }
+        : { ...item, updated_at: new Date().toISOString() };
+
+      const { error } = await supabase.from(table).upsert(payload);
 
       if (error) throw error;
       setSaveStatus('saved');
@@ -105,7 +102,7 @@ const ContentManagement = () => {
       setShowModal(false);
       setEditingItem(null);
     } catch (error) {
-      console.error('Error saving section:', error);
+      console.error('Error saving item:', error);
       setSaveStatus('error');
       setTimeout(() => setSaveStatus(''), 2000);
       alert('Failed to save: ' + error.message);
@@ -146,15 +143,13 @@ const ContentManagement = () => {
   };
 
   const handleCreateNew = () => {
-    const pageId = getPageIdBySlug(selectedPage);
-    setEditingItem({
-      page_id: pageId,
-      section_key: '',
-      section_type: 'content',
-      section_name: '',
-      position: sections.length,
-      is_active: true
-    });
+    const defaults = {
+      sections: { page_key: selectedPage, section_key: '', section_type: 'content', position: sections.length, is_visible: true },
+      programs: { title: '', subtitle: '', description: '', icon: 'FiTarget', features: [], position: programs.length, is_active: true },
+      team: { name: '', role: '', bio: '', position: teamMembers.length, is_active: true },
+      settings: { setting_key: '', setting_value: '', setting_type: 'text', description: '' }
+    };
+    setEditingItem(defaults[selectedTab]);
     setShowModal(true);
   };
 
@@ -451,124 +446,6 @@ const ContentManagement = () => {
     );
   };
 
-  const renderEventEditor = () => {
-    if (!editingItem) return null;
-
-    return (
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-2">Title</label>
-          <input
-            type="text"
-            value={editingItem.title || ''}
-            onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
-            className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-yellow-400"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-2">Description</label>
-          <textarea
-            value={editingItem.description || ''}
-            onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
-            rows={4}
-            className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-yellow-400"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">Event Date</label>
-            <input
-              type="datetime-local"
-              value={editingItem.event_date ? new Date(editingItem.event_date).toISOString().slice(0, 16) : ''}
-              onChange={(e) => setEditingItem({ ...editingItem, event_date: e.target.value })}
-              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-yellow-400"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">End Date</label>
-            <input
-              type="datetime-local"
-              value={editingItem.end_date ? new Date(editingItem.end_date).toISOString().slice(0, 16) : ''}
-              onChange={(e) => setEditingItem({ ...editingItem, end_date: e.target.value })}
-              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-yellow-400"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">Location</label>
-            <input
-              type="text"
-              value={editingItem.location || ''}
-              onChange={(e) => setEditingItem({ ...editingItem, location: e.target.value })}
-              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-yellow-400"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">Event Type</label>
-            <select
-              value={editingItem.event_type || 'event'}
-              onChange={(e) => setEditingItem({ ...editingItem, event_type: e.target.value })}
-              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-yellow-400"
-            >
-              <option value="event">Event</option>
-              <option value="webinar">Webinar</option>
-              <option value="workshop">Workshop</option>
-              <option value="conference">Conference</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">Image URL</label>
-            <input
-              type="url"
-              value={editingItem.image_url || ''}
-              onChange={(e) => setEditingItem({ ...editingItem, image_url: e.target.value })}
-              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-yellow-400"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">Registration URL</label>
-            <input
-              type="url"
-              value={editingItem.registration_url || ''}
-              onChange={(e) => setEditingItem({ ...editingItem, registration_url: e.target.value })}
-              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-yellow-400"
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-6">
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="is_featured"
-              checked={editingItem.is_featured || false}
-              onChange={(e) => setEditingItem({ ...editingItem, is_featured: e.target.checked })}
-              className="w-4 h-4 text-yellow-400 focus:ring-yellow-400 border-neutral-300 rounded"
-            />
-            <label htmlFor="is_featured" className="ml-2 text-sm text-neutral-700">Featured</label>
-          </div>
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="is_active_event"
-              checked={editingItem.is_active !== false}
-              onChange={(e) => setEditingItem({ ...editingItem, is_active: e.target.checked })}
-              className="w-4 h-4 text-yellow-400 focus:ring-yellow-400 border-neutral-300 rounded"
-            />
-            <label htmlFor="is_active_event" className="ml-2 text-sm text-neutral-700">Active</label>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   const renderSettingEditor = () => {
     if (!editingItem) return null;
 
@@ -633,20 +510,33 @@ const ContentManagement = () => {
     );
   };
 
+  const TAB_LABELS = {
+    sections: 'Section',
+    programs: 'Program',
+    team: 'Team Member',
+    settings: 'Setting'
+  };
+
   const renderModal = () => {
     if (!showModal || !editingItem) return null;
 
     const getTitle = () => {
       const isNew = !editingItem.id;
-      return isNew ? 'Add Section' : 'Edit Section';
+      return `${isNew ? 'Add' : 'Edit'} ${TAB_LABELS[selectedTab]}`;
     };
 
     const handleSave = () => {
-      handleSaveSection(editingItem);
+      handleSaveItem(editingItem);
     };
 
     const renderEditor = () => {
-      return renderSectionEditor();
+      switch (selectedTab) {
+        case 'sections': return renderSectionEditor();
+        case 'programs': return renderProgramEditor();
+        case 'team': return renderTeamMemberEditor();
+        case 'settings': return renderSettingEditor();
+        default: return null;
+      }
     };
 
     return (
@@ -805,47 +695,6 @@ const ContentManagement = () => {
     );
   };
 
-  const renderEvents = () => {
-    if (loading) {
-      return <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div></div>;
-    }
-
-    if (events.length === 0) {
-      return <div className="text-center py-12"><p className="text-neutral-600 mb-4">No events found.</p></div>;
-    }
-
-    return (
-      <div className="space-y-4">
-        {events.map((event) => (
-          <motion.div key={event.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white border border-neutral-200 rounded-lg p-4 hover:shadow-md">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h3 className="font-semibold text-neutral-900">{event.title}</h3>
-                  <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">{event.event_type}</span>
-                  {event.is_featured && <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded">Featured</span>}
-                </div>
-                <p className="text-sm text-neutral-600">{event.location}</p>
-                {event.event_date && <p className="text-xs text-neutral-500">{new Date(event.event_date).toLocaleDateString()}</p>}
-              </div>
-              <div className="flex items-center gap-2">
-                <button onClick={() => handleToggleVisibility(event.id, 'events', 'is_active', event.is_active)} className={`p-2 rounded-lg ${event.is_active ? 'bg-green-100 text-green-600' : 'bg-neutral-100 text-neutral-400'}`}>
-                  <SafeIcon icon={event.is_active ? FiEye : FiEyeOff} className="w-5 h-5" />
-                </button>
-                <button onClick={() => { setEditingItem(event); setShowModal(true); }} className="p-2 bg-yellow-400 text-black rounded-lg">
-                  <SafeIcon icon={FiEdit} className="w-5 h-5" />
-                </button>
-                <button onClick={() => handleDelete(event.id, 'events')} className="p-2 bg-red-100 text-red-600 rounded-lg">
-                  <SafeIcon icon={FiTrash2} className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    );
-  };
-
   const renderSettings = () => {
     if (loading) {
       return <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div></div>;
@@ -888,7 +737,6 @@ const ContentManagement = () => {
       case 'sections': return renderSections();
       case 'programs': return renderPrograms();
       case 'team': return renderTeamMembers();
-      case 'events': return renderEvents();
       case 'settings': return renderSettings();
       default: return null;
     }

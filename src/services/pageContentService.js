@@ -1,31 +1,19 @@
 import supabase from '../lib/supabase';
 
-export const getPageContent = async (pageSlug) => {
+export const getPageContent = async (pageKey) => {
   try {
-    const { data: page, error: pageError } = await supabase
-      .from('pages')
-      .select('id')
-      .eq('slug', pageSlug)
-      .maybeSingle();
-
-    if (pageError) throw pageError;
-    if (!page) {
-      console.warn(`Page not found: ${pageSlug}`);
-      return [];
-    }
-
-    const { data: sections, error: sectionsError } = await supabase
+    const { data: sections, error } = await supabase
       .from('page_sections')
       .select('*')
-      .eq('page_id', page.id)
-      .eq('is_active', true)
+      .eq('page_key', pageKey)
+      .eq('is_visible', true)
       .order('position', { ascending: true });
 
-    if (sectionsError) throw sectionsError;
+    if (error) throw error;
 
     return sections || [];
   } catch (error) {
-    console.error(`Error loading page content for ${pageSlug}:`, error);
+    console.error(`Error loading page content for ${pageKey}:`, error);
     return [];
   }
 };

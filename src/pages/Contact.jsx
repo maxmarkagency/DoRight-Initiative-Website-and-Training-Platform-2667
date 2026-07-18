@@ -1,13 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
+import supabase from '../lib/supabase';
+import { getPageContent, getSectionByKey } from '../services/pageContentService';
 
 const { FiMail, FiMapPin, FiFacebook, FiTwitter, FiInstagram, FiLinkedin, FiSend, FiCheck } = FiIcons;
 
 const Contact = () => {
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [sections, setSections] = useState([]);
+  const [siteSettings, setSiteSettings] = useState({});
+
+  useEffect(() => {
+    getPageContent('contact').then(setSections);
+    supabase
+      .from('site_settings')
+      .select('setting_key, setting_value')
+      .in('setting_key', ['contact_email', 'contact_phone', 'contact_address', 'social_links'])
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('Error loading contact settings:', error);
+          return;
+        }
+        const settings = {};
+        (data || []).forEach((row) => { settings[row.setting_key] = row.setting_value; });
+        setSiteSettings(settings);
+      });
+  }, []);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -20,9 +41,12 @@ const Contact = () => {
     setIsSubmitted(true);
   };
 
+  const heroSection = getSectionByKey(sections, 'hero');
+  const socialLinks = siteSettings.social_links || {};
+
   const contactInfo = [
-    { icon: FiMail, title: 'Email Us', details: ['info@doright.ng', 'support@doright.ng'], color: 'text-primary' },
-    { icon: FiMapPin, title: 'Visit Us', details: ['DoRight Awareness Initiative', '28b, Olaminuyun street , Parkview', 'Lagos, Nigeria 101233'], color: 'text-primary' }
+    { icon: FiMail, title: 'Email Us', details: [siteSettings.contact_email || 'info@doright.ng', 'support@doright.ng'], color: 'text-primary' },
+    { icon: FiMapPin, title: 'Visit Us', details: siteSettings.contact_address ? [siteSettings.contact_address] : ['DoRight Awareness Initiative', '28b, Olaminuyun street , Parkview', 'Lagos, Nigeria 101233'], color: 'text-primary' }
   ];
 
   const departments = [
@@ -36,11 +60,11 @@ const Contact = () => {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen">
       {/* Hero Section */}
-      <section className="bg-primary text-white py-12 sm:py-16 lg:py-20">
+      <section className="bg-primary text-white pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-16 lg:pb-20">
         <div className="max-w-container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-center max-w-4xl mx-auto">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4 sm:mb-6 leading-tight"> Get in Touch </h1>
-            <p className="text-base sm:text-lg md:text-xl text-neutral-300 leading-relaxed"> We'd love to hear from you. Whether you have questions about our programs,want to get involved,or need support,we're here to help. </p>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4 sm:mb-6 leading-tight"> {heroSection?.title || 'Get in Touch'} </h1>
+            <p className="text-base sm:text-lg md:text-xl text-neutral-300 leading-relaxed"> {heroSection?.content || "We'd love to hear from you. Whether you have questions about our programs,want to get involved,or need support,we're here to help."} </p>
           </motion.div>
         </div>
       </section>
@@ -129,7 +153,7 @@ const Contact = () => {
               <div className="mt-8 sm:mt-12">
                 <h3 className="text-lg sm:text-xl font-heading font-bold text-neutral-900 mb-4 sm:mb-6"> Follow Us </h3>
                 <div className="flex space-x-3 sm:space-x-4">
-                  {[{ icon: FiFacebook, href: '#', label: 'Facebook' }, { icon: FiTwitter, href: '#', label: 'Twitter' }, { icon: FiInstagram, href: '#', label: 'Instagram' }, { icon: FiLinkedin, href: '#', label: 'LinkedIn' }].map((social) => (
+                  {[{ icon: FiFacebook, href: socialLinks.facebook || '#', label: 'Facebook' }, { icon: FiTwitter, href: socialLinks.twitter || '#', label: 'Twitter' }, { icon: FiInstagram, href: socialLinks.instagram || '#', label: 'Instagram' }, { icon: FiLinkedin, href: socialLinks.linkedin || '#', label: 'LinkedIn' }].map((social) => (
                     <a key={social.label} href={social.href} aria-label={social.label} className="w-10 h-10 sm:w-12 sm:h-12 bg-primary text-white rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors">
                       <SafeIcon icon={social.icon} className="w-4 h-4 sm:w-5 sm:h-5" />
                     </a>

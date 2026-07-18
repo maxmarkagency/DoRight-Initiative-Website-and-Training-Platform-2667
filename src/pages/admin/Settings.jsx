@@ -1,23 +1,70 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import SafeIcon from '../../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
+import supabase from '../../lib/supabase';
 
 const { FiSave, FiLoader, FiCheck } = FiIcons;
 
+const SETTING_KEYS = ['site_name', 'contact_email', 'allow_registration', 'maintenance_mode'];
+
 const Settings = () => {
+  const [values, setValues] = useState({
+    site_name: 'DoRight Academy',
+    contact_email: 'info@doright.ng',
+    allow_registration: true,
+    maintenance_mode: false
+  });
   const [saveStatus, setSaveStatus] = useState('idle'); // idle, saving, saved
 
-  const handleSave = () => {
-    setSaveStatus('saving');
-    setTimeout(() => {
-      setSaveStatus('saved');
-      setTimeout(() => {
-        setSaveStatus('idle');
-      }, 2000);
-    }, 1500);
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('setting_key, setting_value')
+        .in('setting_key', SETTING_KEYS);
+
+      if (error) throw error;
+
+      const loaded = {};
+      (data || []).forEach((row) => {
+        loaded[row.setting_key] = row.setting_value;
+      });
+      setValues((prev) => ({ ...prev, ...loaded }));
+    } catch (error) {
+      console.error('Error loading settings:', error);
+    }
   };
-  
+
+  const handleSave = async () => {
+    setSaveStatus('saving');
+    try {
+      const rows = SETTING_KEYS.map((key) => ({
+        setting_key: key,
+        setting_value: values[key],
+        setting_type: typeof values[key] === 'boolean' ? 'boolean' : 'text',
+        updated_at: new Date().toISOString()
+      }));
+
+      const { error } = await supabase
+        .from('site_settings')
+        .upsert(rows, { onConflict: 'setting_key' });
+
+      if (error) throw error;
+
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      alert('Failed to save: ' + error.message);
+      setSaveStatus('idle');
+    }
+  };
+
   const getButtonContent = () => {
     switch (saveStatus) {
       case 'saving':
@@ -75,26 +122,38 @@ const Settings = () => {
           {renderSettingRow("Site Name", (
             <input
               type="text"
-              defaultValue="DoRight Academy"
+              value={values.site_name}
+              onChange={(e) => setValues({ ...values, site_name: e.target.value })}
               className="w-full max-w-md border border-neutral-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
             />
           ))}
           {renderSettingRow("Contact Email", (
             <input
               type="email"
-              defaultValue="info@doright.ng"
+              value={values.contact_email}
+              onChange={(e) => setValues({ ...values, contact_email: e.target.value })}
               className="w-full max-w-md border border-neutral-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
             />
           ))}
           {renderSettingRow("Allow Registration", (
             <label className="flex items-center cursor-pointer">
-              <input type="checkbox" defaultChecked className="sr-only peer" />
+              <input
+                type="checkbox"
+                checked={values.allow_registration}
+                onChange={(e) => setValues({ ...values, allow_registration: e.target.checked })}
+                className="sr-only peer"
+              />
               <div className="relative w-11 h-6 bg-neutral-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
             </label>
           ))}
           {renderSettingRow("Maintenance Mode", (
             <label className="flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" />
+              <input
+                type="checkbox"
+                checked={values.maintenance_mode}
+                onChange={(e) => setValues({ ...values, maintenance_mode: e.target.checked })}
+                className="sr-only peer"
+              />
               <div className="relative w-11 h-6 bg-neutral-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
             </label>
           ))}
