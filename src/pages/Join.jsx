@@ -1,23 +1,80 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
+import { getActiveSubCommittees, submitLead } from '../services/leadsService';
 
-const { FiUsers, FiHeart, FiHandshake, FiCheck, FiArrowRight, FiMail, FiPhone, FiMapPin } = FiIcons;
+const { FiUsers, FiHeart, FiHandshake, FiCheck, FiArrowRight, FiMail, FiPhone, FiMapPin, FiAlertCircle } = FiIcons;
+
+const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
 
 const Join = () => {
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', interest: '', message: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', interest: '', message: '', subCommitteeId: '' });
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoError, setPhotoError] = useState('');
+  const [subCommittees, setSubCommittees] = useState([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const formSectionRef = useRef(null);
+
+  useEffect(() => {
+    getActiveSubCommittees().then(setSubCommittees);
+  }, []);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setPhotoFile(null);
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      setPhotoError('Please choose an image file.');
+      setPhotoFile(null);
+      return;
+    }
+    if (file.size > MAX_PHOTO_SIZE) {
+      setPhotoError('Image must be under 5MB.');
+      setPhotoFile(null);
+      return;
+    }
+    setPhotoError('');
+    setPhotoFile(file);
+  };
+
+  const scrollToForm = () => {
+    formSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log('Form submitted:', formData);
-    setIsSubmitted(true);
+    if (!photoFile) {
+      setPhotoError('A photo is required.');
+      return;
+    }
+    setIsSubmitting(true);
+    setSubmitError('');
+    try {
+      await submitLead({
+        fullName: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        interest: formData.interest,
+        message: formData.message,
+        subCommitteeId: formData.subCommitteeId,
+        photoFile
+      });
+      setIsSubmitted(true);
+    } catch (error) {
+      console.error('Error submitting lead:', error);
+      setSubmitError('Something went wrong submitting your application. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const ways = [
@@ -89,7 +146,7 @@ const Join = () => {
                       </div>
                     ))}
                   </div>
-                  <button className={`w-full ${way.title === 'Donate' ? 'bg-accent text-neutral-900 hover:brightness-90' : 'bg-primary text-white hover:bg-primary-600'} px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center justify-center`}>
+                  <button onClick={scrollToForm} className={`w-full ${way.title === 'Donate' ? 'bg-accent text-neutral-900 hover:brightness-90' : 'bg-primary text-white hover:bg-primary-600'} px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center justify-center`}>
                     {way.ctaText}
                     <SafeIcon icon={FiArrowRight} className="ml-2 w-5 h-5" />
                   </button>
@@ -101,7 +158,7 @@ const Join = () => {
       </section>
 
       {/* Contact Form */}
-      <section className="py-20 bg-white">
+      <section ref={formSectionRef} className="py-20 bg-white">
         <div className="max-w-container mx-auto px-5">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
             {/* Form */}
@@ -119,8 +176,8 @@ const Join = () => {
                     <input type="email" id="email" name="email" value={formData.email} onChange={handleInputChange} required className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" />
                   </div>
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-neutral-700 mb-2"> Phone Number </label>
-                    <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleInputChange} className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" />
+                    <label htmlFor="phone" className="block text-sm font-medium text-neutral-700 mb-2"> Phone Number * </label>
+                    <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleInputChange} required className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" />
                   </div>
                   <div>
                     <label htmlFor="interest" className="block text-sm font-medium text-neutral-700 mb-2"> Area of Interest * </label>
@@ -134,16 +191,40 @@ const Join = () => {
                     </select>
                   </div>
                   <div>
+                    <label htmlFor="subCommitteeId" className="block text-sm font-medium text-neutral-700 mb-2"> Sub-Committee Preference * </label>
+                    <select id="subCommitteeId" name="subCommitteeId" value={formData.subCommitteeId} onChange={handleInputChange} required className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                      <option value="">Select a sub-committee</option>
+                      {subCommittees.map((committee) => (
+                        <option key={committee.id} value={committee.id}>
+                          {committee.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
                     <label htmlFor="message" className="block text-sm font-medium text-neutral-700 mb-2"> Message </label>
                     <textarea id="message" name="message" rows={4} value={formData.message} onChange={handleInputChange} placeholder="Tell us more about your interest and how you'd like to get involved..." className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" />
                   </div>
-                  <button type="submit" className="w-full bg-primary text-white px-6 py-4 rounded-lg font-semibold hover:bg-primary-600 transition-colors"> Submit Application </button>
+                  <div>
+                    <label htmlFor="photo" className="block text-sm font-medium text-neutral-700 mb-2"> Photo * </label>
+                    <input type="file" id="photo" name="photo" accept="image/*" onChange={handlePhotoChange} required className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" />
+                    {photoError && <p className="text-red-600 text-sm mt-2">{photoError}</p>}
+                  </div>
+                  {submitError && (
+                    <div className="flex items-start bg-red-50 border border-red-200 rounded-lg p-4">
+                      <SafeIcon icon={FiAlertCircle} className="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" />
+                      <p className="text-red-700 text-sm">{submitError}</p>
+                    </div>
+                  )}
+                  <button type="submit" disabled={isSubmitting} className="w-full bg-primary text-white px-6 py-4 rounded-lg font-semibold hover:bg-primary-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+                    {isSubmitting ? 'Submitting...' : 'Submit Application'}
+                  </button>
                 </form>
               ) : (
                 <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-accent/10 border border-accent/20 rounded-lg p-6 text-center">
                   <SafeIcon icon={FiCheck} className="w-12 h-12 text-accent mx-auto mb-4" />
                   <h3 className="text-xl font-bold text-neutral-900 mb-2"> Thank You! </h3>
-                  <p className="text-neutral-700"> We've received your application and will get back to you within 48 hours. </p>
+                  <p className="text-neutral-700"> We've received your application and will get back to you within 24 hours. </p>
                 </motion.div>
               )}
             </motion.div>
