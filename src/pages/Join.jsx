@@ -74,7 +74,7 @@ const Join = () => {
           </motion.div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {ways.map((way, index) => (
-              <motion.div key={way.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.1 }} viewport={{ once: true }} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+              <motion.div key={way.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.1 }} viewport={{ once: true }} className="bg-white rounded-lg border border-neutral-200 overflow-hidden hover:shadow-[0_4px_12px_rgba(13,14,22,0.15)] transition-shadow">
                 <div className={`p-6 ${way.color}`}>
                   <SafeIcon icon={way.icon} className={`w-12 h-12 ${way.title === 'Donate' ? 'text-neutral-900' : 'text-white'} mb-4`} />
                   <h3 className={`text-h3 font-heading font-bold ${way.title === 'Donate' ? 'text-neutral-900' : 'text-white'} mb-2`}> {way.title} </h3>
