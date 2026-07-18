@@ -20,6 +20,7 @@ const ContentManagement = () => {
   const [teamMembers, setTeamMembers] = useState([]);
   const [programs, setPrograms] = useState([]);
   const [siteSettings, setSiteSettings] = useState([]);
+  const [pagesData, setPagesData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -42,17 +43,40 @@ const ContentManagement = () => {
   ];
 
   useEffect(() => {
-    loadData();
-  }, [selectedPage, selectedTab]);
+    loadPages();
+  }, []);
+
+  const loadPages = async () => {
+    try {
+      const { data, error } = await supabase.from('pages').select('id, slug');
+      if (error) throw error;
+      setPagesData(data || []);
+    } catch (error) {
+      console.error('Error loading pages:', error);
+    }
+  };
+
+  const getPageIdBySlug = (slug) => pagesData.find((p) => p.slug === slug)?.id;
+
+  useEffect(() => {
+    if (selectedTab !== 'sections' || pagesData.length > 0) {
+      loadData();
+    }
+  }, [selectedPage, selectedTab, pagesData]);
 
   const loadData = async () => {
     setLoading(true);
     try {
       if (selectedTab === 'sections') {
+        const pageId = getPageIdBySlug(selectedPage);
+        if (!pageId) {
+          setSections([]);
+          return;
+        }
         const { data, error } = await supabase
           .from('page_sections')
           .select('*')
-          .eq('page_key', selectedPage)
+          .eq('page_id', pageId)
           .order('position', { ascending: true });
         if (error) throw error;
         setSections(data || []);
@@ -90,7 +114,7 @@ const ContentManagement = () => {
       setSaveStatus('saving');
       const table = TABLE_BY_TAB[selectedTab];
       const payload = selectedTab === 'sections'
-        ? { ...item, page_key: selectedPage, updated_at: new Date().toISOString() }
+        ? { ...item, page_id: getPageIdBySlug(selectedPage), updated_at: new Date().toISOString() }
         : { ...item, updated_at: new Date().toISOString() };
 
       const { error } = await supabase.from(table).upsert(payload);
@@ -144,7 +168,7 @@ const ContentManagement = () => {
 
   const handleCreateNew = () => {
     const defaults = {
-      sections: { page_key: selectedPage, section_key: '', section_type: 'content', position: sections.length, is_visible: true },
+      sections: { page_id: getPageIdBySlug(selectedPage), section_key: '', section_type: 'content', position: sections.length, is_active: true },
       programs: { title: '', subtitle: '', description: '', icon: 'FiTarget', features: [], position: programs.length, is_active: true },
       team: { name: '', role: '', bio: '', position: teamMembers.length, is_active: true },
       settings: { setting_key: '', setting_value: '', setting_type: 'text', description: '' }
@@ -255,12 +279,12 @@ const ContentManagement = () => {
           <div className="flex items-center pt-8">
             <input
               type="checkbox"
-              id="is_visible"
-              checked={editingItem.is_visible !== false}
-              onChange={(e) => setEditingItem({ ...editingItem, is_visible: e.target.checked })}
+              id="is_active_section"
+              checked={editingItem.is_active !== false}
+              onChange={(e) => setEditingItem({ ...editingItem, is_active: e.target.checked })}
               className="w-4 h-4 text-yellow-400 focus:ring-yellow-400 border-neutral-300 rounded"
             />
-            <label htmlFor="is_visible" className="ml-2 text-sm text-neutral-700">Visible on website</label>
+            <label htmlFor="is_active_section" className="ml-2 text-sm text-neutral-700">Visible on website</label>
           </div>
         </div>
       </div>
@@ -603,8 +627,8 @@ const ContentManagement = () => {
                 <p className="text-sm text-neutral-600">{section.content ? section.content.substring(0, 100) + '...' : 'No content'}</p>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={() => handleToggleVisibility(section.id, 'page_sections', 'is_visible', section.is_visible)} className={`p-2 rounded-lg transition-colors ${section.is_visible ? 'bg-green-100 text-green-600' : 'bg-neutral-100 text-neutral-400'}`}>
-                  <SafeIcon icon={section.is_visible ? FiEye : FiEyeOff} className="w-5 h-5" />
+                <button onClick={() => handleToggleVisibility(section.id, 'page_sections', 'is_active', section.is_active)} className={`p-2 rounded-lg transition-colors ${section.is_active ? 'bg-green-100 text-green-600' : 'bg-neutral-100 text-neutral-400'}`}>
+                  <SafeIcon icon={section.is_active ? FiEye : FiEyeOff} className="w-5 h-5" />
                 </button>
                 <button onClick={() => { setEditingItem(section); setShowModal(true); }} className="p-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500">
                   <SafeIcon icon={FiEdit} className="w-5 h-5" />
