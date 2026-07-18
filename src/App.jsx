@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext';
 import { TrainingProvider } from './context/TrainingContext';
 
 import Header from './components/Header';
+import { hasTransparentHero } from './lib/headerRoutes';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import LoadingTransition from './components/LoadingTransition';
@@ -42,7 +43,7 @@ function AppContent() {
 
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isStudentRoute = location.pathname.startsWith('/dashboard');
-  const isHomeRoute = location.pathname === '/';
+  const needsHeaderOffset = !hasTransparentHero(location.pathname);
 
   return (
     <>
@@ -53,9 +54,10 @@ function AppContent() {
 
       {!isAdminRoute && !isStudentRoute && <Header />}
 
-      {/* Home's hero is full-bleed behind the header; every other page's
-          hero starts as a solid block and needs the header's height offset. */}
-      <main className={!isAdminRoute && !isStudentRoute && !isHomeRoute ? "pt-16 sm:pt-20" : ""}>
+      {/* Pages with a dark hero/band at the top sit full-bleed behind the
+          transparent header; pages with a light top need the header's height
+          offset so content doesn't start under the fixed nav. */}
+      <main className={!isAdminRoute && !isStudentRoute && needsHeaderOffset ? "pt-16 sm:pt-20" : ""}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />

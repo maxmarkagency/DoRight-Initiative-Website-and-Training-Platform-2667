@@ -109,7 +109,7 @@ const BlogPost = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="min-h-screen bg-neutral-50 pt-20"
+      className="min-h-screen bg-neutral-50"
     >
       <div className="max-w-container mx-auto px-5 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">

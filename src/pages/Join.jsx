@@ -38,7 +38,7 @@ const Join = () => {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen">
       {/* Hero Section */}
-      <section className="bg-primary text-white py-20">
+      <section className="bg-primary text-white pt-24 sm:pt-28 lg:pt-32 pb-20">
         <div className="max-w-container mx-auto px-5">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-center max-w-4xl mx-auto">
             <h1 className="text-h1 font-heading font-bold mb-6 leading-tight"> Join the Movement </h1>

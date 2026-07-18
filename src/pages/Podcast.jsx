@@ -106,7 +106,7 @@ const Podcast = () => {
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen bg-neutral-50">
             {/* Hero Section */}
-            <section className="bg-primary text-white py-20">
+            <section className="bg-primary text-white pt-24 sm:pt-28 lg:pt-32 pb-20">
                 <div className="max-w-container mx-auto px-5">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}

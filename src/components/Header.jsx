@@ -6,6 +6,7 @@ import UserMenu from './UserMenu';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import liquidGlass from '../lib/liquid-glass';
+import { hasTransparentHero } from '../lib/headerRoutes';
 
 const { FiMenu, FiX, FiChevronDown, FiLogIn, FiArrowRight } = FiIcons;
 
@@ -16,19 +17,22 @@ const Header = () => {
   const { user, loading } = useAuth();
   const headerRef = useRef(null);
 
-  const isHome = location.pathname === '/';
-  // Only the home route has a full-bleed hero behind the header, so only
-  // there can the header start fully transparent; every other page needs
-  // the glass background right away or nav text has nothing to contrast against.
-  const showGlass = isScrolled || !isHome;
+  // Routes with a dark hero/band at the top can host a header that starts
+  // transparent and turns to glass on scroll; every other route needs the
+  // glass background right away or nav text has nothing to contrast against.
+  const transparentHero = hasTransparentHero(location.pathname);
+  const showGlass = isScrolled || !transparentHero;
 
   useEffect(() => {
-    if (!isHome) return;
+    if (!transparentHero) {
+      setIsScrolled(false);
+      return;
+    }
     const onScroll = () => setIsScrolled(window.scrollY > 40);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, [isHome]);
+  }, [transparentHero]);
 
   useEffect(() => {
     if (!headerRef.current || !showGlass) return;

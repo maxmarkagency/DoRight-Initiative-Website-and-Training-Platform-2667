@@ -85,7 +85,7 @@ const Home = () => {
     <MotionConfig reducedMotion="user">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen w-full overflow-x-hidden">
         {/* Hero Slider — full-bleed background photos, distinct message per slide */}
-        <section className="relative text-white w-full overflow-hidden min-h-[560px] sm:min-h-[640px] lg:min-h-[720px] flex items-center">
+        <section className="relative text-white w-full overflow-hidden min-h-[640px] sm:min-h-[760px] lg:min-h-[880px] flex items-center">
           <AnimatePresence initial={false} custom={slideDirection} mode="sync">
             <motion.div
               key={slide.id}
