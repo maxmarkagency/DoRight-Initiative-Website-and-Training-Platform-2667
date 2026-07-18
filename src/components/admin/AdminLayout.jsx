@@ -11,6 +11,7 @@ import BlogManagement from '../../pages/admin/BlogManagement';
 import GalleryManagement from '../../pages/admin/GalleryManagement';
 import WebinarManagement from '../../pages/admin/WebinarManagement';
 import EventManagement from '../../pages/admin/EventManagement';
+import LeadsManagement from '../../pages/admin/LeadsManagement';
 import MediaManagement from '../../pages/admin/MediaManagement';
 import Settings from '../../pages/admin/Settings';
 
@@ -31,6 +32,7 @@ const AdminLayout = () => {
             <Route path="gallery" element={<GalleryManagement />} />
             <Route path="webinars" element={<WebinarManagement />} />
             <Route path="events" element={<EventManagement />} />
+            <Route path="leads" element={<LeadsManagement />} />
             <Route path="media" element={<MediaManagement />} />
             <Route path="settings" element={<Settings />} />
             <Route path="/" element={<Navigate to="dashboard" replace />} />
