@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
@@ -191,7 +192,10 @@ const Join = () => {
                     </select>
                   </div>
                   <div>
-                    <label htmlFor="subCommitteeId" className="block text-sm font-medium text-neutral-700 mb-2"> Sub-Committee Preference * </label>
+                    <div className="flex items-center justify-between mb-2">
+                      <label htmlFor="subCommitteeId" className="block text-sm font-medium text-neutral-700"> Sub-Committee Preference * </label>
+                      <Link to="/sub-committees" target="_blank" rel="noopener noreferrer" className="text-sm text-primary font-medium hover:underline whitespace-nowrap ml-4"> What does each do? </Link>
+                    </div>
                     <select id="subCommitteeId" name="subCommitteeId" value={formData.subCommitteeId} onChange={handleInputChange} required className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                       <option value="">Select a sub-committee</option>
                       {subCommittees.map((committee) => (

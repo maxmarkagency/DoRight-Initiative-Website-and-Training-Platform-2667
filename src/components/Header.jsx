@@ -49,6 +49,7 @@ const Header = () => {
       dropdown: [
         { name: 'Our Story', path: '/about' },
         { name: 'Our Trustees', path: '/trustees' },
+        { name: 'Sub-Committees', path: '/sub-committees' },
       ]
     },
     {

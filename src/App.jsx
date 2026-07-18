@@ -21,6 +21,7 @@ import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
 import Login from './pages/Login';
 import Trustees from './pages/Trustees';
+import SubCommittees from './pages/SubCommittees';
 import Webinars from './pages/Webinars';
 import CoursePage from './pages/CoursePage';
 import Gallery from './pages/Gallery';
@@ -69,6 +70,7 @@ function AppContent() {
           <Route path="/blog/:postId" element={<BlogPost />} />
           <Route path="/login" element={<Login />} />
           <Route path="/trustees" element={<Trustees />} />
+          <Route path="/sub-committees" element={<SubCommittees />} />
           <Route path="/webinars" element={<Webinars />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/events" element={<Events />} />
