@@ -176,8 +176,8 @@ const Join = () => {
                     <input type="email" id="email" name="email" value={formData.email} onChange={handleInputChange} required className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" />
                   </div>
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-neutral-700 mb-2"> Phone Number </label>
-                    <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleInputChange} className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" />
+                    <label htmlFor="phone" className="block text-sm font-medium text-neutral-700 mb-2"> Phone Number * </label>
+                    <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleInputChange} required className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" />
                   </div>
                   <div>
                     <label htmlFor="interest" className="block text-sm font-medium text-neutral-700 mb-2"> Area of Interest * </label>
