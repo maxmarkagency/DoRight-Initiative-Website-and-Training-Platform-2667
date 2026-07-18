@@ -16,6 +16,24 @@ export const getActiveSubCommittees = async () => {
   }
 };
 
+// Same query as getActiveSubCommittees plus `description` — used by the public
+// sub-committee responsibilities page, which needs the prose the dropdown doesn't.
+export const getSubCommitteeDetails = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('sub_committees')
+      .select('id, name, description')
+      .eq('is_active', true)
+      .order('name', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error loading sub-committee details:', error);
+    return [];
+  }
+};
+
 const buildAdminNotes = (interest, message) => {
   const lines = [];
   if (interest) lines.push(`Interest: ${interest}`);
