@@ -1,16 +1,16 @@
-// DRAFT COPY — replace before sending real emails to real leads.
-//
-// The original template copy came from the "New Member Onboarding Process Plan" PDF cited in
-// docs/superpowers/specs/2026-07-17-member-onboarding-pipeline-design.md. That PDF is no longer
-// accessible to this implementation pass, so everything below is a reasonable placeholder in the
-// DRAI "Civic Standard-Bearer" voice (bold, dignified, institutional) — NOT the real DRAI-authored
-// copy. Swap it out for the authored version before this goes anywhere near a live inbox.
+// Real DRAI-authored copy, from the "New Member Onboarding Process Plan" PDF. The two
+// placeholder links the source document called out have been wired to the pages this project
+// actually built: the sub-committee responsibilities link -> /sub-committees (Phase 3), and the
+// website template's onboarding-form link -> /join (Phase 2). The direct-referral template has no
+// form-link CTA in the source copy (the admin already captured the lead's details directly via
+// Phase 5's referral form), so none is added here.
 
 export interface WelcomeEmailInput {
   fullName: string;
   subCommitteeName: string | null;
   referredBy: string | null;
-  onboardingUrl: string;
+  subCommitteesUrl: string;
+  joinFormUrl: string;
 }
 
 export interface ComposedEmail {
@@ -18,10 +18,6 @@ export interface ComposedEmail {
   html: string;
   text: string;
 }
-
-const DRAFT_BANNER_HTML =
-  '<p style="text-transform: uppercase; letter-spacing: 0.08em; font-size: 12px; color: #9a7b1a; margin-bottom: 24px;">DRAFT COPY — pending real DRAI-authored template</p>';
-const DRAFT_BANNER_TEXT = "DRAFT COPY — pending real DRAI-authored template\n";
 
 function escapeHtml(value: string): string {
   return value
@@ -35,85 +31,87 @@ function escapeHtml(value: string): string {
 function wrapHtml(bodyHtml: string): string {
   return `
     <div style="font-family: Georgia, 'Times New Roman', serif; max-width: 560px; margin: 0 auto; color: #1a1a1a; line-height: 1.5;">
-      ${DRAFT_BANNER_HTML}
       ${bodyHtml}
     </div>
   `;
 }
 
+const MISSION_VISION_HTML = `
+  <h2 style="font-size: 16px; margin: 20px 0 4px;">Mission and Vision</h2>
+  <p>Our vision is to reawaken and entrench uprightness in Nigeria.</p>
+  <p>Our mission is to mobilize Nigerians to proactively resist lawlessness and moral decadence, fostering a culture where doing right is the norm.</p>
+`;
+
+const MISSION_VISION_TEXT =
+  "Mission and Vision\n" +
+  "Our vision is to reawaken and entrench uprightness in Nigeria.\n" +
+  "Our mission is to mobilize Nigerians to proactively resist lawlessness and moral decadence, fostering a culture where doing right is the norm.\n\n";
+
+function contributeSectionHtml(subCommitteesUrl: string): string {
+  return `
+    <h2 style="font-size: 16px; margin: 20px 0 4px;">How you can contribute</h2>
+    <p><strong>Join a sub-committee</strong> - Contribute your expertise and passion by joining any of our sub-committees focused on communication, community engagement, fundraising, strategy or secretariat duties. For more information on roles of each committee <a href="${subCommitteesUrl}" style="color: #000; font-weight: bold;">click here</a>.</p>
+    <p><strong>Spread the word</strong> - Raise awareness by sharing our mission and initiatives with your network, both online and offline.</p>
+    <p><strong>Participate in activities</strong> - Get involved in our various activities, from awareness campaigns to mentoring sessions, and make a tangible difference in communities across Nigeria.</p>
+    <p><strong>Be an advocate</strong> - Advocate for ethical behavior and values in your personal and professional life, serving as a role model for others to follow.</p>
+  `;
+}
+
+function contributeSectionText(subCommitteesUrl: string): string {
+  return (
+    "How you can contribute\n" +
+    `Join a sub-committee - Contribute your expertise and passion by joining any of our sub-committees focused on communication, community engagement, fundraising, strategy or secretariat duties. For more information on roles of each committee: ${subCommitteesUrl}\n\n` +
+    "Spread the word - Raise awareness by sharing our mission and initiatives with your network, both online and offline.\n\n" +
+    "Participate in activities - Get involved in our various activities, from awareness campaigns to mentoring sessions, and make a tangible difference in communities across Nigeria.\n\n" +
+    "Be an advocate - Advocate for ethical behavior and values in your personal and professional life, serving as a role model for others to follow.\n\n"
+  );
+}
+
 /** Pathway 1 — website self-serve (`source = 'website'`). */
 export function websiteWelcomeEmail({
   fullName,
-  subCommitteeName,
-  onboardingUrl,
+  subCommitteesUrl,
+  joinFormUrl,
 }: WelcomeEmailInput): ComposedEmail {
   const name = escapeHtml(fullName);
-  const committeeHtml = subCommitteeName
-    ? `<p>You noted an interest in our <strong>${escapeHtml(subCommitteeName)}</strong> sub-committee — take a look at what that team does using the link below.</p>`
-    : `<p>Take a look at what each of our sub-committees does using the link below, and let us know which one speaks to you.</p>`;
-  const committeeText = subCommitteeName
-    ? `You noted an interest in our ${subCommitteeName} sub-committee.\n`
-    : "";
 
   return {
-    subject: "Welcome to the DoRight Initiative — thank you for reaching out",
+    subject: "Thank you for taking the first step to join the DoRight movement",
     html: wrapHtml(`
-      <h1 style="font-size: 22px; margin-bottom: 4px;">Welcome, ${name}.</h1>
-      <p>Thank you for stepping forward to join the DoRight Initiative. We received your submission, and a member of our team will be in touch within 24 hours to welcome you properly.</p>
-      ${committeeHtml}
-      <p><a href="${onboardingUrl}" style="color: #000; font-weight: bold;">See sub-committee responsibilities &rarr;</a></p>
-      <p>In the meantime, if you have any questions, simply reply to this email.</p>
-      <p>In service,<br/>The DoRight Initiative Team</p>
+      <p>Thank you, ${name}, for taking the first step to join the "DO-RIGHT" movement. We are excited to have you onboard as we work together to drive positive change. Do Right is a non partisan, secular movement with no political affiliations.</p>
+      ${MISSION_VISION_HTML}
+      ${contributeSectionHtml(subCommitteesUrl)}
+      <p><a href="${joinFormUrl}" style="color: #000; font-weight: bold;">Click here to fill the short form so we can complete your onboarding process</a></p>
+      <p>The Doing Right Awareness Initiative Team</p>
     `),
     text:
-      `${DRAFT_BANNER_TEXT}\n` +
-      `Welcome, ${fullName}.\n\n` +
-      `Thank you for stepping forward to join the DoRight Initiative. We received your submission, and a member of our team will be in touch within 24 hours to welcome you properly.\n\n` +
-      committeeText +
-      `See sub-committee responsibilities: ${onboardingUrl}\n\n` +
-      `In service,\nThe DoRight Initiative Team`,
+      `Thank you, ${fullName}, for taking the first step to join the "DO-RIGHT" movement. We are excited to have you onboard as we work together to drive positive change. Do Right is a non partisan, secular movement with no political affiliations.\n\n` +
+      MISSION_VISION_TEXT +
+      contributeSectionText(subCommitteesUrl) +
+      `Click here to fill the short form so we can complete your onboarding process: ${joinFormUrl}\n\n` +
+      "The Doing Right Awareness Initiative Team",
   };
 }
 
 /** Pathway 2 — direct referral (`source = 'referral'`). */
 export function referralWelcomeEmail({
   fullName,
-  subCommitteeName,
-  referredBy,
-  onboardingUrl,
+  subCommitteesUrl,
 }: WelcomeEmailInput): ComposedEmail {
   const name = escapeHtml(fullName);
-  const referredHtml = referredBy
-    ? `<p>${escapeHtml(referredBy)} thought you'd be a strong fit for our work, and passed your details along to us.</p>`
-    : `<p>One of our members thought you'd be a strong fit for our work, and passed your details along to us.</p>`;
-  const referredText = referredBy
-    ? `${referredBy} thought you'd be a strong fit for our work, and passed your details along to us.\n\n`
-    : "One of our members thought you'd be a strong fit for our work, and passed your details along to us.\n\n";
-  const committeeHtml = subCommitteeName
-    ? `<p>We understand you may have an interest in our <strong>${escapeHtml(subCommitteeName)}</strong> sub-committee — read more about it below.</p>`
-    : `<p>Read more about each of our sub-committees below, and let us know which one speaks to you.</p>`;
-  const committeeText = subCommitteeName
-    ? `We understand you may have an interest in our ${subCommitteeName} sub-committee.\n`
-    : "";
 
   return {
-    subject: "You've been referred to the DoRight Initiative",
+    subject: "Great speaking with you about the DoRight Movement",
     html: wrapHtml(`
-      <h1 style="font-size: 22px; margin-bottom: 4px;">Welcome, ${name}.</h1>
-      ${referredHtml}
-      <p>We'd be glad to have you formally join the DoRight Initiative. A member of our team will follow up with you directly.</p>
-      ${committeeHtml}
-      <p><a href="${onboardingUrl}" style="color: #000; font-weight: bold;">See sub-committee responsibilities &rarr;</a></p>
-      <p>If you have any questions before then, simply reply to this email.</p>
-      <p>In service,<br/>The DoRight Initiative Team</p>
+      <p>It was wonderful chatting with you today, ${name}, as a follow up on your interest in joining the "Do-Right Movement". We are excited to have you onboard as we work together to drive positive change. To share further details on who we are, Do Right is a non partisan, secular movement with no political affiliations.</p>
+      ${MISSION_VISION_HTML}
+      ${contributeSectionHtml(subCommitteesUrl)}
+      <p>The Doing Right Awareness Initiative</p>
     `),
     text:
-      `${DRAFT_BANNER_TEXT}\n` +
-      `Welcome, ${fullName}.\n\n` +
-      referredText +
-      `We'd be glad to have you formally join the DoRight Initiative. A member of our team will follow up with you directly.\n\n` +
-      committeeText +
-      `See sub-committee responsibilities: ${onboardingUrl}\n\n` +
-      `In service,\nThe DoRight Initiative Team`,
+      `It was wonderful chatting with you today, ${fullName}, as a follow up on your interest in joining the "Do-Right Movement". We are excited to have you onboard as we work together to drive positive change. To share further details on who we are, Do Right is a non partisan, secular movement with no political affiliations.\n\n` +
+      MISSION_VISION_TEXT +
+      contributeSectionText(subCommitteesUrl) +
+      "The Doing Right Awareness Initiative",
   };
 }

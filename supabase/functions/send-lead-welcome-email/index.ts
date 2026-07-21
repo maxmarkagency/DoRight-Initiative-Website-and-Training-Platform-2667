@@ -2,8 +2,8 @@
 //
 // Fired by an AFTER INSERT trigger on public.leads (see
 // supabase/migrations/20260721210000_add_lead_welcome_email_trigger.sql). Sends one of the two
-// DRAFT welcome-email templates (templates.ts) via Resend, branching on `record.source`
-// ('website' -> Pathway 1, 'referral' -> Pathway 2).
+// welcome-email templates (templates.ts, real DRAI-authored copy) via Resend, branching on
+// `record.source` ('website' -> Pathway 1, 'referral' -> Pathway 2).
 //
 // Auth: deployed with --no-verify-jwt, since the pg_net trigger has no end-user JWT to send.
 // Instead the trigger signs its request with a shared secret stored in Supabase Vault
@@ -16,6 +16,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { referralWelcomeEmail, websiteWelcomeEmail } from "./templates.ts";
 
 const SUB_COMMITTEES_URL = "https://doright.ng/#/sub-committees";
+const JOIN_FORM_URL = "https://doright.ng/#/join";
 
 interface LeadRecord {
   id: string;
@@ -114,7 +115,8 @@ Deno.serve(async (req: Request) => {
     fullName: lead.full_name,
     subCommitteeName,
     referredBy: lead.referred_by,
-    onboardingUrl: SUB_COMMITTEES_URL,
+    subCommitteesUrl: SUB_COMMITTEES_URL,
+    joinFormUrl: JOIN_FORM_URL,
   };
 
   const { subject, html, text } =
