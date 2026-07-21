@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import SafeIcon from '../../common/SafeIcon';
 import MediaUpload from '../../components/admin/MediaUpload';
+import AdminModal from '../../components/admin/AdminModal';
+import SearchFilterBar from '../../components/admin/SearchFilterBar';
 import * as FiIcons from 'react-icons/fi';
 import supabase from '../../lib/supabase';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import { quillModules, quillFormats } from '../../lib/quillConfig';
 
-const { FiPlus, FiSearch, FiEdit2, FiTrash2, FiVideo } = FiIcons;
+const { FiPlus, FiEdit2, FiTrash2, FiVideo } = FiIcons;
 
 const WebinarManagement = () => {
   const [webinars, setWebinars] = useState([]);
@@ -29,25 +32,6 @@ const WebinarManagement = () => {
     is_published: false,
     tags: []
   });
-
-  const quillModules = {
-    toolbar: [
-      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      [{ 'align': [] }],
-      ['link', 'image'],
-      ['clean']
-    ]
-  };
-
-  const quillFormats = [
-    'header',
-    'bold', 'italic', 'underline', 'strike',
-    'list', 'bullet',
-    'align',
-    'link', 'image'
-  ];
 
   useEffect(() => {
     fetchWebinars();
@@ -195,28 +179,20 @@ const WebinarManagement = () => {
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-neutral-200 dark:border-gray-700 p-6">
-        <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
-          <div className="relative w-full sm:w-64">
-            <input
-              type="text"
-              placeholder="Search webinars..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg w-full bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-            />
-            <SafeIcon icon={FiSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          </div>
-
-          <select
-            value={publishedFilter}
-            onChange={(e) => setPublishedFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-yellow-400"
-          >
-            <option value="all">All Webinars</option>
-            <option value="published">Published</option>
-            <option value="draft">Draft</option>
-          </select>
-        </div>
+        <SearchFilterBar
+          searchValue={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Search webinars..."
+          filters={[{
+            value: publishedFilter,
+            onChange: setPublishedFilter,
+            options: [
+              { value: 'all', label: 'All Webinars' },
+              { value: 'published', label: 'Published' },
+              { value: 'draft', label: 'Draft' }
+            ]
+          }]}
+        />
 
         {loading ? (
           <div className="text-center py-8">Loading...</div>
@@ -273,13 +249,7 @@ const WebinarManagement = () => {
         )}
       </div>
 
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-          >
+      <AdminModal isOpen={showModal}>
             <h2 className="text-2xl font-bold mb-4">
               {editingWebinar ? 'Edit Webinar' : 'Create New Webinar'}
             </h2>
@@ -436,9 +406,7 @@ const WebinarManagement = () => {
                 </button>
               </div>
             </form>
-          </motion.div>
-        </div>
-      )}
+      </AdminModal>
     </motion.div>
   );
 };
