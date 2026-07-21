@@ -3,8 +3,11 @@ import { motion } from 'framer-motion';
 import SafeIcon from '../../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import supabase from '../../lib/supabase';
+import { getActiveSubCommittees } from '../../services/leadsService';
 
-const { FiSearch, FiX, FiUser, FiCamera } = FiIcons;
+const { FiSearch, FiX, FiUser, FiCamera, FiPlus } = FiIcons;
+
+const EMPTY_REFERRAL_FORM = { fullName: '', email: '', phone: '', subCommitteeId: '', referredBy: '' };
 
 const STATUS_OPTIONS = ['new', 'contacted', 'integrated', 'full_member'];
 
@@ -45,9 +48,19 @@ const LeadsManagement = () => {
   const [photoUrl, setPhotoUrl] = useState(null);
   const [photoLoading, setPhotoLoading] = useState(false);
 
+  const [subCommittees, setSubCommittees] = useState([]);
+  const [showReferralForm, setShowReferralForm] = useState(false);
+  const [referralForm, setReferralForm] = useState(EMPTY_REFERRAL_FORM);
+  const [referralSaving, setReferralSaving] = useState(false);
+  const [referralError, setReferralError] = useState('');
+
   useEffect(() => {
     fetchLeads();
   }, [searchTerm, statusFilter]);
+
+  useEffect(() => {
+    getActiveSubCommittees().then(setSubCommittees);
+  }, []);
 
   const fetchLeads = async () => {
     try {
@@ -138,6 +151,53 @@ const LeadsManagement = () => {
     }
   };
 
+  const openReferralForm = () => {
+    setReferralForm(EMPTY_REFERRAL_FORM);
+    setReferralError('');
+    setShowReferralForm(true);
+  };
+
+  const closeReferralForm = () => {
+    setShowReferralForm(false);
+    setReferralForm(EMPTY_REFERRAL_FORM);
+    setReferralError('');
+  };
+
+  const handleReferralFieldChange = (e) => {
+    const { name, value } = e.target;
+    setReferralForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCreateReferral = async (e) => {
+    e.preventDefault();
+
+    try {
+      setReferralSaving(true);
+      setReferralError('');
+
+      const { error } = await supabase
+        .from('leads')
+        .insert({
+          full_name: referralForm.fullName.trim(),
+          email: referralForm.email.trim(),
+          phone: referralForm.phone.trim(),
+          sub_committee_id: referralForm.subCommitteeId || null,
+          referred_by: referralForm.referredBy.trim(),
+          source: 'referral'
+        });
+
+      if (error) throw error;
+
+      closeReferralForm();
+      fetchLeads();
+    } catch (error) {
+      console.error('Error creating referral lead:', error);
+      setReferralError('Failed to save referral: ' + error.message);
+    } finally {
+      setReferralSaving(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -147,6 +207,14 @@ const LeadsManagement = () => {
     >
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Leads</h1>
+        <button
+          type="button"
+          onClick={openReferralForm}
+          className="px-4 py-2 bg-yellow-400 text-black font-bold rounded-lg hover:bg-yellow-500 inline-flex items-center gap-2"
+        >
+          <SafeIcon icon={FiPlus} className="h-4 w-4" />
+          New Referral
+        </button>
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-neutral-200 dark:border-gray-700 p-6">
@@ -298,6 +366,110 @@ const LeadsManagement = () => {
                 {saving ? 'Saving...' : 'Save'}
               </button>
             </div>
+          </motion.div>
+        </div>
+      )}
+
+      {showReferralForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex justify-between items-start mb-4">
+              <h2 className="text-2xl font-bold">New Referral Lead</h2>
+              <button onClick={closeReferralForm} className="text-gray-400 hover:text-gray-600">
+                <SafeIcon icon={FiX} className="h-6 w-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateReferral} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Full Name</label>
+                <input
+                  type="text"
+                  name="fullName"
+                  value={referralForm.fullName}
+                  onChange={handleReferralFieldChange}
+                  required
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={referralForm.email}
+                  onChange={handleReferralFieldChange}
+                  required
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Phone</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={referralForm.phone}
+                  onChange={handleReferralFieldChange}
+                  required
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Sub-committee Preference</label>
+                <select
+                  name="subCommitteeId"
+                  value={referralForm.subCommitteeId}
+                  onChange={handleReferralFieldChange}
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-400"
+                >
+                  <option value="">Select a sub-committee</option>
+                  {subCommittees.map((committee) => (
+                    <option key={committee.id} value={committee.id}>{committee.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Referred By</label>
+                <input
+                  type="text"
+                  name="referredBy"
+                  value={referralForm.referredBy}
+                  onChange={handleReferralFieldChange}
+                  required
+                  placeholder="Name of the referee who collected this lead"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-400"
+                />
+              </div>
+
+              {referralError && (
+                <p className="text-red-600 text-sm">{referralError}</p>
+              )}
+
+              <div className="flex justify-end gap-4 mt-6">
+                <button
+                  type="button"
+                  onClick={closeReferralForm}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={referralSaving}
+                  className="px-4 py-2 bg-yellow-400 text-black font-bold rounded-lg hover:bg-yellow-500 disabled:opacity-50"
+                >
+                  {referralSaving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </form>
           </motion.div>
         </div>
       )}
