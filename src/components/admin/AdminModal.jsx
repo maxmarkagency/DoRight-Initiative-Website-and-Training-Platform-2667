@@ -1,6 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
+// `children` is evaluated by the caller before this component ever runs, so `isOpen`
+// alone won't stop a null-dereference inside children (e.g. `selectedItem.name`) — guard
+// any nullable state you reference in the children yourself. See LeadsManagement.jsx's
+// detail modal for an example (`{selectedLead && (...)}` inside the AdminModal).
 const AdminModal = ({ isOpen, maxWidth = 'max-w-2xl', children }) => {
   if (!isOpen) return null;
 
