@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import SafeIcon from '../../common/SafeIcon';
 import MediaUpload from '../../components/admin/MediaUpload';
+import AdminModal from '../../components/admin/AdminModal';
 import * as FiIcons from 'react-icons/fi';
 import supabase from '../../lib/supabase';
 
@@ -274,14 +275,8 @@ const GalleryManagement = () => {
       </div>
 
       {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-          >
-            <h2 className="text-2xl font-bold mb-4">
+      <AdminModal isOpen={showModal}>
+        <h2 className="text-2xl font-bold mb-4">
               {editingItem ? 'Edit Gallery Item' : 'Upload New Media'}
             </h2>
 
@@ -404,9 +399,7 @@ const GalleryManagement = () => {
                 </button>
               </div>
             </form>
-          </motion.div>
-        </div>
-      )}
+      </AdminModal>
     </motion.div>
   );
 };
