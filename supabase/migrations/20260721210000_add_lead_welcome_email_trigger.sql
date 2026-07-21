@@ -22,16 +22,27 @@
      The Dashboard's generated SQL bakes the caller's bearer token as a literal string into the
      trigger's arguments, which would mean a secret checked into this migration file forever
      (see github.com/orgs/supabase/discussions/41521). Reading the token from Vault at call time
-     via `vault.decrypted_secrets` avoids that: this file contains a placeholder secret value
-     only, not a real one.
+     via `vault.decrypted_secrets` avoids that — but only if the secret is ever seeded
+     out-of-band. This migration deliberately does NOT create the `lead_webhook_secret` Vault
+     entry itself, so there is never a real (or placeholder) secret value living in this file or
+     in git history. See section 4.
 
-  4. IMPORTANT — one-time manual edits required before this migration is applied for real
-     (this environment has no live Supabase project to fill these in with):
-     a. Replace `YOUR_PROJECT_REF` in the trigger function's URL below with this project's
-        actual ref (Project Settings > General, or the host in your Supabase project URL).
-     b. Replace `'replace-me-with-a-real-random-secret'` below with a real random value, e.g.
-        the output of `openssl rand -hex 32` — and set the *same* value as the
-        `LEAD_WEBHOOK_SECRET` Edge Function secret (`supabase secrets set`).
+  4. One-time manual setup required before this migration does anything useful (this environment
+     has no live Supabase project to run these against):
+     a. Seed the Vault secret out-of-band — NOT by editing this file — e.g. from a shell with the
+        Supabase CLI/psql configured:
+          openssl rand -hex 32 | tr -d '\n' > /tmp/lead_webhook_secret.txt
+          psql "$DATABASE_URL" \
+            -v secret="$(cat /tmp/lead_webhook_secret.txt)" \
+            -c "SELECT vault.create_secret(:'secret', 'lead_webhook_secret');"
+          rm /tmp/lead_webhook_secret.txt
+        (`tr -d '\n'` matters: a trailing newline in the secret will silently mismatch whatever
+        you set as the `LEAD_WEBHOOK_SECRET` Edge Function secret, and every send will 401.)
+     b. Set the identical value as the Edge Function secret:
+          supabase secrets set LEAD_WEBHOOK_SECRET=<same value as step a>
+     c. If this project's ref ever changes, update the hardcoded URL in
+        `notify_lead_welcome_email()` below (currently `jqekzavaerbxjzyeihvv` — this is the
+        project ref/URL, not a secret; the same value is already public in `.env.example`).
      Full deployment sequence: see
      docs/superpowers/specs/2026-07-21-welcome-email-automation-design.md, "Deployment" section.
 */
@@ -46,14 +57,12 @@ CREATE SCHEMA IF NOT EXISTS vault;
 CREATE EXTENSION IF NOT EXISTS supabase_vault WITH SCHEMA vault;
 
 -- ============================================================================
--- Shared webhook secret (placeholder — see note 4b above)
--- ============================================================================
-
-SELECT vault.create_secret('replace-me-with-a-real-random-secret', 'lead_webhook_secret')
-WHERE NOT EXISTS (SELECT 1 FROM vault.secrets WHERE name = 'lead_webhook_secret');
-
--- ============================================================================
 -- Trigger function + trigger
+--
+-- Note: the `lead_webhook_secret` Vault entry is deliberately NOT seeded here. See
+-- header note 4a: seed it out-of-band (psql/CLI), never as a literal in this file.
+-- Until it's seeded, `v_shared_secret` below is NULL and the Edge Function correctly
+-- rejects the request (fails closed, not open).
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION notify_lead_welcome_email()
@@ -66,7 +75,7 @@ BEGIN
   WHERE name = 'lead_webhook_secret';
 
   PERFORM net.http_post(
-    url := 'https://YOUR_PROJECT_REF.supabase.co/functions/v1/send-lead-welcome-email',
+    url := 'https://jqekzavaerbxjzyeihvv.supabase.co/functions/v1/send-lead-welcome-email',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || COALESCE(v_shared_secret, '')

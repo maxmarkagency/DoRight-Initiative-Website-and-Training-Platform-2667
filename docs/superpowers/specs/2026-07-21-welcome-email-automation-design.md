@@ -8,7 +8,7 @@ Depends on: `docs/superpowers/specs/2026-07-17-member-onboarding-pipeline-design
 
 The DRAI onboarding process plan specifies two welcome-email templates — automated web welcome (Pathway 1, `source = 'website'`) and direct referral welcome (Pathway 2, `source = 'referral'`) — sent as soon as a lead lands in `leads`, both linking to an onboarding destination that (per Phase 3) is now the public `/sub-committees` responsibilities page. No transactional email integration exists anywhere in this codebase today. This phase closes the loop: every `INSERT` into `leads` (either pathway) now triggers a real email send.
 
-**The original template copy is lost.** It came from a PDF attachment earlier in this project that is no longer accessible. The copy in `supabase/functions/send-lead-welcome-email/templates.ts` is a placeholder in the DRAI "Civic Standard-Bearer" voice, clearly marked `DRAFT COPY — pending real DRAI-authored template` in both the visible email banner and code comments. Replace it before this ships to real inboxes.
+**Update (2026-07-21, later same day):** the original template copy, initially thought lost, was provided directly by the user and now lives in `supabase/functions/send-lead-welcome-email/templates.ts` verbatim (one typo fix: "were" → "where" in the mission statement). The two placeholder links in the source copy are wired to real destinations: sub-committee responsibilities → `/sub-committees` (Phase 3), and the website template's onboarding-form link → `/join` (Phase 2). The direct-referral template has no form-link CTA, matching the source copy exactly, since Phase 5's admin flow already captures the lead's details directly.
 
 ## Scope
 
@@ -26,7 +26,7 @@ Instead, the migration defines a small custom trigger function, `notify_lead_wel
 - Reads a shared secret from Supabase Vault (`vault.decrypted_secrets`, keyed `'lead_webhook_secret'`) at call time.
 - Calls `net.http_post(...)` directly (the same pg_net primitive `supabase_functions.http_request` wraps), building the request body itself in the documented Database Webhook shape (`{ type, table, schema, record, old_record }`) so the Edge Function sees exactly the payload the task specified.
 
-This is still fully migration-expressible — no Dashboard-only step was needed. The one thing the migration cannot contain is a *real* secret value (there is no live project here to generate one against): it seeds a placeholder Vault secret and documents, in both the migration's header comment and the Deployment section below, that the placeholder must be replaced with a real random value before the trigger is used for real.
+This is still fully migration-expressible — no Dashboard-only step was needed. **Update (2026-07-21, security fix):** the migration originally seeded a *placeholder* Vault secret via `vault.create_secret('replace-me-with-a-real-random-secret', ...)`, with instructions to hand-edit that literal to a real value before deploying. In practice, someone did exactly that in the working tree — pasted a real generated secret directly into the tracked migration file — which is precisely the risk the Vault-based design was meant to avoid (a real secret sitting in a file that's one `git add` away from being burned into history forever). The migration no longer seeds the secret at all: it only enables the extensions and defines the trigger function/trigger, which read `vault.decrypted_secrets` at call time. The secret itself is seeded entirely out-of-band (see Deployment, step 1) via a one-off `psql` command that is never saved to a file. Until it's seeded, `v_shared_secret` is `NULL` and the Edge Function correctly 401s — fails closed, not open.
 
 ### Edge Function auth: shared secret, not `--no-verify-jwt` left wide open
 
@@ -67,11 +67,18 @@ Both already insert into `leads` exactly as Phases 2 and 5 designed. The trigger
 
 None of the following was run in this environment — no live Supabase project or credentials are available here. Run these, in order, against the real project:
 
-1. **Edit the migration file** `supabase/migrations/20260721210000_add_lead_welcome_email_trigger.sql`:
-   - Replace `YOUR_PROJECT_REF` in the trigger function's URL with the real project ref.
-   - Replace `'replace-me-with-a-real-random-secret'` with a real random value (e.g. `openssl rand -hex 32`). Keep this value handy for step 3.
+1. **Seed the Vault secret out-of-band** — never by editing the migration file:
+
+   ```bash
+   openssl rand -hex 32 | tr -d '\n' > /tmp/lead_webhook_secret.txt
+   psql "$DATABASE_URL" \
+     -v secret="$(cat /tmp/lead_webhook_secret.txt)" \
+     -c "SELECT vault.create_secret(:'secret', 'lead_webhook_secret');"
+   ```
+
+   Keep `/tmp/lead_webhook_secret.txt`'s contents handy for step 3, then `rm` it. (`tr -d '\n'` matters — a stray trailing newline in the secret will silently mismatch step 3's value and every send will 401.) If the project ref (currently `jqekzavaerbxjzyeihvv` in the migration's trigger function) ever changes, update that URL too — it's a public project ref, not a secret, safe to edit directly in the file.
 2. **Set the Resend key:** `supabase secrets set RESEND_API_KEY=<your real Resend API key>`
-3. **Set the shared webhook secret** (must exactly match what you put in the migration in step 1): `supabase secrets set LEAD_WEBHOOK_SECRET=<the same random value>`
+3. **Set the shared webhook secret** (must exactly match the value from step 1): `supabase secrets set LEAD_WEBHOOK_SECRET=<the same value>`
 4. **Deploy the function with JWT verification disabled** (the pg_net trigger has no user JWT to present — the shared-secret check in the function is the real auth gate): `supabase functions deploy send-lead-welcome-email --no-verify-jwt`
 5. **Apply the migration:** `supabase db push` (or paste the file into the Supabase Studio SQL editor for the linked project — matching how Phase 1's migration was applied, per `docs/plans/2026-07-17-member-onboarding-data-model.md`).
 6. **Verify in Resend:** confirm the sending domain (`doright.ng`, used as the `from` address in `index.ts`) is a verified domain in the Resend dashboard — an unverified `from` domain will cause every send to fail at the Resend API, not just silently under-deliver.
@@ -79,8 +86,8 @@ None of the following was run in this environment — no live Supabase project o
 
 ## Concerns for a human to double-check before this goes near production
 
-- **This sends real email to real people once deployed.** The template copy is a draft — read the "Verification performed" and "Background" sections above; do not let this ship to a real inbox without the real DRAI copy swapped in.
+- **This sends real email to real people once deployed.** The template copy is now the real DRAI-authored text (see Background update above) — no draft-copy blocker remains, but double-check the rendered HTML/text output once against the source before the first real send.
 - **The trigger fires on every `INSERT`, not `UPDATE`** (`AFTER INSERT ON leads FOR EACH ROW`) — a status change (`new` → `contacted`, etc.) does not re-fire the email. Confirm this matches intent: a lead's status is updated via `UPDATE`, never re-inserted, so this should not double-send under normal admin use. The one way to accidentally double-send is inserting the same person twice (Phase 1 explicitly chose no de-duplication), which is an existing, known, accepted risk carried into this phase unchanged.
-- **The migration contains a placeholder secret and a placeholder project ref that MUST be hand-edited before `supabase db push`.** Applying it unedited will create a trigger that either 404s (wrong ref) or fails the shared-secret check (default placeholder), i.e. it fails safe (no email sends) rather than silently sending to the wrong place — but it is still a manual step a human must not skip.
+- **The migration no longer seeds any secret at all — it must be seeded out-of-band (Deployment step 1) before anything sends.** Applying the migration unseeded is safe (fails closed: `v_shared_secret` is `NULL`, the Edge Function 401s, no email sends) but it is still a manual step a human must not skip. The project ref in the trigger's URL (`jqekzavaerbxjzyeihvv`) is already filled in and is not sensitive — only the secret-seeding step remains manual, and it must never be done by editing a tracked file.
 - **The `from` address (`onboarding@doright.ng`) assumes that domain is verified in Resend.** If it isn't, every send fails at the Resend API step (logged, not silent, per the error handling above) — but it means zero emails go out until someone completes Resend's domain verification, unrelated to anything in this codebase.
 - **No rate limiting on the Edge Function itself.** The shared-secret check keeps out casual unauthenticated requests, but if `LEAD_WEBHOOK_SECRET` ever leaked, nothing in this function limits how many emails a leaked secret could be used to send. Acceptable for a v1 internal-trigger-only endpoint; revisit if this pattern gets reused for more Edge Functions.
