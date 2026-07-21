@@ -4,8 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import SafeIcon from '../../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import supabase from '../../lib/supabase';
+import SearchFilterBar from '../../components/admin/SearchFilterBar';
 
-const { FiSearch, FiFilter, FiPlus, FiMoreVertical, FiBarChart2, FiEye } = FiIcons;
+const { FiPlus, FiMoreVertical, FiBarChart2, FiEye } = FiIcons;
 
 const CourseManagement = () => {
   const navigate = useNavigate();
@@ -82,28 +83,21 @@ const CourseManagement = () => {
         </button>
       </div>
       <div className="bg-white p-6 rounded-lg shadow-sm border border-neutral-200">
-        <div className="flex items-center justify-between mb-4 gap-4">
-          <div className="relative w-full max-w-sm">
-            <SafeIcon icon={FiSearch} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-            <input
-              type="text"
-              placeholder="Search courses..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="bg-neutral-50 border border-neutral-200 rounded-lg pl-10 pr-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-neutral-300 rounded-lg text-neutral-600 hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            <option value="all">All Status</option>
-            <option value="published">Published</option>
-            <option value="draft">Draft</option>
-            <option value="archived">Archived</option>
-          </select>
-        </div>
+        <SearchFilterBar
+          searchValue={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Search courses..."
+          filters={[{
+            value: statusFilter,
+            onChange: setStatusFilter,
+            options: [
+              { value: 'all', label: 'All Status' },
+              { value: 'published', label: 'Published' },
+              { value: 'draft', label: 'Draft' },
+              { value: 'archived', label: 'Archived' }
+            ]
+          }]}
+        />
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="bg-neutral-50 text-neutral-500 uppercase tracking-wider">
