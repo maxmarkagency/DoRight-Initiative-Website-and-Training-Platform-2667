@@ -5,6 +5,7 @@ import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import { supabase } from '../lib/supabase';
 import BlogSidebar from '../components/BlogSidebar';
+import { sanitizeHtml } from '../lib/sanitizeHtml';
 
 const { FiCalendar, FiUser, FiClock, FiShare2, FiFacebook, FiTwitter, FiLinkedin, FiInstagram, FiMessageCircle } = FiIcons;
 
@@ -152,7 +153,7 @@ const BlogPost = () => {
             {/* Article Content */}
             <article
               className="prose prose-lg max-w-none prose-headings:font-heading prose-headings:font-bold prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-img:rounded-lg"
-              dangerouslySetInnerHTML={{ __html: post.content }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
             />
 
             {/* Article Footer / Share */}
@@ -250,10 +251,10 @@ const BlogPost = () => {
                 Related Posts
               </h2>
               <div className="flex gap-2">
-                <button className="w-8 h-8 rounded-full border border-neutral-200 flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+                <button className="w-11 h-11 rounded-full border border-neutral-200 flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
                   <SafeIcon icon={FiIcons.FiChevronLeft} className="w-4 h-4" />
                 </button>
-                <button className="w-8 h-8 rounded-full border border-neutral-200 flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+                <button className="w-11 h-11 rounded-full border border-neutral-200 flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
                   <SafeIcon icon={FiIcons.FiChevronRight} className="w-4 h-4" />
                 </button>
               </div>

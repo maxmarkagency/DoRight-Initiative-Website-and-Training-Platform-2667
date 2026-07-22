@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import { getPageContent, getSectionByKey } from '../services/pageContentService';
+import { sanitizeHtml } from '../lib/sanitizeHtml';
 
 const { FiUsers, FiTarget, FiTrendingUp, FiShield, FiArrowRight, FiCheck } = FiIcons;
 
@@ -50,7 +51,7 @@ const Programs = () => {
         <div className="max-w-container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-center max-w-4xl mx-auto">
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4 sm:mb-6 leading-tight"> {heroSection?.title || 'Our Programs'} </h1>
-            <p className="text-base sm:text-lg md:text-xl text-neutral-300 leading-relaxed"> {heroSection?.content || 'Comprehensive community-led solutions designed to promote integrity,accountability,and civic responsibility across Nigeria through education,advocacy,and grassroots action.'} </p>
+            <div className="text-base sm:text-lg md:text-xl text-neutral-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: sanitizeHtml(heroSection?.content || 'Comprehensive community-led solutions designed to promote integrity,accountability,and civic responsibility across Nigeria through education,advocacy,and grassroots action.') }} />
           </motion.div>
         </div>
       </section>
@@ -97,7 +98,7 @@ const Programs = () => {
                 </div>
                 <div className={index % 2 === 1 ? 'lg:col-start-1 lg:row-start-1' : ''}>
                   <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.3 }} className="relative">
-                    <img src={program.image} alt={program.title} className="rounded-lg shadow-xl w-full h-64 sm:h-80 lg:h-96 xl:h-[500px] object-cover" />
+                    <img src={program.image} alt={program.title} className="rounded-lg w-full h-64 sm:h-80 lg:h-96 xl:h-[500px] object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent rounded-lg"></div>
                     {/* Overlay with program info */}
                     <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
@@ -119,7 +120,7 @@ const Programs = () => {
         <div className="max-w-container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }} className="text-center mb-12 sm:mb-16">
             <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-neutral-900 mb-4 sm:mb-6"> {howWeWorkSection?.title || 'How We Create Change'} </h2>
-            <p className="text-sm sm:text-lg text-neutral-700 max-w-3xl mx-auto leading-relaxed"> {howWeWorkSection?.content || 'Our integrated approach combines community mobilization with institutional engagement,creating sustainable change from the grassroots up while influencing policy at the highest levels.'} </p>
+            <div className="text-sm sm:text-lg text-neutral-700 max-w-3xl mx-auto leading-relaxed" dangerouslySetInnerHTML={{ __html: sanitizeHtml(howWeWorkSection?.content || 'Our integrated approach combines community mobilization with institutional engagement,creating sustainable change from the grassroots up while influencing policy at the highest levels.') }} />
           </motion.div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
             {[{ title: 'Community Engagement', description: 'We start at the grassroots level,working directly with communities to identify challenges and build local capacity for change.', icon: FiUsers }, { title: 'Evidence-Based Advocacy', description: 'Our research and data collection inform targeted advocacy efforts that address systemic issues and promote policy reform.', icon: FiTarget }, { title: 'Sustainable Impact', description: 'We measure outcomes and adapt our strategies to ensure lasting change that communities can maintain and expand.', icon: FiTrendingUp }].map((item, index) => (

@@ -3,6 +3,9 @@ import { motion } from 'framer-motion';
 import SafeIcon from '../../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import supabase from '../../lib/supabase';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import { quillModules, quillFormats } from '../../lib/quillConfig';
 
 const { FiEdit, FiSave, FiX, FiPlus, FiTrash2, FiEye, FiEyeOff, FiSettings, FiUsers, FiCalendar, FiTarget, FiLayers, FiBook } = FiIcons;
 
@@ -233,12 +236,17 @@ const ContentManagement = () => {
 
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-2">Content</label>
-          <textarea
-            value={editingItem.content || ''}
-            onChange={(e) => setEditingItem({ ...editingItem, content: e.target.value })}
-            rows={4}
-            className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-yellow-400"
-          />
+          <div className="border border-neutral-300 rounded-lg overflow-hidden">
+            <ReactQuill
+              theme="snow"
+              value={editingItem.content || ''}
+              onChange={(content) => setEditingItem({ ...editingItem, content })}
+              modules={quillModules}
+              formats={quillFormats}
+              className="bg-white"
+              style={{ minHeight: '200px' }}
+            />
+          </div>
         </div>
 
         <div>

@@ -4,6 +4,7 @@ import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import supabase from '../lib/supabase';
 import { getPageContent, getSectionByKey } from '../services/pageContentService';
+import { sanitizeHtml } from '../lib/sanitizeHtml';
 
 const { FiMail, FiMapPin, FiFacebook, FiTwitter, FiInstagram, FiLinkedin, FiSend, FiCheck } = FiIcons;
 
@@ -64,7 +65,7 @@ const Contact = () => {
         <div className="max-w-container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-center max-w-4xl mx-auto">
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4 sm:mb-6 leading-tight"> {heroSection?.title || 'Get in Touch'} </h1>
-            <p className="text-base sm:text-lg md:text-xl text-neutral-300 leading-relaxed"> {heroSection?.content || "We'd love to hear from you. Whether you have questions about our programs,want to get involved,or need support,we're here to help."} </p>
+            <div className="text-base sm:text-lg md:text-xl text-neutral-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: sanitizeHtml(heroSection?.content || "We'd love to hear from you. Whether you have questions about our programs,want to get involved,or need support,we're here to help.") }} />
           </motion.div>
         </div>
       </section>
@@ -99,7 +100,7 @@ const Contact = () => {
         <div className="max-w-container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
             {/* Contact Form */}
-            <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="bg-white rounded-lg shadow-lg p-6 sm:p-8">
+            <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="bg-white rounded-lg border border-neutral-200 p-6 sm:p-8">
               <h2 className="text-xl sm:text-2xl font-heading font-bold text-neutral-900 mb-4 sm:mb-6"> Send Us a Message </h2>
               <p className="text-sm sm:text-base text-neutral-700 mb-6 sm:mb-8"> Have a specific question or need assistance? Fill out the form below and we'll get back to you as soon as possible. </p>
               {!isSubmitted ? (
@@ -140,7 +141,7 @@ const Contact = () => {
               <p className="text-sm sm:text-base text-neutral-700 mb-6 sm:mb-8"> For specific inquiries,you can reach out directly to the relevant department. </p>
               <div className="space-y-4 sm:space-y-6">
                 {departments.map((dept, index) => (
-                  <motion.div key={dept.name} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.1 }} viewport={{ once: true }} className="bg-white rounded-lg shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow">
+                  <motion.div key={dept.name} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.1 }} viewport={{ once: true }} className="bg-white rounded-lg border border-neutral-200 p-4 sm:p-6 hover:shadow-[0_4px_12px_rgba(13,14,22,0.15)] transition-shadow">
                     <h3 className="text-lg sm:text-xl font-heading font-bold text-neutral-900 mb-2"> {dept.name} </h3>
                     <p className="text-neutral-600 mb-3 text-sm sm:text-base"> {dept.description} </p>
                     <a href={`mailto:${dept.email}`} className="text-primary hover:text-primary-600 font-medium inline-flex items-center text-sm sm:text-base">
@@ -191,7 +192,7 @@ const Contact = () => {
           </motion.div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
             {[{ question: 'How can I volunteer with DoRight?', answer: 'You can apply to volunteer through our Join page or contact our volunteer coordinator directly. We offer flexible opportunities that match your skills and availability.' }, { question: 'Are your training courses free?', answer: 'Yes,all our training courses and certification programs are completely free. Our goal is to make integrity education accessible to all Nigerians.' }, { question: 'How do I report corruption or misconduct?', answer: 'You can use our anonymous reporting hotline or digital platform. All reports are handled confidentially and with appropriate follow-up.' }, { question: 'Can my organization partner with DoRight?', answer: 'We welcome partnerships with organizations that share our values. Contact our partnerships team to discuss collaboration opportunities.' }].map((faq, index) => (
-              <motion.div key={index} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.1 }} viewport={{ once: true }} className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+              <motion.div key={index} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.1 }} viewport={{ once: true }} className="bg-white rounded-lg border border-neutral-200 p-4 sm:p-6">
                 <h3 className="text-base sm:text-lg font-heading font-bold text-neutral-900 mb-3"> {faq.question} </h3>
                 <p className="text-sm sm:text-base text-neutral-700 leading-relaxed"> {faq.answer} </p>
               </motion.div>
