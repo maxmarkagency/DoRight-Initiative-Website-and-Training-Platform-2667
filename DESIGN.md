@@ -15,28 +15,28 @@ colors:
   info: "#17A2B8"
 typography:
   display:
-    fontFamily: "Poppins, system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
+    fontFamily: "Geist Sans, system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
     fontSize: "2.5rem"
     fontWeight: 700
     lineHeight: 1.2
     letterSpacing: "-0.02em"
   headline:
-    fontFamily: "Poppins, system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
+    fontFamily: "Geist Sans, system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
     fontSize: "2rem"
     fontWeight: 700
     lineHeight: 1.3
   title:
-    fontFamily: "Poppins, system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
+    fontFamily: "Geist Sans, system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
     fontSize: "1.5rem"
     fontWeight: 600
     lineHeight: 1.4
   body:
-    fontFamily: "Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
+    fontFamily: "Geist Sans, system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
     fontSize: "1rem"
     fontWeight: 400
     lineHeight: 1.6
   label:
-    fontFamily: "Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
+    fontFamily: "Geist Sans, system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
     fontSize: "0.875rem"
     fontWeight: 500
     lineHeight: 1.5
@@ -84,7 +84,7 @@ The current codebase does not yet fully live up to this doctrine — the homepag
 - Near-black authority + earned gold, not soft neutrals or gradients
 - Solid, deliberate components — full-color fills and clear borders, not tentative or overly soft
 - Flat by default; shadows appear only for genuine state changes, not as ambient texture
-- Poppins headings paired with Inter body — a geometric/humanist contrast, not two similar sans-serifs
+- Geist Sans throughout, one family carried by weight contrast rather than two paired typefaces
 - Generous, consistent 20px radius as the system's signature shape
 
 ## 2. Colors
@@ -114,22 +114,22 @@ The palette is deliberately narrow: one near-black authority tone, one gold that
 
 ## 3. Typography
 
-**Display Font:** Poppins (with system-ui fallback)
-**Body Font:** Inter (with system-ui fallback)
+**Display Font:** Geist Sans (with system-ui fallback)
+**Body Font:** Geist Sans (with system-ui fallback)
 
-**Character:** Poppins' geometric confidence carries headlines; Inter's humanist neutrality carries everything meant to be read at length. The pairing is a real contrast (geometric display + humanist body), not two similar sans-serifs standing in for each other.
+**Character:** One family system-wide, with hierarchy carried entirely by weight and size rather than a second typeface. Geist's range (100–900) gives enough contrast between a bold/black display weight and a regular body weight that a second family isn't needed to separate "announces" from "is read."
 
 ### Hierarchy
-- **Display** (700, 2.5rem/40px, 1.2 line-height, -0.02em tracking): Poppins. Page-level H1s.
-- **Headline** (700, 2rem/32px, 1.3): Poppins. Section headings (H2).
-- **Title** (600, 1.5rem/24px, 1.4): Poppins. Subsection headings (H3), card titles.
-- **Body** (400, 1rem/16px, 1.6): Inter. Cap prose measure at 65–75ch; this is already the base body treatment in `index.css`.
-- **Label** (500, 0.875rem/14px, 1.5): Inter. Nav items, buttons, form labels, metadata.
+- **Display** (700, 2.5rem/40px, 1.2 line-height, -0.02em tracking): Geist Sans. Page-level H1s.
+- **Headline** (700, 2rem/32px, 1.3): Geist Sans. Section headings (H2).
+- **Title** (600, 1.5rem/24px, 1.4): Geist Sans. Subsection headings (H3), card titles.
+- **Body** (400, 1rem/16px, 1.6): Geist Sans. Cap prose measure at 65–75ch; this is already the base body treatment in `index.css`.
+- **Label** (500, 0.875rem/14px, 1.5): Geist Sans. Nav items, buttons, form labels, metadata.
 
 Responsive scaling currently steps through Tailwind breakpoint classes (`text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl`) rather than fluid `clamp()`. Either approach is legitimate; if hero headings are revisited, prefer `clamp()` with a ≤6rem ceiling and a letter-spacing floor of ≥ -0.04em to avoid overflow at in-between viewport widths that the current fixed breakpoint steps can produce.
 
 ### Named Rules
-**The Two-Voice Rule.** Exactly two families system-wide: Poppins for anything that announces, Inter for anything that's read. Never introduce a third family for "just this one section."
+**The One-Family Rule.** Geist Sans, system-wide, no exceptions. Hierarchy comes from weight (400/500/600/700/800) and size, not from introducing a second typeface for "just this one section."
 
 ## 4. Elevation
 

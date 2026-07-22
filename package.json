@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource/geist-sans": "^5.3.0",
     "@supabase/supabase-js": "^2.43.4",
     "dompurify": "^3.4.12",
     "framer-motion": "^11.2.10",
