@@ -1,7 +1,5 @@
 # Supabase-Only Backend + Vercel Deployment Migration Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
-
 **Goal:** Delete the unused Express backend and every cPanel deployment artifact, and configure Vercel as the sole deployment target for the frontend, which already talks to Supabase directly.
 
 **Architecture:** Investigation (see `docs/superpowers/specs/2026-07-15-supabase-vercel-migration-design.md`) found that the frontend already migrated itself off the Express backend for every live feature (auth, blog, gallery, media storage, training/enrollment data all call Supabase directly already). The only genuinely live remnant of the old API is one dead-code trail (`cmsService.js` → `DynamicSection.jsx`, which is itself unused by any page) and one broken import in `MediaManagement.jsx`. So this plan is mostly deletion: remove `backend/`, remove cPanel/Docker artifacts, remove now-pointless dead frontend code, rewrite docs, then configure Vercel + cut over DNS.

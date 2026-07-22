@@ -1,7 +1,5 @@
 # Member Onboarding Data Model (Phase 1) Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
-
 **Goal:** Add the `sub_committees` and `leads` tables (plus a private Storage bucket for lead photos) that the rest of the member-onboarding pipeline (join form, admin review, referral path, email automation) will build on.
 
 **Architecture:** One new Supabase migration file following this project's existing conventions exactly — `EXISTS (SELECT 1 FROM users WHERE users.id = auth.uid() AND users.role = 'admin')` inline RLS checks (the pattern actually used by `blog_posts`/`gallery_items`, not the less-consistently-used `is_admin()` helper), the shared `update_updated_at_column()` trigger function already defined in the initial schema migration, and Storage bucket + policies created via SQL (`storage.buckets` / `storage.objects`) for reproducibility, since this project's one existing bucket (`media-library`) was set up by hand and isn't tracked anywhere.

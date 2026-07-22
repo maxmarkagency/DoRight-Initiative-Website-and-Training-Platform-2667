@@ -1,7 +1,5 @@
 # Admin App Shared Components Refactor Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
-
 **Goal:** Extract three pieces of scaffolding that six admin management pages currently duplicate — the modal shell, the Quill editor config, and the search/filter bar row — into shared components, with zero visual or behavioral change.
 
 **Architecture:** Two new presentational components (`src/components/admin/AdminModal.jsx`, `src/components/admin/SearchFilterBar.jsx`) and one shared config module (`src/lib/quillConfig.js`). Each of the six pages (`BlogManagement.jsx`, `EventManagement.jsx`, `WebinarManagement.jsx`, `CourseManagement.jsx`, `GalleryManagement.jsx`, `LeadsManagement.jsx`) is then updated to import and use these instead of its own hand-rolled copy. Each page keeps 100% of its own data-fetching, form state, and field logic — only the shared shell/scaffolding markup moves.

@@ -1,7 +1,5 @@
 # Join Form Wiring (Phase 2) Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
-
 **Goal:** Wire `src/pages/Join.jsx`'s currently-fake submit handler to actually persist a lead into the Phase 1 `leads`/`sub_committees` schema, with a real photo upload to the `lead-photos` Storage bucket.
 
 **Architecture:** One new service module (`src/services/leadsService.js`, matching the existing `pageContentService.js` pattern) holding the two Supabase calls this feature needs — fetching active sub-committees and submitting a lead (photo upload + table insert) — so `Join.jsx` stays focused on form state and rendering. `Join.jsx` gains: a sub-committee `<select>` populated from the service, a required photo `<input type="file">`, an async submit handler with loading/error states, and scroll-to-form wiring on the three "Ways to Get Involved" CTA buttons (currently dead — no `onClick` at all).
