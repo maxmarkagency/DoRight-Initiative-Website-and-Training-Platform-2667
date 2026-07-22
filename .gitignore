@@ -28,5 +28,8 @@ dist-ssr
 .impeccable/
 .gstack/
 
+# Local-only AI assistant instructions (kept on disk, never tracked)
+CLAUDE.md
+
 # Supabase CLI local artifacts
 supabase/.temp/
