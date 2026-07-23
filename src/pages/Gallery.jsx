@@ -154,9 +154,9 @@ const Gallery = () => {
 
   if (loading) {
     return (
-      <div className="bg-gray-900 text-white min-h-screen flex items-center justify-center">
+      <div className="bg-primary text-white min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-400 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-accent mx-auto mb-4"></div>
           <p className="text-xl text-gray-300">Loading gallery...</p>
         </div>
       </div>
@@ -165,12 +165,12 @@ const Gallery = () => {
 
   if (error) {
     return (
-      <div className="bg-gray-900 text-white min-h-screen flex items-center justify-center">
+      <div className="bg-primary text-white min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
           <p className="text-xl text-red-400 mb-4">{error}</p>
           <button
             onClick={fetchGalleryItems}
-            className="bg-yellow-400 text-black px-6 py-3 rounded-lg font-semibold hover:bg-yellow-500 transition-colors"
+            className="bg-accent text-neutral-900 px-6 py-3 rounded-lg font-semibold hover:brightness-90 transition-colors"
           >
             Try Again
           </button>
@@ -186,12 +186,12 @@ const Gallery = () => {
       exit="out"
       variants={pageVariants}
       transition={{ duration: 0.5 }}
-      className="bg-gray-900 text-white min-h-screen"
+      className="bg-primary text-white min-h-screen"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div className="text-center mb-16">
           <motion.h1
-            className="text-4xl md:text-5xl font-extrabold text-yellow-400 mb-4 tracking-tight"
+            className="text-4xl md:text-5xl font-extrabold text-accent mb-4 tracking-tight"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -215,8 +215,8 @@ const Gallery = () => {
                 key={category}
                 onClick={() => setSelectedCategory(category)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedCategory === category
-                  ? 'bg-yellow-400 text-black'
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  ? 'bg-accent text-neutral-900'
+                  : 'bg-neutral-800 text-gray-300 hover:bg-neutral-700'
                   }`}
               >
                 {category}
@@ -235,7 +235,7 @@ const Gallery = () => {
             {filteredImages.map((image, index) => (
               <motion.div
                 key={image.id}
-                className="relative overflow-hidden rounded-lg shadow-2xl group cursor-pointer"
+                className="relative overflow-hidden rounded-lg group cursor-pointer"
                 variants={imageVariants}
                 initial="initial"
                 animate="in"
@@ -248,8 +248,8 @@ const Gallery = () => {
                 {/* Video Overlay */}
                 {image.mediaType === 'video' && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="bg-yellow-400 bg-opacity-80 rounded-full p-3 shadow-lg transform group-hover:scale-110 transition-transform">
-                      <svg className="w-8 h-8 text-black" fill="currentColor" viewBox="0 0 20 20">
+                    <div className="bg-accent bg-opacity-80 rounded-full p-3 transform group-hover:scale-110 transition-transform">
+                      <svg className="w-8 h-8 text-neutral-900" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M4.5 3.5v13l11-6.5-11-6.5z"></path>
                       </svg>
                     </div>
@@ -273,13 +273,13 @@ const Gallery = () => {
                       <p className="text-xs text-gray-300">{image.description}</p>
                     )}
                     {image.isGroup && (
-                      <p className="text-xs text-yellow-400 mt-2 font-semibold">Click to view all {image.itemCount} photos</p>
+                      <p className="text-xs text-accent mt-2 font-semibold">Click to view all {image.itemCount} photos</p>
                     )}
                   </div>
                 </div>
                 {image.isFeatured && (
                   <div className="absolute top-4 right-4">
-                    <span className="bg-yellow-400 text-black px-2 py-1 rounded-full text-xs font-semibold">
+                    <span className="bg-accent text-neutral-900 px-2 py-1 rounded-full text-xs font-semibold">
                       Featured
                     </span>
                   </div>
@@ -375,7 +375,7 @@ const Gallery = () => {
                       e.stopPropagation();
                       setCurrentImageIndex(idx);
                     }}
-                    className={`flex-shrink-0 w-16 h-16 border-2 rounded overflow-hidden transition-colors ${currentImageIndex === idx ? 'border-yellow-400' : 'border-transparent opacity-60 hover:opacity-100'
+                    className={`flex-shrink-0 w-16 h-16 border-2 rounded overflow-hidden transition-colors ${currentImageIndex === idx ? 'border-accent' : 'border-transparent opacity-60 hover:opacity-100'
                       }`}
                   >
                     <img src={item.src} alt={item.alt} className="w-full h-full object-cover" />

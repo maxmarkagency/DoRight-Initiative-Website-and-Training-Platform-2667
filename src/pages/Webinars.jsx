@@ -140,7 +140,7 @@ const Webinars = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                   viewport={{ once: true }}
-                  className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
+                  className="bg-white rounded-lg border border-neutral-200 overflow-hidden hover:shadow-[0_4px_12px_rgba(13,14,22,0.15)] transition-shadow"
                 >
                   <div className="relative">
                     <img
@@ -229,7 +229,7 @@ const Webinars = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                   viewport={{ once: true }}
-                  className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
+                  className="bg-white rounded-lg border border-neutral-200 overflow-hidden hover:shadow-[0_4px_12px_rgba(13,14,22,0.15)] transition-shadow"
                 >
                   <div className="md:flex">
                     <div className="md:w-1/3">
@@ -313,7 +313,7 @@ const Webinars = () => {
                   </button>
                 </form>
               ) : (
-                <div className="bg-green-500/20 text-white p-4 rounded-lg flex items-center justify-center">
+                <div className="bg-success/20 text-white p-4 rounded-lg flex items-center justify-center">
                   <SafeIcon icon={FiCheck} className="w-6 h-6 mr-3" />
                   <span>Thank you for subscribing!</span>
                 </div>

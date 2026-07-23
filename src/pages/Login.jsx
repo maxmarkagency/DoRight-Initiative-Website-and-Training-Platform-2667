@@ -77,7 +77,7 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen bg-primary text-white flex items-center justify-center p-4 sm:p-6 lg:p-8">
       <motion.div
-        className="w-full max-w-md p-6 sm:p-8 bg-gray-800 rounded-2xl shadow-2xl"
+        className="w-full max-w-md p-6 sm:p-8 bg-neutral-800 rounded-lg"
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
@@ -86,7 +86,7 @@ const LoginPage = () => {
           <Link to="/" className="text-3xl sm:text-4xl font-bold text-accent">
             DoRight
           </Link>
-          <p className="text-gray-400 mt-2 text-sm sm:text-base">
+          <p className="text-neutral-400 mt-2 text-sm sm:text-base">
             {isRegister ? 'Create your account' : 'Welcome back'}
           </p>
         </div>
@@ -121,36 +121,42 @@ const LoginPage = () => {
         >
           <div className="space-y-4 sm:space-y-6">
             <div className="relative">
-              <SafeIcon icon={FiMail} className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
+              <label htmlFor="login-email" className="sr-only">Email</label>
+              <SafeIcon icon={FiMail} className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-neutral-400 w-4 h-4 sm:w-5 sm:h-5" />
               <input
+                id="login-email"
                 type="email"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg py-3 px-10 sm:px-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent text-sm sm:text-base"
+                className="w-full bg-neutral-700 border border-neutral-600 rounded-lg py-3 px-10 sm:px-12 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-accent text-sm sm:text-base"
                 required
               />
             </div>
             <div className="relative">
-              <SafeIcon icon={FiLock} className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
+              <label htmlFor="login-password" className="sr-only">Password</label>
+              <SafeIcon icon={FiLock} className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-neutral-400 w-4 h-4 sm:w-5 sm:h-5" />
               <input
+                id="login-password"
                 type="password"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg py-3 px-10 sm:px-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent text-sm sm:text-base"
+                className="w-full bg-neutral-700 border border-neutral-600 rounded-lg py-3 px-10 sm:px-12 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-accent text-sm sm:text-base"
                 required
               />
             </div>
             {isRegister && (
               <div className="relative">
-                <SafeIcon icon={FiLock} className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
+                <label htmlFor="login-confirm-password" className="sr-only">Confirm Password</label>
+                <SafeIcon icon={FiLock} className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-neutral-400 w-4 h-4 sm:w-5 sm:h-5" />
                 <input
+                  id="login-confirm-password"
                   type="password"
                   placeholder="Confirm Password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg py-3 px-10 sm:px-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent text-sm sm:text-base"
+                  className="w-full bg-neutral-700 border border-neutral-600 rounded-lg py-3 px-10 sm:px-12 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-accent text-sm sm:text-base"
                   required
                 />
               </div>
@@ -168,7 +174,7 @@ const LoginPage = () => {
           </motion.button>
         </motion.form>
 
-        <div className="mt-6 sm:mt-8 text-center text-gray-400">
+        <div className="mt-6 sm:mt-8 text-center text-neutral-400">
           <button
             onClick={() => {
               setIsRegister(!isRegister);

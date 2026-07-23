@@ -22,7 +22,7 @@ const Trustees = () => {
         <div className="max-w-container mx-auto px-5">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-center max-w-4xl mx-auto">
             <h1 className="text-h1 font-heading font-bold mb-6 leading-tight"> OUR TRUSTEES </h1>
-            <p className="text-xl text-blue-100 leading-relaxed"> Meet the distinguished leaders who guide DRAI's mission with their wisdom,expertise,and unwavering commitment to building a Nigeria of integrity and accountability. </p>
+            <p className="text-xl text-neutral-300 leading-relaxed"> Meet the distinguished leaders who guide DRAI's mission with their wisdom,expertise,and unwavering commitment to building a Nigeria of integrity and accountability. </p>
           </motion.div>
         </div>
       </section>
@@ -71,7 +71,7 @@ const Trustees = () => {
                 {/* Profile Image */}
                 <div className={index % 2 === 1 ? 'lg:col-start-1 lg:row-start-1' : ''}>
                   <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.3 }} className="relative">
-                    <div className="relative overflow-hidden rounded-lg shadow-xl">
+                    <div className="relative overflow-hidden rounded-lg">
                       <img src={trustee.image} alt={trustee.name} className="w-full h-96 lg:h-[500px] object-cover" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
                       {/* Overlay with name */}
@@ -83,7 +83,7 @@ const Trustees = () => {
                       </div>
                     </div>
                     {/* Decorative elements */}
-                    <div className="absolute -top-4 -right-4 w-8 h-8 bg-accent rounded-full opacity-80"></div>
+                    <div className="absolute -top-4 -right-4 w-8 h-8 bg-primary rounded-full opacity-80"></div>
                     <div className="absolute -bottom-4 -left-4 w-12 h-12 bg-primary rounded-full opacity-20"></div>
                   </motion.div>
                 </div>
@@ -98,7 +98,7 @@ const Trustees = () => {
         <div className="max-w-container mx-auto px-5 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }}>
             <h2 className="text-h2 font-heading font-bold mb-6"> Guided by Excellence </h2>
-            <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto"> Under the guidance of these distinguished trustees,DRAI continues to expand its impact across Nigeria,building communities of integrity and accountability that will transform our nation. </p>
+            <p className="text-xl text-neutral-300 mb-8 max-w-2xl mx-auto"> Under the guidance of these distinguished trustees,DRAI continues to expand its impact across Nigeria,building communities of integrity and accountability that will transform our nation. </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a href="/about" className="bg-accent text-neutral-900 px-8 py-4 rounded-lg font-semibold hover:brightness-90 transition-colors inline-flex items-center justify-center"> Learn More About DRAI </a>
               <a href="/join" className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-primary transition-colors inline-flex items-center justify-center"> Join Our Mission </a>

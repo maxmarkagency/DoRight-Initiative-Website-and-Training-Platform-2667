@@ -63,7 +63,7 @@ const Training = () => {
               </div>
             </motion.div>
             <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="relative order-1 lg:order-2">
-              <img src="https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759686439881-Do-right-awarenss-initiative-school-project-12-scaled-2-1536x1024.jpg" alt="DoingRight training session with educators and participants" className="rounded-lg shadow-2xl w-full h-auto max-h-96 object-cover" />
+              <img src="https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759686439881-Do-right-awarenss-initiative-school-project-12-scaled-2-1536x1024.jpg" alt="DoingRight training session with educators and participants" className="rounded-lg w-full h-auto max-h-96 object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent rounded-lg"></div>
               {/* Overlay with training info */}
               <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 text-white">

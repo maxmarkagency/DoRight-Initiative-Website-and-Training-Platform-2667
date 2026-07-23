@@ -142,12 +142,12 @@ const PodcastEpisode = () => {
                     Back to All Episodes
                 </Link>
 
-                <div className="bg-white rounded-lg shadow-xl overflow-hidden">
+                <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden">
                     <div className="p-8 md:p-12">
                         <div className="flex flex-col md:flex-row gap-8">
                             {/* Artwork */}
                             <div className="flex-shrink-0 mx-auto md:mx-0">
-                                <div className="w-64 h-64 rounded-lg overflow-hidden shadow-lg relative bg-neutral-200">
+                                <div className="w-64 h-64 rounded-lg overflow-hidden relative bg-neutral-200">
                                     <img
                                         src={episode.artwork?.urls?.[0]?.url || 'https://placehold.co/400x400?text=Podcast'}
                                         alt={episode.title}
@@ -183,7 +183,7 @@ const PodcastEpisode = () => {
                                     <div className="flex items-center gap-4">
                                         <button
                                             onClick={handlePlay}
-                                            className="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary-600 transition-colors shadow-md flex-shrink-0"
+                                            className="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary-600 hover:shadow-[0_4px_12px_rgba(13,14,22,0.15)] transition-colors flex-shrink-0"
                                         >
                                             <SafeIcon icon={isPlaying ? FiPause : FiPlay} className="w-6 h-6 ml-0.5" />
                                         </button>
@@ -211,19 +211,19 @@ const PodcastEpisode = () => {
                                         Share Episode
                                     </p>
                                     <div className="flex flex-wrap justify-center md:justify-start gap-2">
-                                        <a href={shareLinks.facebook} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-[#1877F2]/10 text-[#1877F2] hover:bg-[#1877F2] hover:text-white transition-colors">
+                                        <a href={shareLinks.facebook} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-[#1877F2]/10 text-[#1877F2] hover:bg-[#1877F2] hover:text-white transition-colors inline-flex items-center justify-center min-w-[44px] min-h-[44px]">
                                             <SafeIcon icon={FiFacebook} className="w-5 h-5" />
                                         </a>
-                                        <a href={shareLinks.twitter} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-[#1DA1F2]/10 text-[#1DA1F2] hover:bg-[#1DA1F2] hover:text-white transition-colors">
+                                        <a href={shareLinks.twitter} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-[#1DA1F2]/10 text-[#1DA1F2] hover:bg-[#1DA1F2] hover:text-white transition-colors inline-flex items-center justify-center min-w-[44px] min-h-[44px]">
                                             <SafeIcon icon={FiTwitter} className="w-5 h-5" />
                                         </a>
-                                        <a href={shareLinks.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-[#0A66C2]/10 text-[#0A66C2] hover:bg-[#0A66C2] hover:text-white transition-colors">
+                                        <a href={shareLinks.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-[#0A66C2]/10 text-[#0A66C2] hover:bg-[#0A66C2] hover:text-white transition-colors inline-flex items-center justify-center min-w-[44px] min-h-[44px]">
                                             <SafeIcon icon={FiLinkedin} className="w-5 h-5" />
                                         </a>
-                                        <a href={`https://wa.me/?text=${encodeURIComponent(title + ' ' + shareUrl)}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white transition-colors">
+                                        <a href={`https://wa.me/?text=${encodeURIComponent(title + ' ' + shareUrl)}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white transition-colors inline-flex items-center justify-center min-w-[44px] min-h-[44px]">
                                             <SafeIcon icon={FiMessageCircle} className="w-5 h-5" />
                                         </a>
-                                        <button onClick={handleCopyLink} className="p-2 rounded-full bg-neutral-100 text-neutral-600 hover:bg-neutral-200 transition-colors relative">
+                                        <button onClick={handleCopyLink} className="p-2 rounded-full bg-neutral-100 text-neutral-600 hover:bg-neutral-200 transition-colors relative inline-flex items-center justify-center min-w-[44px] min-h-[44px]">
                                             <SafeIcon icon={copied ? FiCheck : FiLink} className="w-5 h-5" />
                                             {copied && (
                                                 <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs py-1 px-2 rounded opacity-90 whitespace-nowrap">

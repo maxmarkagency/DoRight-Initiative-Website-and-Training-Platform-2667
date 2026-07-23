@@ -170,7 +170,7 @@ const Podcast = () => {
                                         <div className="flex items-center gap-4">
                                             <button
                                                 onClick={() => handlePlay(currentEpisode)}
-                                                className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary-600 transition-colors shadow-lg"
+                                                className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary-600 transition-colors"
                                             >
                                                 <SafeIcon icon={isPlaying ? FiPause : FiPlay} className="w-5 h-5 ml-0.5" />
                                             </button>
@@ -261,7 +261,7 @@ const Podcast = () => {
                                                         href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://doright.ng/#/media/podcast/' + episode.slug)}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="p-2 rounded-full bg-[#3b5998]/10 text-[#3b5998] hover:bg-[#3b5998] hover:text-white transition-colors"
+                                                        className="p-2 rounded-full bg-[#3b5998]/10 text-[#3b5998] hover:bg-[#3b5998] hover:text-white transition-colors inline-flex items-center justify-center min-w-[44px] min-h-[44px]"
                                                         title="Share on Facebook"
                                                     >
                                                         <SafeIcon icon={FiFacebook} className="w-4 h-4" />
@@ -270,7 +270,7 @@ const Podcast = () => {
                                                         href={`https://twitter.com/intent/tweet?url=${encodeURIComponent('https://doright.ng/#/media/podcast/' + episode.slug)}&text=${encodeURIComponent(episode.title)}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="p-2 rounded-full bg-[#1DA1F2]/10 text-[#1DA1F2] hover:bg-[#1DA1F2] hover:text-white transition-colors"
+                                                        className="p-2 rounded-full bg-[#1DA1F2]/10 text-[#1DA1F2] hover:bg-[#1DA1F2] hover:text-white transition-colors inline-flex items-center justify-center min-w-[44px] min-h-[44px]"
                                                         title="Share on Twitter"
                                                     >
                                                         <SafeIcon icon={FiTwitter} className="w-4 h-4" />
@@ -279,7 +279,7 @@ const Podcast = () => {
                                                         href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://doright.ng/#/media/podcast/' + episode.slug)}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="p-2 rounded-full bg-[#0A66C2]/10 text-[#0A66C2] hover:bg-[#0A66C2] hover:text-white transition-colors"
+                                                        className="p-2 rounded-full bg-[#0A66C2]/10 text-[#0A66C2] hover:bg-[#0A66C2] hover:text-white transition-colors inline-flex items-center justify-center min-w-[44px] min-h-[44px]"
                                                         title="Share on LinkedIn"
                                                     >
                                                         <SafeIcon icon={FiLinkedin} className="w-4 h-4" />
@@ -288,7 +288,7 @@ const Podcast = () => {
                                                         href={`https://wa.me/?text=${encodeURIComponent(episode.title + ' https://doright.ng/#/media/podcast/' + episode.slug)}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="p-2 rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white transition-colors"
+                                                        className="p-2 rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white transition-colors inline-flex items-center justify-center min-w-[44px] min-h-[44px]"
                                                         title="Share on WhatsApp"
                                                     >
                                                         <SafeIcon icon={FiMessageCircle} className="w-4 h-4" />

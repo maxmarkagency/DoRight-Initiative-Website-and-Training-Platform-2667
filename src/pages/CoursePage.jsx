@@ -94,7 +94,7 @@ const CoursePage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Video Player */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden">
               {/* Mock Video Player */}
               <div className="bg-black aspect-video flex items-center justify-center">
                 <div className="text-center text-white">
@@ -149,7 +149,7 @@ const CoursePage = () => {
           </div>
 
           {/* Lesson List */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="bg-white rounded-lg border border-neutral-200 p-6">
             <h3 className="text-lg font-heading font-bold text-neutral-900 mb-6"> Course Lessons </h3>
             <div className="space-y-3">
               {course.lessons.map((lesson, index) => {
@@ -189,7 +189,7 @@ const CoursePage = () => {
       {/* Certificate Modal */}
       {showCertificateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-lg p-8 max-w-md w-full">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-lg p-8 max-w-md w-full shadow-[0_10px_40px_rgba(13,14,22,0.25)]">
             <div className="text-center">
               <SafeIcon icon={FiAward} className="w-16 h-16 text-accent mx-auto mb-4" />
               <h3 className="text-2xl font-bold text-neutral-900 mb-4"> Certificate Earned! </h3>

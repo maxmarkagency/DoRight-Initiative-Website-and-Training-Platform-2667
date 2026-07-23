@@ -209,7 +209,7 @@ const Home = () => {
               </motion.div>
               <motion.div initial={{ opacity: 0, x: 50 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.2 }} viewport={{ once: true }} className="relative w-full">
                 <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.3 }} className="relative">
-                  <img src="https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759575546536-DSC_0360-scaled-2-1536x1024.jpg" alt="DRAI team members working together" className="rounded-lg shadow-xl w-full h-auto" />
+                  <img src="https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759575546536-DSC_0360-scaled-2-1536x1024.jpg" alt="DRAI team members working together" className="rounded-lg w-full h-auto" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-lg"></div>
                   <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
                     <h3 className="text-xl md:text-2xl font-heading font-bold mb-2">Our Dedicated Team</h3>
@@ -274,7 +274,7 @@ const Home = () => {
                 </div>
               </motion.div>
               <motion.div initial={{ opacity: 0, x: 50 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.2 }} viewport={{ once: true }} className="relative w-full">
-                <img src="https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759576809848-image_2025-10-04_041950413.png" alt="DRAI volunteer wearing orange volunteer t-shirt at community event" className="rounded-lg shadow-xl w-full h-auto" />
+                <img src="https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759576809848-image_2025-10-04_041950413.png" alt="DRAI volunteer wearing orange volunteer t-shirt at community event" className="rounded-lg w-full h-auto" />
               </motion.div>
             </div>
           </div>
