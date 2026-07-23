@@ -4,14 +4,25 @@ import SafeIcon from '../../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import supabase from '../../lib/supabase';
 
-const { FiSave, FiLoader, FiCheck } = FiIcons;
+const { FiSave, FiLoader, FiCheck, FiFacebook, FiTwitter, FiInstagram, FiLinkedin } = FiIcons;
 
-const SETTING_KEYS = ['site_name', 'contact_email', 'allow_registration', 'maintenance_mode'];
+// contact_address, contact_phone, and social_links are also read directly by
+// Contact.jsx (src/pages/Contact.jsx) - they must stay in this list or there's
+// no admin UI to set them at all, only the hardcoded fallback text ever shows.
+const SETTING_KEYS = [
+  'site_name', 'contact_email', 'contact_phone', 'contact_address', 'social_links',
+  'allow_registration', 'maintenance_mode'
+];
+
+const DEFAULT_SOCIAL_LINKS = { facebook: '', twitter: '', instagram: '', linkedin: '' };
 
 const Settings = () => {
   const [values, setValues] = useState({
     site_name: 'DoRight Academy',
     contact_email: 'info@doright.ng',
+    contact_phone: '',
+    contact_address: '',
+    social_links: DEFAULT_SOCIAL_LINKS,
     allow_registration: true,
     maintenance_mode: false
   });
@@ -32,12 +43,18 @@ const Settings = () => {
 
       const loaded = {};
       (data || []).forEach((row) => {
-        loaded[row.setting_key] = row.setting_value;
+        loaded[row.setting_key] = row.setting_key === 'social_links'
+          ? { ...DEFAULT_SOCIAL_LINKS, ...row.setting_value }
+          : row.setting_value;
       });
       setValues((prev) => ({ ...prev, ...loaded }));
     } catch (error) {
       console.error('Error loading settings:', error);
     }
+  };
+
+  const updateSocialLink = (platform, url) => {
+    setValues((prev) => ({ ...prev, social_links: { ...prev.social_links, [platform]: url } }));
   };
 
   const handleSave = async () => {
@@ -46,7 +63,7 @@ const Settings = () => {
       const rows = SETTING_KEYS.map((key) => ({
         setting_key: key,
         setting_value: values[key],
-        setting_type: typeof values[key] === 'boolean' ? 'boolean' : 'text',
+        setting_type: typeof values[key] === 'boolean' ? 'boolean' : typeof values[key] === 'object' ? 'json' : 'text',
         updated_at: new Date().toISOString()
       }));
 
@@ -134,6 +151,45 @@ const Settings = () => {
               onChange={(e) => setValues({ ...values, contact_email: e.target.value })}
               className="w-full max-w-md border border-neutral-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
             />
+          ))}
+          {renderSettingRow("Contact Phone", (
+            <input
+              type="tel"
+              value={values.contact_phone}
+              onChange={(e) => setValues({ ...values, contact_phone: e.target.value })}
+              placeholder="+234 (0) 123 456 7890"
+              className="w-full max-w-md border border-neutral-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          ))}
+          {renderSettingRow("Address", (
+            <textarea
+              value={values.contact_address}
+              onChange={(e) => setValues({ ...values, contact_address: e.target.value })}
+              rows={3}
+              placeholder="DoRight Awareness Initiative&#10;28b, Olaminuyun Street, Parkview&#10;Lagos, Nigeria 101233"
+              className="w-full max-w-md border border-neutral-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          ))}
+          {renderSettingRow("Social Links", (
+            <div className="space-y-2 max-w-md">
+              {[
+                { key: 'facebook', icon: FiFacebook, placeholder: 'https://facebook.com/...' },
+                { key: 'twitter', icon: FiTwitter, placeholder: 'https://twitter.com/...' },
+                { key: 'instagram', icon: FiInstagram, placeholder: 'https://instagram.com/...' },
+                { key: 'linkedin', icon: FiLinkedin, placeholder: 'https://linkedin.com/...' }
+              ].map(({ key, icon, placeholder }) => (
+                <div key={key} className="flex items-center gap-2">
+                  <SafeIcon icon={icon} className="w-5 h-5 text-neutral-400 flex-shrink-0" />
+                  <input
+                    type="url"
+                    value={values.social_links[key]}
+                    onChange={(e) => updateSocialLink(key, e.target.value)}
+                    placeholder={placeholder}
+                    className="w-full border border-neutral-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              ))}
+            </div>
           ))}
           {renderSettingRow("Allow Registration", (
             <label className="flex items-center cursor-pointer">
