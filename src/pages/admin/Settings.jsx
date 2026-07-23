@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import SafeIcon from '../../common/SafeIcon';
+import { SiTiktok } from 'react-icons/si';
 import * as FiIcons from 'react-icons/fi';
 import supabase from '../../lib/supabase';
 
@@ -14,7 +15,7 @@ const SETTING_KEYS = [
   'allow_registration', 'maintenance_mode'
 ];
 
-const DEFAULT_SOCIAL_LINKS = { facebook: '', twitter: '', instagram: '', linkedin: '' };
+const DEFAULT_SOCIAL_LINKS = { facebook: '', twitter: '', instagram: '', linkedin: '', tiktok: '' };
 
 const Settings = () => {
   const [values, setValues] = useState({
@@ -176,7 +177,8 @@ const Settings = () => {
                 { key: 'facebook', icon: FiFacebook, placeholder: 'https://facebook.com/...' },
                 { key: 'twitter', icon: FiTwitter, placeholder: 'https://twitter.com/...' },
                 { key: 'instagram', icon: FiInstagram, placeholder: 'https://instagram.com/...' },
-                { key: 'linkedin', icon: FiLinkedin, placeholder: 'https://linkedin.com/...' }
+                { key: 'linkedin', icon: FiLinkedin, placeholder: 'https://linkedin.com/...' },
+                { key: 'tiktok', icon: SiTiktok, placeholder: 'https://tiktok.com/@...' }
               ].map(({ key, icon, placeholder }) => (
                 <div key={key} className="flex items-center gap-2">
                   <SafeIcon icon={icon} className="w-5 h-5 text-neutral-400 flex-shrink-0" />

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {Link} from 'react-router-dom';
 import SafeIcon from '../common/SafeIcon';
+import { SiTiktok } from 'react-icons/si';
 import * as FiIcons from 'react-icons/fi';
 import supabase from '../lib/supabase';
 
@@ -74,6 +75,13 @@ const Footer=()=> {
                 aria-label="LinkedIn"
               >
                 <SafeIcon icon={FiLinkedin} className="w-5 h-5" />
+              </a>
+              <a
+                href={socialLinks.tiktok || '#'}
+                className="text-neutral-300 hover:text-accent transition-colors"
+                aria-label="TikTok"
+              >
+                <SafeIcon icon={SiTiktok} className="w-5 h-5" />
               </a>
             </div>
           </div>

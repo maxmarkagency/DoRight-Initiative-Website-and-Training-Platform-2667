@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
+import { SiTiktok } from 'react-icons/si';
 import * as FiIcons from 'react-icons/fi';
 import supabase from '../lib/supabase';
 import { getPageContent, getSectionByKey } from '../services/pageContentService';
@@ -154,7 +155,7 @@ const Contact = () => {
               <div className="mt-8 sm:mt-12">
                 <h3 className="text-lg sm:text-xl font-heading font-bold text-neutral-900 mb-4 sm:mb-6"> Follow Us </h3>
                 <div className="flex space-x-3 sm:space-x-4">
-                  {[{ icon: FiFacebook, href: socialLinks.facebook || '#', label: 'Facebook' }, { icon: FiTwitter, href: socialLinks.twitter || '#', label: 'Twitter' }, { icon: FiInstagram, href: socialLinks.instagram || '#', label: 'Instagram' }, { icon: FiLinkedin, href: socialLinks.linkedin || '#', label: 'LinkedIn' }].map((social) => (
+                  {[{ icon: FiFacebook, href: socialLinks.facebook || '#', label: 'Facebook' }, { icon: FiTwitter, href: socialLinks.twitter || '#', label: 'Twitter' }, { icon: FiInstagram, href: socialLinks.instagram || '#', label: 'Instagram' }, { icon: FiLinkedin, href: socialLinks.linkedin || '#', label: 'LinkedIn' }, { icon: SiTiktok, href: socialLinks.tiktok || '#', label: 'TikTok' }].map((social) => (
                     <a key={social.label} href={social.href} aria-label={social.label} className="w-10 h-10 sm:w-12 sm:h-12 bg-primary text-white rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors">
                       <SafeIcon icon={social.icon} className="w-4 h-4 sm:w-5 sm:h-5" />
                     </a>

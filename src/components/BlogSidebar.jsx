@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import SafeIcon from '../common/SafeIcon';
+import { SiTiktok } from 'react-icons/si';
 import * as FiIcons from 'react-icons/fi';
 
 const { FiFacebook, FiTwitter, FiInstagram, FiLinkedin, FiYoutube } = FiIcons;
@@ -21,6 +22,7 @@ const BlogSidebar = ({ recentPosts = [] }) => {
         { icon: FiFacebook, name: 'Facebook', bg: 'bg-blue-50', text: 'text-blue-700', link: '#' },
         { icon: FiYoutube, name: 'Youtube', bg: 'bg-red-100', text: 'text-red-600', link: '#' },
         { icon: FiLinkedin, name: 'Linkedin', bg: 'bg-blue-50', text: 'text-blue-800', link: '#' },
+        { icon: SiTiktok, name: 'TikTok', bg: 'bg-neutral-100', text: 'text-neutral-900', link: '#' },
     ];
 
     return (
