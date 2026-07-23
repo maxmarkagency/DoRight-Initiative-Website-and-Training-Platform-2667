@@ -1,0 +1,16 @@
+{
+  "name": "DoRight Awareness Initiative",
+  "short_name": "DoRight",
+  "description": "Promoting integrity, accountability, and civic responsibility across Nigeria.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAFAFA",
+  "theme_color": "#0D0E16",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "type": "image/png",
+      "sizes": "any"
+    }
+  ]
+}
