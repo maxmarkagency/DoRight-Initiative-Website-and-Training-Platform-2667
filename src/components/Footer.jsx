@@ -1,11 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {Link} from 'react-router-dom';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
+import supabase from '../lib/supabase';
 
 const {FiFacebook,FiTwitter,FiInstagram,FiLinkedin,FiMail,FiMapPin}=FiIcons;
 
 const Footer=()=> {
+  const [siteSettings, setSiteSettings] = useState({});
+
+  useEffect(() => {
+    supabase
+      .from('site_settings')
+      .select('setting_key, setting_value')
+      .in('setting_key', ['contact_email', 'contact_address', 'social_links'])
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('Error loading footer settings:', error);
+          return;
+        }
+        const settings = {};
+        (data || []).forEach((row) => { settings[row.setting_key] = row.setting_value; });
+        setSiteSettings(settings);
+      });
+  }, []);
+
+  const socialLinks = siteSettings.social_links || {};
+
   return (
     <footer className="bg-black text-white w-full overflow-hidden">
       <div className="w-full max-w-container mx-auto px-4 sm:px-5 py-8 sm:py-12">
@@ -27,28 +48,28 @@ const Footer=()=> {
             </p>
             <div className="flex space-x-4">
               <a
-                href="#"
+                href={socialLinks.facebook || '#'}
                 className="text-neutral-300 hover:text-accent transition-colors"
                 aria-label="Facebook"
               >
                 <SafeIcon icon={FiFacebook} className="w-5 h-5" />
               </a>
               <a
-                href="#"
+                href={socialLinks.twitter || '#'}
                 className="text-neutral-300 hover:text-accent transition-colors"
                 aria-label="Twitter"
               >
                 <SafeIcon icon={FiTwitter} className="w-5 h-5" />
               </a>
               <a
-                href="#"
+                href={socialLinks.instagram || '#'}
                 className="text-neutral-300 hover:text-accent transition-colors"
                 aria-label="Instagram"
               >
                 <SafeIcon icon={FiInstagram} className="w-5 h-5" />
               </a>
               <a
-                href="#"
+                href={socialLinks.linkedin || '#'}
                 className="text-neutral-300 hover:text-accent transition-colors"
                 aria-label="LinkedIn"
               >
@@ -126,11 +147,11 @@ const Footer=()=> {
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <SafeIcon icon={FiMail} className="w-4 h-4 text-accent flex-shrink-0" />
-                <span className="text-neutral-300 text-sm sm:text-base break-all">info@doingright.ng</span>
+                <span className="text-neutral-300 text-sm sm:text-base break-all">{siteSettings.contact_email || 'info@doingright.ng'}</span>
               </div>
               <div className="flex items-start space-x-3">
                 <SafeIcon icon={FiMapPin} className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
-                <span className="text-neutral-300 text-sm sm:text-base break-words">28b, Olaminuyun street, Parkview, Lagos, Nigeria 101233</span>
+                <span className="text-neutral-300 text-sm sm:text-base break-words">{siteSettings.contact_address || '28b, Olaminuyun street, Parkview, Lagos, Nigeria 101233'}</span>
               </div>
             </div>
           </div>
