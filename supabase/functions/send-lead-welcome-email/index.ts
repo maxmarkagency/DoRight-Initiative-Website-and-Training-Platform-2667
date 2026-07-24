@@ -13,7 +13,7 @@
 // Deployment steps: docs/superpowers/specs/2026-07-21-welcome-email-automation-design.md.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { referralWelcomeEmail, websiteWelcomeEmail } from "./templates.ts";
+import { adminNotificationEmail, referralWelcomeEmail, websiteWelcomeEmail } from "./templates.ts";
 
 const SUB_COMMITTEES_URL = "https://doright.ng/#/sub-committees";
 const JOIN_FORM_URL = "https://doright.ng/#/join";
@@ -22,9 +22,11 @@ interface LeadRecord {
   id: string;
   full_name: string;
   email: string;
+  phone?: string | null;
   sub_committee_id: string | null;
   source: string;
   referred_by: string | null;
+  admin_notes?: string | null;
 }
 
 interface LeadWebhookPayload {
@@ -122,8 +124,19 @@ Deno.serve(async (req: Request) => {
   const { subject, html, text } =
     lead.source === "referral" ? referralWelcomeEmail(templateInput) : websiteWelcomeEmail(templateInput);
 
+  const adminEmailRecipient = Deno.env.get("ENQUIRIES_EMAIL") || "enquires@doright.ng";
+  const adminEmail = adminNotificationEmail({
+    fullName: lead.full_name,
+    email: lead.email,
+    phone: lead.phone ?? null,
+    subCommitteeName,
+    source: lead.source,
+    referredBy: lead.referred_by,
+    adminNotes: lead.admin_notes ?? null,
+  });
+
   try {
-    const resendResponse = await fetch("https://api.resend.com/emails", {
+    const welcomePromise = fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${resendApiKey}`,
@@ -138,18 +151,35 @@ Deno.serve(async (req: Request) => {
       }),
     });
 
-    if (!resendResponse.ok) {
-      const errorBody = await resendResponse.text();
-      console.error(
-        `send-lead-welcome-email: Resend API error for lead ${lead.id}: ${resendResponse.status} ${errorBody}`,
-      );
-      return new Response(JSON.stringify({ error: "Failed to send email" }), {
-        status: 502,
-        headers: { "Content-Type": "application/json" },
-      });
+    const adminNotificationPromise = fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "DoRight Initiative <onboarding@doright.ng>",
+        to: [adminEmailRecipient],
+        subject: adminEmail.subject,
+        html: adminEmail.html,
+        text: adminEmail.text,
+      }),
+    });
+
+    const [welcomeResult, adminResult] = await Promise.allSettled([
+      welcomePromise,
+      adminNotificationPromise,
+    ]);
+
+    if (welcomeResult.status === "rejected" || (welcomeResult.status === "fulfilled" && !welcomeResult.value.ok)) {
+      console.error(`send-lead-welcome-email: failed sending lead welcome email for ${lead.id}`, welcomeResult);
     }
 
-    return new Response(JSON.stringify({ sent: true }), {
+    if (adminResult.status === "rejected" || (adminResult.status === "fulfilled" && !adminResult.value.ok)) {
+      console.error(`send-lead-welcome-email: failed sending admin notification to ${adminEmailRecipient}`, adminResult);
+    }
+
+    return new Response(JSON.stringify({ sent: true, adminNotified: true }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });

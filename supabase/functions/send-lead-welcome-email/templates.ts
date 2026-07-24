@@ -115,3 +115,93 @@ export function referralWelcomeEmail({
       "The Doing Right Awareness Initiative",
   };
 }
+
+export interface AdminNotificationInput {
+  fullName: string;
+  email: string;
+  phone: string | null;
+  subCommitteeName: string | null;
+  source: string;
+  referredBy: string | null;
+  adminNotes: string | null;
+}
+
+/** Admin Notification Email — sent to enquires@doright.ng for every new join submission. */
+export function adminNotificationEmail({
+  fullName,
+  email,
+  phone,
+  subCommitteeName,
+  source,
+  referredBy,
+  adminNotes,
+}: AdminNotificationInput): ComposedEmail {
+  const name = escapeHtml(fullName);
+  const userEmail = escapeHtml(email);
+  const userPhone = escapeHtml(phone || "Not provided");
+  const subCommittee = escapeHtml(subCommitteeName || "None selected");
+  const src = escapeHtml(source);
+  const referrer = referredBy ? escapeHtml(referredBy) : null;
+  const notes = adminNotes ? escapeHtml(adminNotes) : null;
+
+  return {
+    subject: `New Join Submission: ${fullName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+        <div style="background-color: #0D0E16; color: #ffffff; padding: 18px 24px;">
+          <h2 style="margin: 0; font-size: 18px; font-weight: bold;">New Join Form Submission</h2>
+        </div>
+        <div style="padding: 24px; background-color: #ffffff;">
+          <p style="margin-top: 0; font-size: 15px;">A new lead has submitted their details on the <strong>DoRight Initiative</strong> platform:</p>
+          
+          <table style="width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px;">
+            <tr style="border-bottom: 1px solid #f0f0f0;">
+              <td style="padding: 10px 0; font-weight: bold; color: #4a5568; width: 150px;">Full Name:</td>
+              <td style="padding: 10px 0; color: #1a202c;">${name}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #f0f0f0;">
+              <td style="padding: 10px 0; font-weight: bold; color: #4a5568;">Email Address:</td>
+              <td style="padding: 10px 0; color: #1a202c;"><a href="mailto:${userEmail}" style="color: #005BBB; text-decoration: none;">${userEmail}</a></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #f0f0f0;">
+              <td style="padding: 10px 0; font-weight: bold; color: #4a5568;">Phone Number:</td>
+              <td style="padding: 10px 0; color: #1a202c;">${userPhone}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #f0f0f0;">
+              <td style="padding: 10px 0; font-weight: bold; color: #4a5568;">Sub-Committee:</td>
+              <td style="padding: 10px 0; color: #1a202c;">${subCommittee}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #f0f0f0;">
+              <td style="padding: 10px 0; font-weight: bold; color: #4a5568;">Submission Source:</td>
+              <td style="padding: 10px 0; color: #1a202c;">${src}</td>
+            </tr>
+            ${referrer ? `
+            <tr style="border-bottom: 1px solid #f0f0f0;">
+              <td style="padding: 10px 0; font-weight: bold; color: #4a5568;">Referred By:</td>
+              <td style="padding: 10px 0; color: #1a202c;">${referrer}</td>
+            </tr>` : ''}
+          </table>
+
+          ${notes ? `
+          <div style="margin-top: 20px; padding: 14px 16px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
+            <div style="font-weight: bold; color: #4a5568; margin-bottom: 6px; font-size: 13px; text-transform: uppercase; tracking: 0.5px;">Interest & Message Details:</div>
+            <div style="white-space: pre-wrap; color: #2d3748; font-size: 14px; line-height: 1.6;">${notes}</div>
+          </div>` : ''}
+
+          <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #edf2f7; font-size: 12px; color: #a0aec0; text-align: center;">
+            DoRight Awareness Initiative • Automatic Onboarding System
+          </div>
+        </div>
+      </div>
+    `,
+    text:
+      `New Join Form Submission: ${fullName}\n\n` +
+      `Full Name: ${fullName}\n` +
+      `Email: ${email}\n` +
+      `Phone: ${phone || "Not provided"}\n` +
+      `Sub-Committee: ${subCommitteeName || "None selected"}\n` +
+      `Source: ${source}\n` +
+      (referredBy ? `Referred By: ${referredBy}\n` : "") +
+      (adminNotes ? `\nInterest & Message:\n${adminNotes}\n` : ""),
+  };
+}
