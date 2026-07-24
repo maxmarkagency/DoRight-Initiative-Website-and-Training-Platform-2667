@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import { getActiveSubCommittees, submitLead } from '../services/leadsService';
+import supabase from '../lib/supabase';
 
 const { FiUsers, FiHeart, FiHandshake, FiCheck, FiArrowRight, FiMail, FiPhone, FiMapPin, FiAlertCircle } = FiIcons;
 
@@ -17,10 +18,24 @@ const Join = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [siteSettings, setSiteSettings] = useState({});
   const formSectionRef = useRef(null);
 
   useEffect(() => {
     getActiveSubCommittees().then(setSubCommittees);
+    supabase
+      .from('site_settings')
+      .select('setting_key, setting_value')
+      .in('setting_key', ['contact_email', 'contact_phone', 'contact_address'])
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('Error loading contact settings:', error);
+          return;
+        }
+        const settings = {};
+        (data || []).forEach((row) => { settings[row.setting_key] = row.setting_value; });
+        setSiteSettings(settings);
+      });
   }, []);
 
   const handleInputChange = (e) => {
@@ -240,7 +255,7 @@ const Join = () => {
                   <SafeIcon icon={FiMail} className="w-6 h-6 text-primary mr-4 mt-1 flex-shrink-0" />
                   <div>
                     <h4 className="font-semibold text-neutral-900 mb-1">Email Us</h4>
-                    <p className="text-neutral-700">info@doright.ng</p>
+                    <p className="text-neutral-700">{siteSettings.contact_email || 'info@doright.ng'}</p>
                     <p className="text-neutral-700">volunteer@doright.ng</p>
                   </div>
                 </div>
@@ -248,15 +263,14 @@ const Join = () => {
                   <SafeIcon icon={FiPhone} className="w-6 h-6 text-primary mr-4 mt-1 flex-shrink-0" />
                   <div>
                     <h4 className="font-semibold text-neutral-900 mb-1">Call Us</h4>
-                    <p className="text-neutral-700">+234 (0) 123 456 7890</p>
-                    <p className="text-neutral-700">+234 (0) 987 654 3210</p>
+                    <p className="text-neutral-700">{siteSettings.contact_phone || '+234 (0) 123 456 7890'}</p>
                   </div>
                 </div>
                 <div className="flex items-start">
                   <SafeIcon icon={FiMapPin} className="w-6 h-6 text-primary mr-4 mt-1 flex-shrink-0" />
                   <div>
                     <h4 className="font-semibold text-neutral-900 mb-1">Visit Us</h4>
-                    <p className="text-neutral-700"> DoRight Awareness Initiative<br /> 123 Integrity Street<br /> Victoria Island,Lagos<br /> Nigeria </p>
+                    <p className="text-neutral-700">{siteSettings.contact_address || 'DoRight Awareness Initiative, 123 Integrity Street, Victoria Island, Lagos, Nigeria'}</p>
                   </div>
                 </div>
               </div>
