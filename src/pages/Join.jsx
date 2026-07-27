@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
+import { FaHandshake } from 'react-icons/fa6';
 import { getActiveSubCommittees, submitLead } from '../services/leadsService';
 import supabase from '../lib/supabase';
 
-const { FiUsers, FiHeart, FiHandshake, FiCheck, FiArrowRight, FiMail, FiPhone, FiMapPin, FiAlertCircle } = FiIcons;
+const { FiUsers, FiHeart, FiCheck, FiArrowRight, FiMail, FiPhone, FiMapPin, FiAlertCircle } = FiIcons;
 
 const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
 
@@ -96,7 +97,7 @@ const Join = () => {
   const ways = [
     { title: 'Volunteer', description: 'Join our community of dedicated volunteers working on the ground to promote integrity and accountability.', features: ['Community outreach programs', 'Event organization support', 'Training and mentorship', 'Flexible time commitment', 'Skills development opportunities'], icon: FiUsers, color: 'bg-primary', ctaText: 'Become a Volunteer' },
     { title: 'Donate', description: 'Support our mission with financial contributions that help us expand our reach and impact across Nigeria.', features: ['Monthly or one-time donations', 'Transparent fund allocation', 'Regular impact reports', 'Tax-deductible receipts', 'Direct community impact'], icon: FiHeart, color: 'bg-accent', ctaText: 'Make a Donation' },
-    { title: 'Partner', description: 'Collaborate with us as an organization,institution,or business to amplify our collective impact.', features: ['Strategic partnerships', 'Joint program development', 'Resource sharing', 'Co-branded initiatives', 'Network expansion'], icon: FiHandshake, color: 'bg-primary', ctaText: 'Partner With Us' }
+    { title: 'Partner', description: 'Collaborate with us as an organization,institution,or business to amplify our collective impact.', features: ['Strategic partnerships', 'Joint program development', 'Resource sharing', 'Co-branded initiatives', 'Network expansion'], icon: FaHandshake, color: 'bg-primary', ctaText: 'Partner With Us' }
   ];
 
   const interestOptions = ['Volunteering', 'Donating', 'Partnership', 'Youth Programs', 'Community Campaigns', 'Policy Advocacy', 'Training Programs', 'Other'];
