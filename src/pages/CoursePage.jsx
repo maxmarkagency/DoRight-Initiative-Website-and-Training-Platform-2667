@@ -5,6 +5,7 @@ import { useTraining } from '../context/TrainingContext';
 import { courses } from '../data/courses';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
+import useSeo from '../hooks/useSeo';
 
 const { FiPlay, FiCheck, FiClock, FiAward, FiArrowLeft, FiLock, FiDownload } = FiIcons;
 
@@ -14,6 +15,12 @@ const CoursePage = () => {
   const [currentLesson, setCurrentLesson] = useState(0);
   const [showCertificateModal, setShowCertificateModal] = useState(false);
   const course = courses.find(c => c.id === courseId);
+
+  useSeo({
+    path: '/course/' + courseId,
+    title: course?.title || 'Course',
+    noindex: true,
+  });
 
   if (!course) {
     return <Navigate to="/training" replace />;

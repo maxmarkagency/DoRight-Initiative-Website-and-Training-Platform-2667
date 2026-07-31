@@ -6,12 +6,19 @@ import * as FiIcons from 'react-icons/fi';
 import { FaHandshake } from 'react-icons/fa6';
 import { getActiveSubCommittees, submitLead } from '../services/leadsService';
 import supabase from '../lib/supabase';
+import useSeo from '../hooks/useSeo';
 
 const { FiUsers, FiHeart, FiCheck, FiArrowRight, FiMail, FiPhone, FiMapPin, FiAlertCircle } = FiIcons;
 
 const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
 
 const Join = () => {
+  useSeo({
+    path: '/join',
+    title: 'Join The Movement',
+    description: "Get involved with DoRight Awareness Initiative — volunteer, partner, or join a sub-committee to help build a more accountable Nigeria.",
+  });
+
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', interest: '', message: '', subCommitteeId: '' });
   const [photoFile, setPhotoFile] = useState(null);
   const [photoError, setPhotoError] = useState('');

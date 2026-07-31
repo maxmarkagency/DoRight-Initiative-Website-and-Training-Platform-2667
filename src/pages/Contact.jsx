@@ -6,10 +6,17 @@ import * as FiIcons from 'react-icons/fi';
 import supabase from '../lib/supabase';
 import { getPageContent, getSectionByKey } from '../services/pageContentService';
 import { sanitizeHtml } from '../lib/sanitizeHtml';
+import useSeo from '../hooks/useSeo';
 
 const { FiMail, FiMapPin, FiFacebook, FiTwitter, FiInstagram, FiLinkedin, FiSend, FiCheck } = FiIcons;
 
 const Contact = () => {
+  useSeo({
+    path: '/contact',
+    title: 'Contact Us',
+    description: "Reach the DoRight Awareness Initiative team for program inquiries, partnerships, volunteering, media, or general questions.",
+  });
+
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [sections, setSections] = useState([]);

@@ -4,10 +4,18 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
+import useSeo from '../hooks/useSeo';
 
 const { FiUser, FiLock, FiMail, FiLogIn, FiUserPlus, FiAlertCircle } = FiIcons;
 
 const LoginPage = () => {
+  useSeo({
+    path: '/login',
+    title: 'Log In',
+    description: "Log in to your DoRight Awareness Initiative training account.",
+    noindex: true
+  });
+
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

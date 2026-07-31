@@ -3,8 +3,16 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
+import useSeo from '../hooks/useSeo';
 
 const { FiPlay, FiPause, FiClock, FiCalendar, FiHeadphones, FiArrowLeft, FiShare2, FiFacebook, FiTwitter, FiLinkedin, FiLink, FiCheck, FiMessageCircle } = FiIcons;
+
+const stripHtmlAndTruncate = (html, maxLength = 155) => {
+    if (!html) return '';
+    const plainText = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (plainText.length <= maxLength) return plainText;
+    return `${plainText.slice(0, maxLength).trimEnd()}...`;
+};
 
 const PodcastEpisode = () => {
     const { slug } = useParams();
@@ -14,6 +22,22 @@ const PodcastEpisode = () => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [copied, setCopied] = useState(false);
     const audioRef = React.useRef(new Audio());
+
+    useSeo({
+        path: `/media/podcast/${slug}`,
+        title: episode?.title || 'Podcast',
+        description: stripHtmlAndTruncate(episode?.description) || "Listen to the DoRight podcast: conversations on integrity, accountability, and civic responsibility in Nigeria.",
+        image: episode?.artwork?.urls?.[0]?.url || undefined,
+        type: 'article',
+        jsonLd: episode ? {
+            '@context': 'https://schema.org',
+            '@type': 'Article',
+            headline: episode.title,
+            image: episode.artwork?.urls?.[0]?.url,
+            datePublished: episode.published_at,
+            author: { '@type': 'Organization', name: 'DoRight Team' },
+        } : undefined
+    });
 
     // Placeholder slug - user to update if different. 
     // Ideally this should be in a config file or context, but keeping it here for consistency with Podcast.jsx
@@ -91,7 +115,7 @@ const PodcastEpisode = () => {
         });
     };
 
-    const shareUrl = 'https://doright.ng/#/media/podcast/' + slug;
+    const shareUrl = 'https://doright.ng/media/podcast/' + slug;
     const title = episode?.title || 'DoRight Podcast';
 
     const handleCopyLink = () => {

@@ -4,11 +4,18 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
+import useSeo from '../hooks/useSeo';
 
 const { FiArrowRight, FiUsers, FiBookOpen, FiTarget, FiUser, FiClock, FiAward, FiPlay, FiLock, FiCheck } = FiIcons;
 
 const Training = () => {
   const { isAuthenticated } = useAuth();
+
+  useSeo({
+    path: '/training',
+    title: 'Training & Certification',
+    description: "Enroll in DRAI's online courses on integrity and civic leadership. Complete lessons, pass assessments, and earn verified certificates.",
+  });
 
   const howItWorksSteps = [
     {

@@ -2,10 +2,17 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
+import useSeo from '../hooks/useSeo';
 
 const { FiUsers, FiHeart, FiTarget } = FiIcons;
 
 const Trustees = () => {
+  useSeo({
+    path: '/trustees',
+    title: 'Our Board of Trustees',
+    description: "Meet the Board of Trustees guiding DoRight Awareness Initiative's mission to promote integrity and civic responsibility across Nigeria."
+  });
+
   const trustees = [
     { id: 1, name: 'Pastor Wale Adefarasin', image: 'https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759593162037-wale-adefarasin-1.jpg', description: 'Pastor Wale Adefarasin is the General Overseer of Guiding Light Assembly,he is presenter of \'The Heart of the matter\',a television programme that deals with social issues.', fullProfile: 'He is married to Pastor Olaolu Adefarasin and they have 3 children and 2 grandchildren. He is a firm believer in the sanctity of \'family\',and the importance of family in our national life. He believes that it is in the family that the character of our future leaders is forged. Pastor Wale Adefarasin has great hope in the future of Nigeria,and is passionate that there is a future and a hope for Nigeria,once its citizens arise to work for it.' },
     { id: 2, name: 'Ayodele Alamutu', image: 'https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759593178510-alamutu-1.jpg', description: 'She is the founder of RollTheDice Global Resources,involved in Internal Control,Audit,Business Advisory and Risk Management Advisory Services. She is a Risk Management,Assurance and Control Executive with more than 25 years progressive experience in the UK and Nigeria.', fullProfile: 'Ms. Alamutu is a fellow of the Institute of Chartered Accountants of Nigeria,A Certified member of The Institute of Risk Management (CIRM) and currently the Vice Chair of IRM Nigeria Regional Group. She is an Information Systems Auditor,Project Management Professional and a Board member of the Institute of Internal Auditors. She has been mentoring youths for over 30years and is rewarded by living to witness the strides these youths have and are achieving today. This has geared her to continue her involvement with the youth and join them to help promote the tenets of Doing Right nationally. In her spare time,she loves to read and Zumba dance. Her risk management philosophy is to challenge management to consider extreme events and asymmetric risks that could impact their objectives and test them against their current activities.' },

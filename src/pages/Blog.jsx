@@ -4,10 +4,17 @@ import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import { supabase } from '../lib/supabase';
+import useSeo from '../hooks/useSeo';
 
 const { FiCalendar, FiUser, FiArrowRight, FiSearch, FiTag, FiCheck } = FiIcons;
 
 const Blog = () => {
+  useSeo({
+    path: '/blog',
+    title: 'Blog & Insights',
+    description: "Read the latest articles, updates, and insights from DoRight Awareness Initiative on integrity, accountability, and civic responsibility in Nigeria."
+  });
+
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [email, setEmail] = useState('');

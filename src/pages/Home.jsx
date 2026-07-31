@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
+import useSeo from '../hooks/useSeo';
 
 const { FiUsers, FiTarget, FiTrendingUp, FiShield, FiArrowRight, FiPlay, FiPause, FiStar, FiChevronLeft, FiChevronRight } = FiIcons;
 
@@ -80,6 +81,12 @@ const Home = () => {
   };
 
   const slide = heroSlides[currentSlide];
+
+  useSeo({
+    path: '/',
+    title: 'Integrity, Leadership, Civic Responsibility',
+    description: "DoRight Awareness Initiative promotes integrity, accountability, and civic responsibility across Nigeria through community campaigns, public education, and skills training."
+  });
 
   return (
     <MotionConfig reducedMotion="user">

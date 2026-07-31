@@ -5,12 +5,19 @@ import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import { getPageContent, getSectionByKey } from '../services/pageContentService';
 import { sanitizeHtml } from '../lib/sanitizeHtml';
+import useSeo from '../hooks/useSeo';
 
 const { FiUsers, FiTarget, FiEye, FiHeart, FiAward, FiTrendingUp, FiMapPin, FiCalendar } = FiIcons;
 
 const About = () => {
   const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useSeo({
+    path: '/about',
+    title: 'About Us — Our Story',
+    description: "Learn about Doing Right Awareness Initiative (DRAI): a Nigerian non-profit championing integrity, accountability, and civic responsibility since 2018."
+  });
 
   useEffect(() => {
     loadContent();

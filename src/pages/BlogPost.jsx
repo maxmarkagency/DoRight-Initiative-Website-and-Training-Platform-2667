@@ -6,8 +6,16 @@ import * as FiIcons from 'react-icons/fi';
 import { supabase } from '../lib/supabase';
 import BlogSidebar from '../components/BlogSidebar';
 import { sanitizeHtml } from '../lib/sanitizeHtml';
+import useSeo from '../hooks/useSeo';
 
 const { FiCalendar, FiUser, FiClock, FiShare2, FiFacebook, FiTwitter, FiLinkedin, FiInstagram, FiMessageCircle } = FiIcons;
+
+const stripHtmlAndTruncate = (html, maxLength = 155) => {
+  if (!html) return '';
+  const plainText = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  if (plainText.length <= maxLength) return plainText;
+  return `${plainText.slice(0, maxLength).trimEnd()}...`;
+};
 
 const BlogPost = () => {
   const { postId } = useParams();
@@ -15,6 +23,22 @@ const BlogPost = () => {
   const [relatedPosts, setRelatedPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+
+  useSeo({
+    path: `/blog/${postId}`,
+    title: post?.title || 'Blog',
+    description: stripHtmlAndTruncate(post?.content) || "Read the latest articles, updates, and insights from DoRight Awareness Initiative.",
+    image: post?.image || undefined,
+    type: 'article',
+    jsonLd: post ? {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: post.title,
+      image: post.image,
+      datePublished: post.date,
+      author: { '@type': post.author ? 'Person' : undefined, name: post.author || 'DoRight Team' },
+    } : undefined
+  });
 
   useEffect(() => {
     fetchBlogPost();
@@ -160,25 +184,25 @@ const BlogPost = () => {
             <div className="mt-12 py-8 border-t border-b border-neutral-200 flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex gap-2">
                 <a
-                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://doright.ng/#/blog/' + postId)}`}
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://doright.ng/blog/' + postId)}`}
                   target="_blank" rel="noopener noreferrer"
                   className="bg-[#3b5998] text-white px-4 py-2 rounded text-sm font-medium flex items-center hover:bg-opacity-90 transition-opacity">
                   <SafeIcon icon={FiFacebook} className="w-4 h-4 mr-2" /> Share
                 </a>
                 <a
-                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent('https://doright.ng/#/blog/' + postId)}&text=${encodeURIComponent(post.title)}`}
+                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent('https://doright.ng/blog/' + postId)}&text=${encodeURIComponent(post.title)}`}
                   target="_blank" rel="noopener noreferrer"
                   className="bg-[#1da1f2] text-white px-4 py-2 rounded text-sm font-medium flex items-center hover:bg-opacity-90 transition-opacity">
                   <SafeIcon icon={FiTwitter} className="w-4 h-4 mr-2" /> Tweet
                 </a>
                 <a
-                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://doright.ng/#/blog/' + postId)}`}
+                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://doright.ng/blog/' + postId)}`}
                   target="_blank" rel="noopener noreferrer"
                   className="bg-[#0A66C2] text-white px-4 py-2 rounded text-sm font-medium flex items-center hover:bg-opacity-90 transition-opacity">
                   <SafeIcon icon={FiLinkedin} className="w-4 h-4 mr-2" /> Share
                 </a>
                 <a
-                  href={`https://wa.me/?text=${encodeURIComponent(post.title + ' https://doright.ng/#/blog/' + postId)}`}
+                  href={`https://wa.me/?text=${encodeURIComponent(post.title + ' https://doright.ng/blog/' + postId)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-[#25D366] text-white px-4 py-2 rounded text-sm font-medium flex items-center hover:bg-opacity-90 transition-opacity"

@@ -5,12 +5,19 @@ import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import { getPageContent, getSectionByKey } from '../services/pageContentService';
 import { sanitizeHtml } from '../lib/sanitizeHtml';
+import useSeo from '../hooks/useSeo';
 
 const { FiUsers, FiTarget, FiTrendingUp, FiShield, FiArrowRight, FiCheck } = FiIcons;
 
 const Programs = () => {
   const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useSeo({
+    path: '/programs',
+    title: 'Our Programs',
+    description: "Explore DRAI's programs: youth mentorship, community campaigns, policy advocacy, and educational outreach driving integrity and accountability across Nigeria."
+  });
 
   useEffect(() => {
     loadContent();

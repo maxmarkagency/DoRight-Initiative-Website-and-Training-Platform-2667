@@ -5,10 +5,17 @@ import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import LoadingTransition from '../components/LoadingTransition';
 import liquidGlass from '../lib/liquid-glass';
+import useSeo from '../hooks/useSeo';
 
 const { FiPlay, FiPause, FiClock, FiCalendar, FiHeadphones, FiAlertCircle, FiFacebook, FiTwitter, FiLinkedin, FiMessageCircle, FiShare2, FiArrowRight } = FiIcons;
 
 const Podcast = () => {
+    useSeo({
+        path: '/media/podcast',
+        title: 'Podcast',
+        description: "Listen to the DoRight podcast: conversations on integrity, accountability, and civic responsibility in Nigeria."
+    });
+
     const [episodes, setEpisodes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -258,7 +265,7 @@ const Podcast = () => {
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <a
-                                                        href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://doright.ng/#/media/podcast/' + episode.slug)}`}
+                                                        href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://doright.ng/media/podcast/' + episode.slug)}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="p-2 rounded-full bg-[#3b5998]/10 text-[#3b5998] hover:bg-[#3b5998] hover:text-white transition-colors inline-flex items-center justify-center min-w-[44px] min-h-[44px]"
@@ -267,7 +274,7 @@ const Podcast = () => {
                                                         <SafeIcon icon={FiFacebook} className="w-4 h-4" />
                                                     </a>
                                                     <a
-                                                        href={`https://twitter.com/intent/tweet?url=${encodeURIComponent('https://doright.ng/#/media/podcast/' + episode.slug)}&text=${encodeURIComponent(episode.title)}`}
+                                                        href={`https://twitter.com/intent/tweet?url=${encodeURIComponent('https://doright.ng/media/podcast/' + episode.slug)}&text=${encodeURIComponent(episode.title)}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="p-2 rounded-full bg-[#1DA1F2]/10 text-[#1DA1F2] hover:bg-[#1DA1F2] hover:text-white transition-colors inline-flex items-center justify-center min-w-[44px] min-h-[44px]"
@@ -276,7 +283,7 @@ const Podcast = () => {
                                                         <SafeIcon icon={FiTwitter} className="w-4 h-4" />
                                                     </a>
                                                     <a
-                                                        href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://doright.ng/#/media/podcast/' + episode.slug)}`}
+                                                        href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://doright.ng/media/podcast/' + episode.slug)}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="p-2 rounded-full bg-[#0A66C2]/10 text-[#0A66C2] hover:bg-[#0A66C2] hover:text-white transition-colors inline-flex items-center justify-center min-w-[44px] min-h-[44px]"
@@ -285,7 +292,7 @@ const Podcast = () => {
                                                         <SafeIcon icon={FiLinkedin} className="w-4 h-4" />
                                                     </a>
                                                     <a
-                                                        href={`https://wa.me/?text=${encodeURIComponent(episode.title + ' https://doright.ng/#/media/podcast/' + episode.slug)}`}
+                                                        href={`https://wa.me/?text=${encodeURIComponent(episode.title + ' https://doright.ng/media/podcast/' + episode.slug)}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="p-2 rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white transition-colors inline-flex items-center justify-center min-w-[44px] min-h-[44px]"

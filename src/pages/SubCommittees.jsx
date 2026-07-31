@@ -4,12 +4,19 @@ import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import { getSubCommitteeDetails } from '../services/leadsService';
+import useSeo from '../hooks/useSeo';
 
 const { FiUsers, FiArrowRight } = FiIcons;
 
 const SubCommittees = () => {
   const [committees, setCommittees] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useSeo({
+    path: '/sub-committees',
+    title: 'Our Sub-Committees',
+    description: "See what each of DRAI's five member sub-committees does, from community outreach to policy advocacy, and find where your skills fit at DoRight Awareness Initiative."
+  });
 
   useEffect(() => {
     getSubCommitteeDetails().then((data) => {

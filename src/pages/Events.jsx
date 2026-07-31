@@ -3,10 +3,17 @@ import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import supabase from '../lib/supabase';
+import useSeo from '../hooks/useSeo';
 
 const { FiCalendar, FiMapPin, FiUsers } = FiIcons;
 
 const Events = () => {
+  useSeo({
+    path: '/events',
+    title: 'Events',
+    description: "See upcoming and past events from DoRight Awareness Initiative — community campaigns, workshops, and civic engagement activities."
+  });
+
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 

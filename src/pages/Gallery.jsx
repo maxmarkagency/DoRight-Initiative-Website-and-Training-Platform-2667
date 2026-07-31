@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
+import useSeo from '../hooks/useSeo';
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -14,6 +15,12 @@ const imageVariants = {
 };
 
 const Gallery = () => {
+  useSeo({
+    path: '/gallery',
+    title: 'Photo & Video Gallery',
+    description: "Browse photos and videos from DoRight Awareness Initiative's community campaigns, training programs, and events across Nigeria."
+  });
+
   const [galleryImages, setGalleryImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

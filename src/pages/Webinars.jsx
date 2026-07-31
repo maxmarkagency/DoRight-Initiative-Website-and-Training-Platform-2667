@@ -3,10 +3,17 @@ import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import supabase from '../lib/supabase';
+import useSeo from '../hooks/useSeo';
 
 const { FiCalendar, FiClock, FiUsers, FiPlay, FiExternalLink, FiCheck } = FiIcons;
 
 const Webinars = () => {
+  useSeo({
+    path: '/webinars',
+    title: 'Webinars',
+    description: "Join DRAI's live webinars and access recorded sessions on integrity, governance, and civic engagement led by expert speakers.",
+  });
+
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
   const [upcomingWebinars, setUpcomingWebinars] = useState([]);
