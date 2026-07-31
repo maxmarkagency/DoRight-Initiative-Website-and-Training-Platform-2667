@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import useSeo from '../hooks/useSeo';
+import { PODCAST_SLUG } from '../config/podcast';
 
 const { FiPlay, FiPause, FiClock, FiCalendar, FiHeadphones, FiArrowLeft, FiShare2, FiFacebook, FiTwitter, FiLinkedin, FiLink, FiCheck, FiMessageCircle } = FiIcons;
 
@@ -38,10 +39,6 @@ const PodcastEpisode = () => {
             author: { '@type': 'Organization', name: 'DoRight Team' },
         } : undefined
     });
-
-    // Placeholder slug - user to update if different. 
-    // Ideally this should be in a config file or context, but keeping it here for consistency with Podcast.jsx
-    const PODCAST_SLUG = 'doright';
 
     useEffect(() => {
         fetchEpisode();

@@ -6,6 +6,7 @@ import * as FiIcons from 'react-icons/fi';
 import LoadingTransition from '../components/LoadingTransition';
 import liquidGlass from '../lib/liquid-glass';
 import useSeo from '../hooks/useSeo';
+import { PODCAST_SLUG } from '../config/podcast';
 
 const { FiPlay, FiPause, FiClock, FiCalendar, FiHeadphones, FiAlertCircle, FiFacebook, FiTwitter, FiLinkedin, FiMessageCircle, FiShare2, FiArrowRight } = FiIcons;
 
@@ -31,9 +32,6 @@ const Podcast = () => {
         const glass = liquidGlass(playerBarRef.current, { scale: -60, chroma: 4, blur: 6, saturate: 1.3 });
         return () => glass.destroy();
     }, [currentEpisode]);
-
-    // Placeholder slug - user to update if different
-    const PODCAST_SLUG = 'doright';
 
     useEffect(() => {
         fetchEpisodes();
