@@ -65,7 +65,9 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/programs" element={<Programs />} />
+          {/* Public Training Route commented out as requested:
           <Route path="/training" element={<Training />} />
+          */}
           <Route path="/join" element={<Join />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/blog" element={<Blog />} />
@@ -82,6 +84,7 @@ function AppContent() {
           <Route path="/membership-card" element={<MembershipCardPage />} />
           <Route path="/verify-member" element={<VerifyMemberPage />} />
 
+          {/* Training dashboard/course routes commented out:
           <Route path="/training/dashboard" element={<Navigate to="/dashboard" replace />} />
           <Route path="/training/course/:courseId" element={
             <ProtectedRoute>
@@ -93,6 +96,7 @@ function AppContent() {
               <CoursePage />
             </ProtectedRoute>
           } />
+          */}
 
           <Route path="/dashboard" element={
             <ProtectedRoute>

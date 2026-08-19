@@ -56,7 +56,7 @@ const Header = () => {
       name: 'Programs',
       dropdown: [
         { name: 'Our Programs', path: '/programs' },
-        { name: 'Training', path: '/training' },
+        // { name: 'Training', path: '/training' },
         { name: 'Webinars', path: '/webinars' },
         { name: 'Events', path: '/events' },
       ]

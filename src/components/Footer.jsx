@@ -108,14 +108,14 @@ const Footer=()=> {
                   Our Programs
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link
                   to="/training"
                   className="text-neutral-300 hover:text-accent transition-colors text-sm sm:text-base break-words"
                 >
                   Training
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <Link
                   to="/webinars"

@@ -141,10 +141,17 @@ const Home = () => {
                     <SafeIcon icon={FiArrowRight} className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
                   </Link>
                 </motion.div>
+                {/* Start Training CTA commented out as requested:
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link to="/training" className="border-2 border-white/80 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold hover:bg-white hover:text-black transition-all duration-300 inline-flex items-center justify-center text-sm sm:text-base w-full sm:w-auto">
                     <SafeIcon icon={FiPlay} className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
                     Start Training
+                  </Link>
+                </motion.div>
+                */}
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Link to="/programs" className="border-2 border-white/80 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold hover:bg-white hover:text-black transition-all duration-300 inline-flex items-center justify-center text-sm sm:text-base w-full sm:w-auto">
+                    Explore Programs
                   </Link>
                 </motion.div>
               </div>
