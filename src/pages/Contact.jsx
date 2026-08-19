@@ -53,19 +53,46 @@ const Contact = () => {
   const heroSection = getSectionByKey(sections, 'hero');
   const socialLinks = siteSettings.social_links || {};
 
-  const contactPhone = siteSettings.contact_phone || '+234 912 339 9968';
+  const rawPhone = siteSettings.contact_phone;
+  const contactPhone =
+    !rawPhone || rawPhone.includes('XXX') || rawPhone.includes('123 456') || rawPhone.trim() === ''
+      ? '+234 912 339 9968'
+      : rawPhone;
+
+  const rawAddress = siteSettings.contact_address;
+  const contactAddress =
+    !rawAddress || rawAddress.includes('123 Integrity') || rawAddress.trim() === '' || rawAddress === 'Lagos, Nigeria'
+      ? '28b, Olaminuyun street, Parkview, Ikoyi, Lagos, Nigeria 101233'
+      : rawAddress;
+
+  const rawEmail = siteSettings.contact_email;
+  const contactEmail = !rawEmail || rawEmail.trim() === '' ? 'info@doright.ng' : rawEmail;
 
   const contactInfo = [
-    { icon: FiMail, title: 'Email Us', details: [siteSettings.contact_email || 'info@doright.ng', 'support@doright.ng'], color: 'text-primary' },
-    { icon: FiPhone, title: 'Call Us', details: [contactPhone], color: 'text-primary' },
-    { icon: FiMapPin, title: 'Visit Us', details: siteSettings.contact_address ? [siteSettings.contact_address] : ['DoRight Awareness Initiative', '28b, Olaminuyun street , Parkview', 'Lagos, Nigeria 101233'], color: 'text-primary' }
+    {
+      icon: FiMail,
+      title: 'Email Us',
+      details: [contactEmail, 'volunteer@doright.ng'],
+      color: 'text-primary'
+    },
+    {
+      icon: FiPhone,
+      title: 'Call Us',
+      details: [contactPhone],
+      color: 'text-primary'
+    },
+    {
+      icon: FiMapPin,
+      title: 'Visit Us',
+      details: ['DoRight Awareness Initiative', contactAddress],
+      color: 'text-primary'
+    }
   ];
 
   const departments = [
     { name: 'General Inquiries', email: 'info@doright.ng', description: 'General questions about our organization and programs' },
     { name: 'Partnerships', email: 'partnerships@doright.ng', description: 'Collaboration opportunities and strategic partnerships' },
     { name: 'Volunteer Coordination', email: 'volunteer@doright.ng', description: 'Volunteer opportunities and community engagement' },
-    // { name: 'Training Programs', email: 'training@doright.ng', description: 'Course inquiries and certification support' },
     { name: 'Media & Press', email: 'media@doright.ng', description: 'Press inquiries and media relations' }
   ];
 
@@ -90,15 +117,45 @@ const Contact = () => {
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
             {contactInfo.map((info, index) => (
-              <motion.div key={info.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.1 }} viewport={{ once: true }} className="text-center">
-                <div className={`${info.color} w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 mx-auto mb-4 sm:mb-6 bg-neutral-100 rounded-full flex items-center justify-center`}>
+              <motion.div key={info.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.1 }} viewport={{ once: true }} className="text-center bg-neutral-50/70 p-6 sm:p-8 rounded-2xl border border-neutral-200/80 shadow-sm flex flex-col items-center">
+                <div className={`${info.color} w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 mx-auto mb-4 sm:mb-6 bg-white shadow-sm border border-neutral-200 rounded-full flex items-center justify-center`}>
                   <SafeIcon icon={info.icon} className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8" />
                 </div>
                 <h3 className="text-lg sm:text-xl font-heading font-bold text-neutral-900 mb-3 sm:mb-4"> {info.title} </h3>
-                <div className="space-y-1 sm:space-y-2">
-                  {info.details.map((detail, detailIndex) => (
-                    <p key={detailIndex} className="text-sm sm:text-base text-neutral-700"> {detail} </p>
-                  ))}
+                <div className="space-y-1.5 sm:space-y-2">
+                  {info.details.map((detail, detailIndex) => {
+                    const isPhone = detail.startsWith('+');
+                    const isEmail = detail.includes('@');
+                    if (isPhone) {
+                      return (
+                        <p key={detailIndex} className="text-sm sm:text-base">
+                          <a
+                            href={`tel:${detail.replace(/\s+/g, '')}`}
+                            className="font-semibold text-primary hover:text-primary-600 transition-colors"
+                          >
+                            {detail}
+                          </a>
+                        </p>
+                      );
+                    }
+                    if (isEmail) {
+                      return (
+                        <p key={detailIndex} className="text-sm sm:text-base">
+                          <a
+                            href={`mailto:${detail}`}
+                            className="text-neutral-700 hover:text-primary transition-colors"
+                          >
+                            {detail}
+                          </a>
+                        </p>
+                      );
+                    }
+                    return (
+                      <p key={detailIndex} className="text-sm sm:text-base text-neutral-700">
+                        {detail}
+                      </p>
+                    );
+                  })}
                 </div>
               </motion.div>
             ))}

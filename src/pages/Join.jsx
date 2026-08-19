@@ -368,7 +368,7 @@ const Join = () => {
                     <div>
                       <h4 className="font-semibold text-neutral-900 mb-0.5">Visit Us</h4>
                       <p className="text-neutral-700 text-sm">
-                        {siteSettings.contact_address || 'DoRight Awareness Initiative, 123 Integrity Street, Victoria Island, Lagos, Nigeria'}
+                        {siteSettings.contact_address || '28b, Olaminuyun street, Parkview, Ikoyi, Lagos, Nigeria 101233'}
                       </p>
                     </div>
                   </div>
