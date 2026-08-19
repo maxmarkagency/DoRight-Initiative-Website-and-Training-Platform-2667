@@ -77,9 +77,19 @@ const buildAdminNotes = (interest, message) => {
   return lines.length > 0 ? lines.join('\n') : null;
 };
 
+const fileToBase64 = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (error) => reject(error);
+  });
+
 export const submitLead = async ({ fullName, email, phone, interest, message, subCommitteeId = null, photoFile }) => {
-  let filePath = null;
   let photoPreview = null;
+  let photoBase64 = null;
+  let photoExt = 'jpg';
+  let photoMime = 'image/jpeg';
 
   if (photoFile) {
     try {
@@ -89,79 +99,90 @@ export const submitLead = async ({ fullName, email, phone, interest, message, su
     }
 
     try {
-      const fileExt = photoFile.name ? photoFile.name.split('.').pop() : 'jpg';
-      const uploadPath = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('lead-photos')
-        .upload(uploadPath, photoFile, { cacheControl: '3600', upsert: true });
-
-      if (!uploadError) {
-        filePath = uploadPath;
-      } else {
-        console.warn('Storage upload note (proceeding with lead creation):', uploadError.message || uploadError);
-        filePath = uploadPath;
-      }
-    } catch (storageErr) {
-      console.warn('Storage upload caught error:', storageErr);
+      photoBase64 = await fileToBase64(photoFile);
+      photoExt = photoFile.name ? photoFile.name.split('.').pop() : 'jpg';
+      photoMime = photoFile.type || 'image/jpeg';
+    } catch (e) {
+      console.warn('Could not encode photo to base64', e);
     }
   }
 
   const now = new Date().toISOString();
   const fallbackMembershipId = `DRAI-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-  let insertedLead = null;
+  // 1. Primary path: Use submit-lead Edge Function (service role bypasses RLS and saves photo)
+  try {
+    const { data: funcData, error: funcError } = await supabase.functions.invoke('submit-lead', {
+      body: {
+        fullName,
+        email,
+        phone: phone || null,
+        interest: interest || null,
+        message: message || null,
+        subCommitteeId: subCommitteeId || null,
+        photoBase64,
+        photoExt,
+        photoMime
+      }
+    });
 
-  const { data: insertedData, error: insertError } = await supabase
+    if (!funcError && funcData?.lead) {
+      return {
+        ...funcData.lead,
+        photo_preview: photoPreview || funcData.lead.photo_public_url || null
+      };
+    }
+    if (funcError) {
+      console.warn('submit-lead function returned error, using resilient fallback:', funcError);
+    }
+  } catch (funcErr) {
+    console.warn('submit-lead function invocation error, using resilient fallback:', funcErr);
+  }
+
+  // 2. Resilient fallback path: Direct insert without .select() (prevents 401 unauthenticated select crash)
+  const localLead = {
+    full_name: fullName,
+    email,
+    phone: phone || null,
+    sub_committee_id: subCommitteeId || null,
+    source: 'website',
+    tier: 'tier_1',
+    tier_1_at: now,
+    membership_id: fallbackMembershipId,
+    status: 'new',
+    admin_notes: buildAdminNotes(interest, message),
+    created_at: now
+  };
+
+  const { error: insertError } = await supabase
     .from('leads')
-    .insert({
-      full_name: fullName,
-      email,
-      phone: phone || null,
-      photo_url: filePath,
-      sub_committee_id: subCommitteeId || null,
-      source: 'website',
-      tier: 'tier_1',
-      tier_1_at: now,
-      membership_id: fallbackMembershipId,
-      status: 'new',
-      admin_notes: buildAdminNotes(interest, message)
-    })
-    .select()
-    .single();
+    .insert(localLead);
 
   if (insertError) {
-    // If column trigger exists or duplicate, try insert without fallback
-    const { data: retryData, error: retryError } = await supabase
+    const { error: retryError } = await supabase
       .from('leads')
       .insert({
         full_name: fullName,
         email,
         phone: phone || null,
-        photo_url: filePath,
         sub_committee_id: subCommitteeId || null,
         source: 'website',
         tier: 'tier_1',
         tier_1_at: now,
         status: 'new',
         admin_notes: buildAdminNotes(interest, message)
-      })
-      .select()
-      .single();
+      });
 
     if (retryError) throw retryError;
-    insertedLead = retryData;
-  } else {
-    insertedLead = insertedData;
   }
 
-  // Trigger welcome email function asynchronously
+  // Trigger welcome email asynchronously
   try {
     supabase.functions.invoke('send-lead-welcome-email', {
       body: {
         type: 'INSERT',
         table: 'leads',
-        record: insertedLead
+        record: localLead
       }
     }).catch((err) => console.warn('Welcome email trigger warning:', err));
   } catch (e) {
@@ -169,7 +190,7 @@ export const submitLead = async ({ fullName, email, phone, interest, message, su
   }
 
   return {
-    ...insertedLead,
+    ...localLead,
     photo_preview: photoPreview
   };
 };
