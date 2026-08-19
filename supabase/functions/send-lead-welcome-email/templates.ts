@@ -488,34 +488,35 @@ export function tier2AdvancementEmail({
   return { subject, html, text };
 }
 
-/** Email sent when an admin advances a member to a higher tier. */
-export function tierTransitionEmail(input: TierTransitionInput): ComposedEmail {
-  if (input.toTier === 'tier_2') {
-    return tier2AdvancementEmail(input);
-  }
-
-  // Tier 3 or general fallback
+/** Email sent when an admin advances a member to Tier 3 (Strategic Leader). */
+export function tier3AdvancementEmail(input: TierTransitionInput): ComposedEmail {
   const name = escapeHtml(input.fullName.trim());
   const cardUrl = input.membershipCardUrl || `https://doright.ng/#/membership-card?id=${encodeURIComponent(input.membershipId || '')}`;
   const whatsappUrl = input.whatsappGroupUrl || "https://chat.whatsapp.com/DoRightTier3Leaders";
+  const paymentUrl = "https://doright.ng/#/donate";
+  const subCommitteesUrl = "https://doright.ng/#/sub-committees";
   const notes = input.customNotes ? escapeHtml(input.customNotes) : null;
 
-  const subject = `🌟 Outstanding Leadership: Welcome to Tier 3 (Strategic Leader) at DoRight`;
+  const subject = "Leadership Advancement: Welcome to Tier 3 (Strategic Leader) 🌟";
 
   const html = wrapHtml(`
     <div style="margin-bottom: 20px;">
       <div style="display: inline-block; padding: 4px 14px; border-radius: 9999px; background-color: #ecfdf5; color: #047857; font-size: 13px; font-weight: bold; margin-bottom: 12px;">
-        Tier 3 Leadership • Strategic Leader
+        Tier 3 Advancement • Strategic Leader
       </div>
       <h1 style="font-size: 20px; font-weight: bold; color: #0f172a; margin: 0 0 16px; line-height: 1.4;">
-        Welcome to Tier 3: Strategic Leader at DoRight Awareness Initiative
+        Leadership Advancement: Welcome to Tier 3 (Strategic Leader) 🌟
       </h1>
     </div>
 
     <p style="font-size: 16px; margin-top: 0; color: #0f172a;">Dear <strong>${name}</strong>,</p>
 
     <p style="font-size: 15px; color: #334155; line-height: 1.65;">
-      In recognition of your exceptional dedication, proven community mobilization, and unwavering adherence to our core principles, we are thrilled to welcome you into <strong>Tier 3: Strategic Leader</strong>.
+      Your active participation as a <strong>Movement Champion (Tier 2)</strong> has made a vital impact on our community. Thanks to your outreach efforts, digital publishing, and community engagement, our vision is stronger than ever.
+    </p>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      Having met and exceeded your Tier 2 outreach milestones you have unlocked your Pathway to <strong>Tier 3: Strategic Leader</strong>!
     </p>
 
     ${input.membershipId ? `
@@ -526,38 +527,76 @@ export function tierTransitionEmail(input: TierTransitionInput): ComposedEmail {
     </div>
     ` : ''}
 
+    {/* What changes in Tier 3 */}
     <div style="background-color: #f8fafc; border-left: 4px solid #047857; border-radius: 0 8px 8px 0; padding: 18px 20px; margin: 24px 0;">
       <h2 style="font-size: 16px; font-weight: bold; color: #064e3b; margin: 0 0 10px;">
-        Your Strategic Leadership Responsibilities:
+        What changes in Tier 3?
       </h2>
+      <p style="font-size: 14px; color: #334155; line-height: 1.6; margin: 0 0 12px;">
+        As a <strong>Strategic Leader (Operational Contributor)</strong>, you will play an active role in driving our mission directly through leadership and structure.
+      </p>
       <div style="font-size: 14px; color: #1e293b; line-height: 1.6;">
+        <strong>Your core responsibilities in Tier 3 will be to:</strong>
         <ul style="margin: 6px 0 0; padding-left: 20px;">
-          <li style="margin-bottom: 6px;">Maintain at least 70% committee meeting attendance.</li>
-          <li style="margin-bottom: 6px;">Deliver assigned monthly operational tasks in your specialized sub-committees.</li>
-          <li>Mentor and guide emerging Tier 1 and Tier 2 advocates.</li>
+          <li style="margin-bottom: 6px;">Actively participate in functional sub-committees delivering on your assigned monthly tasks.</li>
+          <li>Maintain a 70% attendance rate for sub-committee meetings and strategic sessions.</li>
         </ul>
       </div>
     </div>
 
+    {/* Next Steps */}
     <div style="margin: 28px 0;">
+      <h2 style="font-size: 17px; font-weight: bold; color: #0f172a; margin: 0 0 16px; border-bottom: 2px solid #F59E0B; padding-bottom: 6px; display: inline-block;">
+        Next Steps:
+      </h2>
+
+      {/* 1. Membership fee */}
       <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px 18px; margin-bottom: 14px;">
-        <p style="font-size: 14px; color: #334155; margin: 0 0 10px;">
-          <strong>Access your updated Tier 3 Advocate Card:</strong>
+        <p style="font-size: 14px; color: #334155; margin: 0 0 10px; line-height: 1.55;">
+          <strong>Membership fee</strong> — click here to pay your updated membership fee. For strategic leaders, fees are set at a minimum of <strong>NGN 250,000</strong> and a maximum of <strong>NGN 300,000</strong>.
         </p>
         <div>
-          <a href="${cardUrl}" style="background-color: #F59E0B; color: #000000; padding: 10px 22px; border-radius: 6px; font-weight: bold; font-size: 13px; text-decoration: none; display: inline-block;">
-            👉 Access / Download Updated Card
+          <a href="${paymentUrl}" style="background-color: #005BBB; color: #ffffff; padding: 10px 22px; border-radius: 6px; font-weight: bold; font-size: 13px; text-decoration: none; display: inline-block;">
+            👉 Pay Tier 3 Membership Fee
           </a>
         </div>
       </div>
 
+      {/* 2. Membership card */}
       <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px 18px; margin-bottom: 14px;">
-        <p style="font-size: 14px; color: #334155; margin: 0 0 10px;">
-          <strong>Join the Tier 3 Strategic Leadership Council WhatsApp Group:</strong>
+        <p style="font-size: 14px; color: #334155; margin: 0 0 10px; line-height: 1.55;">
+          <strong>Membership card</strong> — once your payment is processed, you will be issued your renewed DRAI membership card. You can store this card on your device and print a hard copy.
+        </p>
+        <div>
+          <a href="${cardUrl}" style="background-color: #F59E0B; color: #000000; padding: 10px 22px; border-radius: 6px; font-weight: bold; font-size: 13px; text-decoration: none; display: inline-block;">
+            👉 Access / Download Renewed Membership Card
+          </a>
+        </div>
+        <p style="font-size: 12px; color: #64748b; margin: 8px 0 0;">
+          💡 <em>Tip: Click "Download Card" for a digital image on your phone, or "Print / PDF" for a physical ID badge.</em>
+        </p>
+      </div>
+
+      {/* 3. Tier 3 Leadership Group */}
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px 18px; margin-bottom: 14px;">
+        <p style="font-size: 14px; color: #334155; margin: 0 0 10px; line-height: 1.55;">
+          <strong>Joining the Tier 3 Leadership Group:</strong> If you were not automatically routed to our tier 3 community, click here to access your exclusive leadership hub and connect with fellow Strategic Leaders.
         </p>
         <div>
           <a href="${whatsappUrl}" style="background-color: #25D366; color: #ffffff; padding: 10px 22px; border-radius: 6px; font-weight: bold; font-size: 13px; text-decoration: none; display: inline-block;">
-            👉 Join Tier 3 Leadership WhatsApp Group
+            👉 Join Tier 3 Leadership WhatsApp Hub
+          </a>
+        </div>
+      </div>
+
+      {/* 4. Sub-Committee Selection */}
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px 18px; margin-bottom: 14px;">
+        <p style="font-size: 14px; color: #334155; margin: 0 0 10px; line-height: 1.55;">
+          <strong>Sub-Committee Selection:</strong> Please go through the responsibilities of the different groups here and select your operational area of interest.
+        </p>
+        <div>
+          <a href="${subCommitteesUrl}" style="background-color: #0F172A; color: #ffffff; padding: 10px 22px; border-radius: 6px; font-weight: bold; font-size: 13px; text-decoration: none; display: inline-block;">
+            👉 Select Your Sub-Committee
           </a>
         </div>
       </div>
@@ -571,12 +610,12 @@ export function tierTransitionEmail(input: TierTransitionInput): ComposedEmail {
     ` : ''}
 
     <p style="font-size: 15px; color: #334155; line-height: 1.65; margin: 24px 0 28px;">
-      Thank you for leading by example and shaping the strategic future of the Doing Right Awareness Initiative.
+      Thank you for stepping into operational leadership to help sustain and grow our movement.
     </p>
 
     <div style="border-top: 1px solid #e2e8f0; padding-top: 18px; font-size: 14px; color: #475569;">
       <p style="margin: 0 0 4px;">Kind regards,</p>
-      <p style="margin: 0; font-weight: bold; color: #0f172a;">The DRAI Admin Team</p>
+      <p style="margin: 0; font-weight: bold; color: #0f172a;">The DRAI Executive Leadership &amp; Admin Team</p>
       <p style="margin: 2px 0 0; color: #047857; font-weight: 600;">Doing Right Awareness Initiative</p>
     </div>
   `);
@@ -584,14 +623,31 @@ export function tierTransitionEmail(input: TierTransitionInput): ComposedEmail {
   const text =
     `Subject: ${subject}\n\n` +
     `Dear ${input.fullName.trim()},\n\n` +
-    `In recognition of your exceptional dedication, proven community mobilization, and unwavering adherence to our core principles, we are thrilled to welcome you into Tier 3: Strategic Leader.\n\n` +
-    (input.membershipId ? `Membership ID: ${input.membershipId}\n\n` : '') +
-    `Access Updated Advocate Card: ${cardUrl}\n\n` +
-    `Join Tier 3 Leadership WhatsApp Group: ${whatsappUrl}\n\n` +
+    `Your active participation as a Movement Champion (Tier 2) has made a vital impact on our community. Thanks to your outreach efforts, digital publishing, and community engagement, our vision is stronger than ever.\n\n` +
+    `Having met and exceeded your Tier 2 outreach milestones you have unlocked your Pathway to Tier 3: Strategic Leader!\n\n` +
+    `What changes in Tier 3?\n\n` +
+    `As a Strategic Leader (Operational Contributor), you will play an active role in driving our mission directly through leadership and structure.\n\n` +
+    `Your core responsibilities in Tier 3 will be to:\n` +
+    `- Actively participate in functional sub-committees delivering on your assigned monthly tasks.\n` +
+    `- Maintain a 70% attendance rate for sub-committee meetings and strategic sessions.\n\n` +
+    `Next Steps:\n\n` +
+    `1. Membership fee - click here to pay your updated membership fee. For strategic leaders, fees are set at a minimum of NGN 250,000 and a maximum of NGN 300,000: ${paymentUrl}\n\n` +
+    `2. Membership card - once your payment is processed, you will be issued your renewed DRAI membership card: ${cardUrl}\n\n` +
+    `3. Joining the tier 3 Leadership Group: If you were not automatically routed to our tier 3 community, click here to access your exclusive leadership hub and connect with fellow Strategic Leaders: ${whatsappUrl}\n\n` +
+    `4. Sub-Committee Selection: Please go through the responsibilities of the different groups here (${subCommitteesUrl}) and select your operational area of interest.\n\n` +
     (input.customNotes ? `Message from Leadership:\n${input.customNotes}\n\n` : '') +
+    `Thank you for stepping into operational leadership to help sustain and grow our movement.\n\n` +
     `Kind regards,\n` +
-    `The DRAI Admin Team\n` +
+    `The DRAI Executive Leadership & Admin Team\n` +
     `Doing Right Awareness Initiative`;
 
   return { subject, html, text };
+}
+
+/** Email sent when an admin advances a member to a higher tier. */
+export function tierTransitionEmail(input: TierTransitionInput): ComposedEmail {
+  if (input.toTier === 'tier_2') {
+    return tier2AdvancementEmail(input);
+  }
+  return tier3AdvancementEmail(input);
 }
