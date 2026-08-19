@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SafeIcon from '../../common/SafeIcon';
 import AdminModal from '../../components/admin/AdminModal';
@@ -11,6 +11,7 @@ import {
   getActiveSubCommittees,
   updateLeadTier,
   deleteLead,
+  updateLeadImpactSubmission,
   sendTierNotificationEmail,
   getTierWhatsAppLinks,
   saveTierWhatsAppLinks,
@@ -36,7 +37,14 @@ const {
   FiCreditCard,
   FiMessageCircle,
   FiExternalLink,
-  FiTrash2
+  FiTrash2,
+  FiFilter,
+  FiCalendar,
+  FiCheck,
+  FiBookOpen,
+  FiChevronLeft,
+  FiChevronRight,
+  FiRefreshCw
 } = FiIcons;
 
 const EMPTY_REFERRAL_FORM = {
@@ -51,15 +59,35 @@ const EMPTY_REFERRAL_FORM = {
 
 const SIGNED_URL_EXPIRY_SECONDS = 300;
 
+const MONTH_NAMES = [
+  { key: '01', name: 'January', short: 'Jan' },
+  { key: '02', name: 'February', short: 'Feb' },
+  { key: '03', name: 'March', short: 'Mar' },
+  { key: '04', name: 'April', short: 'Apr' },
+  { key: '05', name: 'May', short: 'May' },
+  { key: '06', name: 'June', short: 'Jun' },
+  { key: '07', name: 'July', short: 'Jul' },
+  { key: '08', name: 'August', short: 'Aug' },
+  { key: '09', name: 'September', short: 'Sep' },
+  { key: '10', name: 'October', short: 'Oct' },
+  { key: '11', name: 'November', short: 'Nov' },
+  { key: '12', name: 'December', short: 'Dec' }
+];
+
 const LeadsManagement = () => {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Search and Filter States
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTierTab, setSelectedTierTab] = useState('all');
+  const [impactFilter, setImpactFilter] = useState('all'); // 'all' | 'submitted_current' | 'pending_current'
+  const [subCommitteeFilter, setSubCommitteeFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'name_asc' | 'name_desc'
 
   // Selected Lead for Tier Management Modal
   const [selectedLead, setSelectedLead] = useState(null);
-  const [activeModalTab, setActiveModalTab] = useState('tier'); // 'tier' | 'card'
+  const [activeModalTab, setActiveModalTab] = useState('tier'); // 'tier' | 'impact' | 'card'
   const [targetTier, setTargetTier] = useState('tier_1');
   const [noteDraft, setNoteDraft] = useState('');
   const [customEmailNote, setCustomEmailNote] = useState('');
@@ -67,6 +95,17 @@ const LeadsManagement = () => {
   const [savingTier, setSavingTier] = useState(false);
   const [tierActionSuccess, setTierActionSuccess] = useState('');
   const [tierActionError, setTierActionError] = useState('');
+
+  // Monthly Impact Stories Modal State
+  const currentYear = new Date().getFullYear();
+  const currentMonthNumber = String(new Date().getMonth() + 1).padStart(2, '0');
+  const currentMonthKey = `${currentYear}-${currentMonthNumber}`;
+  const currentMonthObj = MONTH_NAMES.find((m) => m.key === currentMonthNumber) || MONTH_NAMES[7];
+
+  const [selectedImpactYear, setSelectedImpactYear] = useState(currentYear);
+  const [impactSubmissionsDraft, setImpactSubmissionsDraft] = useState({});
+  const [savingImpactMonth, setSavingImpactMonth] = useState(null);
+  const [impactToast, setImpactToast] = useState('');
 
   // Photo
   const [photoUrl, setPhotoUrl] = useState(null);
@@ -91,7 +130,7 @@ const LeadsManagement = () => {
   const [deleteError, setDeleteError] = useState('');
   const [deleteSuccessToast, setDeleteSuccessToast] = useState('');
 
-  // Sub-committees (for legacy view if referenced)
+  // Sub-committees
   const [subCommittees, setSubCommittees] = useState([]);
 
   useEffect(() => {
@@ -102,6 +141,31 @@ const LeadsManagement = () => {
     getActiveSubCommittees().then(setSubCommittees);
     getTierWhatsAppLinks().then(setWhatsAppLinks);
   }, []);
+
+  const fetchLeads = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('leads')
+        .select('*, sub_committees(name)')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Normalise tier and impact_submissions
+      const normalised = (data || []).map((item) => ({
+        ...item,
+        tier: item.tier || 'tier_1',
+        impact_submissions: item.impact_submissions || {}
+      }));
+
+      setLeads(normalised);
+    } catch (error) {
+      console.error('Error fetching leads:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleConfirmDelete = async () => {
     if (!deletingLead) return;
@@ -127,54 +191,76 @@ const LeadsManagement = () => {
     }
   };
 
-  const fetchLeads = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('leads')
-        .select('*, sub_committees(name)')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Normalise tier for any legacy records without tier field
-      const normalised = (data || []).map((item) => ({
-        ...item,
-        tier: item.tier || 'tier_1'
-      }));
-
-      setLeads(normalised);
-    } catch (error) {
-      console.error('Error fetching leads:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Tier counts
-  const counts = {
-    all: leads.length,
-    tier_1: leads.filter((l) => (l.tier || 'tier_1') === 'tier_1').length,
-    tier_2: leads.filter((l) => l.tier === 'tier_2').length,
-    tier_3: leads.filter((l) => l.tier === 'tier_3').length
-  };
+  const counts = useMemo(() => {
+    return {
+      all: leads.length,
+      tier_1: leads.filter((l) => (l.tier || 'tier_1') === 'tier_1').length,
+      tier_2: leads.filter((l) => l.tier === 'tier_2').length,
+      tier_3: leads.filter((l) => l.tier === 'tier_3').length,
+      submittedCurrentMonth: leads.filter((l) => l.impact_submissions?.[currentMonthKey] === true).length
+    };
+  }, [leads, currentMonthKey]);
 
-  // Filtered leads
-  const filteredLeads = leads.filter((lead) => {
-    const currentTier = lead.tier || 'tier_1';
-    if (selectedTierTab !== 'all' && currentTier !== selectedTierTab) {
-      return false;
-    }
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      const matchName = lead.full_name?.toLowerCase().includes(term);
-      const matchEmail = lead.email?.toLowerCase().includes(term);
-      const matchPhone = lead.phone?.toLowerCase().includes(term);
-      const matchNotes = lead.admin_notes?.toLowerCase().includes(term);
-      return matchName || matchEmail || matchPhone || matchNotes;
-    }
-    return true;
-  });
+  // Filtered and Sorted leads
+  const filteredLeads = useMemo(() => {
+    return leads
+      .filter((lead) => {
+        const currentTier = lead.tier || 'tier_1';
+        if (selectedTierTab !== 'all' && currentTier !== selectedTierTab) {
+          return false;
+        }
+
+        // Sub-Committee Filter
+        if (subCommitteeFilter !== 'all') {
+          if (subCommitteeFilter === 'none' && lead.sub_committee_id) return false;
+          if (subCommitteeFilter !== 'none' && lead.sub_committee_id !== subCommitteeFilter) return false;
+        }
+
+        // Impact Story Filter
+        if (impactFilter === 'submitted_current') {
+          if (lead.impact_submissions?.[currentMonthKey] !== true) return false;
+        } else if (impactFilter === 'pending_current') {
+          if (lead.impact_submissions?.[currentMonthKey] === true) return false;
+        }
+
+        // Search Term
+        if (searchTerm.trim()) {
+          const term = searchTerm.trim().toLowerCase();
+          const matchName = lead.full_name?.toLowerCase().includes(term);
+          const matchEmail = lead.email?.toLowerCase().includes(term);
+          const matchPhone = lead.phone?.toLowerCase().includes(term);
+          const matchMemId = lead.membership_id?.toLowerCase().includes(term);
+          const matchNotes = lead.admin_notes?.toLowerCase().includes(term);
+          const matchRef = lead.referred_by?.toLowerCase().includes(term);
+          return matchName || matchEmail || matchPhone || matchMemId || matchNotes || matchRef;
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        if (sortBy === 'newest') return new Date(b.created_at) - new Date(a.created_at);
+        if (sortBy === 'oldest') return new Date(a.created_at) - new Date(b.created_at);
+        if (sortBy === 'name_asc') return (a.full_name || '').localeCompare(b.full_name || '');
+        if (sortBy === 'name_desc') return (b.full_name || '').localeCompare(a.full_name || '');
+        return 0;
+      });
+  }, [leads, selectedTierTab, subCommitteeFilter, impactFilter, searchTerm, sortBy, currentMonthKey]);
+
+  const hasActiveFilters =
+    selectedTierTab !== 'all' ||
+    impactFilter !== 'all' ||
+    subCommitteeFilter !== 'all' ||
+    searchTerm.trim() !== '' ||
+    sortBy !== 'newest';
+
+  const resetFilters = () => {
+    setSelectedTierTab('all');
+    setImpactFilter('all');
+    setSubCommitteeFilter('all');
+    setSearchTerm('');
+    setSortBy('newest');
+  };
 
   const openLeadModal = (lead, initialTab = 'tier') => {
     setSelectedLead(lead);
@@ -186,6 +272,9 @@ const LeadsManagement = () => {
     setSendEmailNotification(true);
     setTierActionSuccess('');
     setTierActionError('');
+    setImpactToast('');
+    setImpactSubmissionsDraft(lead.impact_submissions || {});
+    setSelectedImpactYear(currentYear);
     setPhotoUrl(null);
 
     if (lead.photo_url) {
@@ -211,6 +300,49 @@ const LeadsManagement = () => {
     setPhotoLoading(false);
     setTierActionSuccess('');
     setTierActionError('');
+    setImpactToast('');
+  };
+
+  // Toggle Impact Story Submission for a Month
+  const handleToggleImpactMonth = async (monthKey, isSubmitted) => {
+    if (!selectedLead) return;
+
+    setSavingImpactMonth(monthKey);
+    setImpactToast('');
+
+    try {
+      const updatedMap = {
+        ...impactSubmissionsDraft,
+        [monthKey]: isSubmitted
+      };
+      setImpactSubmissionsDraft(updatedMap);
+
+      await updateLeadImpactSubmission(selectedLead.id, monthKey, isSubmitted);
+
+      // Update in leads list
+      setLeads((prev) =>
+        prev.map((l) =>
+          l.id === selectedLead.id
+            ? { ...l, impact_submissions: updatedMap }
+            : l
+        )
+      );
+
+      // Update selected lead state
+      setSelectedLead((prev) => ({
+        ...prev,
+        impact_submissions: updatedMap
+      }));
+
+      const monthName = MONTH_NAMES.find((m) => m.key === monthKey.split('-')[1])?.name || monthKey;
+      setImpactToast(`Updated ${monthName} submission status to: ${isSubmitted ? 'Submitted (Yes)' : 'Not Submitted (No)'}`);
+      setTimeout(() => setImpactToast(''), 3500);
+    } catch (err) {
+      console.error('Error updating impact story submission:', err);
+      alert('Unable to save impact submission. Please verify your connection and try again.');
+    } finally {
+      setSavingImpactMonth(null);
+    }
   };
 
   const handleSaveTier = async () => {
@@ -323,6 +455,7 @@ const LeadsManagement = () => {
         tier_1_at: now,
         referred_by: referralForm.referredBy.trim() || null,
         source: 'referral',
+        impact_submissions: {},
         admin_notes: referralForm.adminNotes ? `Interest: ${referralForm.interest}\n${referralForm.adminNotes}` : `Interest: ${referralForm.interest}`
       });
 
@@ -368,10 +501,10 @@ const LeadsManagement = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-            <span>Members & Tier Management</span>
+            <span>Members &amp; Tier Management</span>
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Track user form submissions, promote members across tiers, manage WhatsApp community links, and trigger automated emails.
+            Track user form submissions, verify monthly impact stories, promote members across tiers, and manage community communications.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -422,12 +555,12 @@ const LeadsManagement = () => {
         )}
       </AnimatePresence>
 
-      {/* Tier Summary Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Tier & Monthly Impact Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* All Members */}
         <div
           onClick={() => setSelectedTierTab('all')}
-          className={`cursor-pointer rounded-xl p-5 border transition-all ${
+          className={`cursor-pointer rounded-xl p-4 border transition-all ${
             selectedTierTab === 'all'
               ? 'bg-white dark:bg-gray-800 border-yellow-400 ring-2 ring-yellow-400/20 shadow-md'
               : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-gray-300'
@@ -435,130 +568,250 @@ const LeadsManagement = () => {
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">All Members</span>
-            <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300">
-              <SafeIcon icon={FiLayers} className="w-4 h-4" />
+            <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300">
+              <SafeIcon icon={FiLayers} className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mt-2">{counts.all}</div>
-          <div className="text-xs text-gray-500 mt-1">Total registered leads</div>
+          <div className="text-xl font-bold text-gray-900 dark:text-white mt-2">{counts.all}</div>
+          <div className="text-[11px] text-gray-500 mt-0.5">Total registered leads</div>
         </div>
 
         {/* Tier 1 */}
         <div
           onClick={() => setSelectedTierTab('tier_1')}
-          className={`cursor-pointer rounded-xl p-5 border transition-all ${
+          className={`cursor-pointer rounded-xl p-4 border transition-all ${
             selectedTierTab === 'tier_1'
-              ? 'bg-blue-50/70 dark:bg-blue-950/40 border-blue-400 ring-2 ring-blue-400/20 shadow-md'
+              ? 'bg-blue-50/50 dark:bg-blue-950/30 border-blue-500 ring-2 ring-blue-500/20 shadow-md'
               : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-blue-200'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wider">Tier 1: Personal Advocate</span>
-            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-300">
-              <SafeIcon icon={FiUser} className="w-4 h-4" />
+            <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+              Tier 1: Advocates
+            </span>
+            <div className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400">
+              <SafeIcon icon={FiAward} className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mt-2">{counts.tier_1}</div>
-          <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">Lead by daily personal example</div>
+          <div className="text-xl font-bold text-gray-900 dark:text-white mt-2">{counts.tier_1}</div>
+          <div className="text-[11px] text-blue-600 dark:text-blue-400 mt-0.5">Personal advocates</div>
         </div>
 
         {/* Tier 2 */}
         <div
           onClick={() => setSelectedTierTab('tier_2')}
-          className={`cursor-pointer rounded-xl p-5 border transition-all ${
+          className={`cursor-pointer rounded-xl p-4 border transition-all ${
             selectedTierTab === 'tier_2'
-              ? 'bg-purple-50/70 dark:bg-purple-950/40 border-purple-400 ring-2 ring-purple-400/20 shadow-md'
+              ? 'bg-purple-50/50 dark:bg-purple-950/30 border-purple-500 ring-2 ring-purple-500/20 shadow-md'
               : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-purple-200'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-purple-700 dark:text-purple-400 uppercase tracking-wider">Tier 2: Movement Champion</span>
-            <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-300">
-              <SafeIcon icon={FiTrendingUp} className="w-4 h-4" />
+            <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
+              Tier 2: Champions
+            </span>
+            <div className="w-7 h-7 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400">
+              <SafeIcon icon={FiTrendingUp} className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mt-2">{counts.tier_2}</div>
-          <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">Public outreach & mobilization</div>
+          <div className="text-xl font-bold text-gray-900 dark:text-white mt-2">{counts.tier_2}</div>
+          <div className="text-[11px] text-purple-600 dark:text-purple-400 mt-0.5">Outreach &amp; mobilizers</div>
         </div>
 
         {/* Tier 3 */}
         <div
           onClick={() => setSelectedTierTab('tier_3')}
-          className={`cursor-pointer rounded-xl p-5 border transition-all ${
+          className={`cursor-pointer rounded-xl p-4 border transition-all ${
             selectedTierTab === 'tier_3'
-              ? 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-400 ring-2 ring-emerald-400/20 shadow-md'
+              ? 'bg-emerald-50/50 dark:bg-emerald-950/30 border-emerald-500 ring-2 ring-emerald-500/20 shadow-md'
               : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-emerald-200'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Tier 3: Strategic Leader</span>
-            <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-600 dark:text-emerald-300">
-              <SafeIcon icon={FiAward} className="w-4 h-4" />
+            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+              Tier 3: Leaders
+            </span>
+            <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+              <SafeIcon icon={FiAward} className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mt-2">{counts.tier_3}</div>
-          <div className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">Operational & committee leadership</div>
+          <div className="text-xl font-bold text-gray-900 dark:text-white mt-2">{counts.tier_3}</div>
+          <div className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-0.5">Strategic &amp; committee leaders</div>
+        </div>
+
+        {/* Monthly Impact Story Tracker Card */}
+        <div
+          onClick={() => setImpactFilter(impactFilter === 'submitted_current' ? 'all' : 'submitted_current')}
+          className={`cursor-pointer rounded-xl p-4 border transition-all ${
+            impactFilter === 'submitted_current'
+              ? 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-500 ring-2 ring-amber-500/20 shadow-md'
+              : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-amber-300'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+              {currentMonthObj.short} Impact Stories
+            </span>
+            <div className="w-7 h-7 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center text-amber-600 dark:text-amber-400">
+              <SafeIcon icon={FiBookOpen} className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="text-xl font-bold text-gray-900 dark:text-white mt-2">
+            {counts.submittedCurrentMonth} <span className="text-xs font-normal text-gray-400">/ {counts.all}</span>
+          </div>
+          <div className="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5 font-medium">
+            Submitted for {currentMonthObj.name}
+          </div>
         </div>
       </div>
 
       {/* Main Table Container */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
-        {/* Filter Tabs & Search Bar */}
-        <div className="p-5 border-b border-gray-200 dark:border-gray-700 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          {/* Tier Tabs */}
-          <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700/60 p-1 rounded-lg">
-            <button
-              onClick={() => setSelectedTierTab('all')}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                selectedTierTab === 'all'
-                  ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-300 hover:text-gray-900'
-              }`}
-            >
-              All ({counts.all})
-            </button>
-            <button
-              onClick={() => setSelectedTierTab('tier_1')}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                selectedTierTab === 'tier_1'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-300 hover:text-gray-900'
-              }`}
-            >
-              Tier 1 ({counts.tier_1})
-            </button>
-            <button
-              onClick={() => setSelectedTierTab('tier_2')}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                selectedTierTab === 'tier_2'
-                  ? 'bg-purple-600 text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-300 hover:text-gray-900'
-              }`}
-            >
-              Tier 2 ({counts.tier_2})
-            </button>
-            <button
-              onClick={() => setSelectedTierTab('tier_3')}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                selectedTierTab === 'tier_3'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-300 hover:text-gray-900'
-              }`}
-            >
-              Tier 3 ({counts.tier_3})
-            </button>
+        {/* Filter Controls Bar */}
+        <div className="p-5 border-b border-gray-200 dark:border-gray-700 space-y-4">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            {/* Tier Tabs */}
+            <div className="flex flex-wrap items-center gap-1 bg-gray-100 dark:bg-gray-700/60 p-1 rounded-lg">
+              <button
+                type="button"
+                onClick={() => setSelectedTierTab('all')}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                  selectedTierTab === 'all'
+                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900'
+                }`}
+              >
+                All ({counts.all})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedTierTab('tier_1')}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                  selectedTierTab === 'tier_1'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900'
+                }`}
+              >
+                Tier 1 ({counts.tier_1})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedTierTab('tier_2')}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                  selectedTierTab === 'tier_2'
+                    ? 'bg-purple-600 text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900'
+                }`}
+              >
+                Tier 2 ({counts.tier_2})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedTierTab('tier_3')}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                  selectedTierTab === 'tier_3'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900'
+                }`}
+              >
+                Tier 3 ({counts.tier_3})
+              </button>
+            </div>
+
+            {/* Search Bar */}
+            <div className="relative w-full lg:w-96">
+              <SafeIcon icon={FiSearch} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search name, email, phone, Membership ID..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <SafeIcon icon={FiX} className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Search Bar */}
-          <div className="relative w-full md:w-80">
-            <SafeIcon icon={FiSearch} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search member name, email, phone..."
-              className="w-full pl-9 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
-            />
+          {/* Secondary Filters: Impact Status, Sub-Committee & Sorting */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs border-t border-gray-100 dark:border-gray-700/60">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Monthly Story Filter */}
+              <div className="flex items-center gap-1.5">
+                <SafeIcon icon={FiBookOpen} className="w-3.5 h-3.5 text-amber-500" />
+                <span className="font-semibold text-gray-500">Impact Story:</span>
+                <select
+                  value={impactFilter}
+                  onChange={(e) => setImpactFilter(e.target.value)}
+                  className="px-2.5 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/60 text-gray-800 dark:text-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-yellow-400 font-medium"
+                >
+                  <option value="all">All Submission Statuses</option>
+                  <option value="submitted_current">Submitted for {currentMonthObj.name} (Yes)</option>
+                  <option value="pending_current">Pending for {currentMonthObj.name} (No)</option>
+                </select>
+              </div>
+
+              {/* Sub-Committee Filter */}
+              {subCommittees.length > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <SafeIcon icon={FiFilter} className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="font-semibold text-gray-500">Sub-Committee:</span>
+                  <select
+                    value={subCommitteeFilter}
+                    onChange={(e) => setSubCommitteeFilter(e.target.value)}
+                    className="px-2.5 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/60 text-gray-800 dark:text-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-yellow-400 font-medium"
+                  >
+                    <option value="all">All Sub-Committees</option>
+                    <option value="none">No Sub-Committee Assigned</option>
+                    {subCommittees.map((sc) => (
+                      <option key={sc.id} value={sc.id}>
+                        {sc.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Sort By */}
+              <div className="flex items-center gap-1.5">
+                <SafeIcon icon={FiClock} className="w-3.5 h-3.5 text-gray-400" />
+                <span className="font-semibold text-gray-500">Sort:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="px-2.5 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/60 text-gray-800 dark:text-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-yellow-400 font-medium"
+                >
+                  <option value="newest">Newest Registered</option>
+                  <option value="oldest">Oldest Registered</option>
+                  <option value="name_asc">Name (A ➔ Z)</option>
+                  <option value="name_desc">Name (Z ➔ A)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Reset Filters & Count Indicator */}
+            <div className="flex items-center gap-3">
+              <span className="text-gray-500 text-xs font-medium">
+                Showing <strong className="text-gray-900 dark:text-white">{filteredLeads.length}</strong> of {leads.length} members
+              </span>
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="px-2.5 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 text-gray-700 dark:text-gray-300 text-xs font-semibold inline-flex items-center gap-1 transition-colors"
+                >
+                  <SafeIcon icon={FiRefreshCw} className="w-3 h-3" />
+                  <span>Reset Filters</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -569,17 +822,28 @@ const LeadsManagement = () => {
           <div className="text-center py-16 text-gray-500">
             <SafeIcon icon={FiUser} className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="font-medium text-gray-700 dark:text-gray-300">No members found</p>
-            <p className="text-xs text-gray-400 mt-1">Try adjusting your tier filter or search keywords.</p>
+            <p className="text-xs text-gray-400 mt-1">Try adjusting your filters or search keywords.</p>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="mt-3 px-3 py-1.5 bg-yellow-400 text-black font-semibold text-xs rounded-lg hover:bg-yellow-500"
+              >
+                Clear All Filters
+              </button>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 <tr>
-                  <th className="p-4">Member Name</th>
+                  <th className="p-4">Member / Advocate</th>
                   <th className="p-4">Contact Info</th>
-                  <th className="p-4">Source</th>
                   <th className="p-4">Current Tier</th>
+                  <th className="p-4 text-center">
+                    {currentMonthObj.short} Story
+                  </th>
                   <th className="p-4">Registered Date</th>
                   <th className="p-4 text-right">Tier Actions</th>
                 </tr>
@@ -588,52 +852,82 @@ const LeadsManagement = () => {
                 {filteredLeads.map((lead) => {
                   const currentTier = lead.tier || 'tier_1';
                   const tierConfig = TIERS[currentTier] || TIERS.tier_1;
+                  const isSubmittedThisMonth = lead.impact_submissions?.[currentMonthKey] === true;
 
                   return (
                     <tr
                       key={lead.id}
-                      onClick={() => openLeadModal(lead)}
+                      onClick={() => openLeadModal(lead, 'tier')}
                       className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
                     >
                       {/* Name & Avatar */}
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center font-bold text-gray-600 dark:text-gray-300 flex-shrink-0 text-sm">
-                            {lead.full_name ? lead.full_name.charAt(0).toUpperCase() : 'M'}
+                          <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-300 font-bold text-xs flex-shrink-0">
+                            {lead.full_name?.charAt(0)?.toUpperCase() || 'M'}
                           </div>
                           <div>
-                            <div className="font-semibold text-gray-900 dark:text-white">{lead.full_name}</div>
-                            <div className="text-[11px] font-mono font-bold text-amber-600 dark:text-amber-400">
-                              {lead.membership_id || 'DRAI-2026-PENDING'}
+                            <div className="font-semibold text-gray-900 dark:text-white flex items-center gap-1.5">
+                              <span>{lead.full_name}</span>
                             </div>
-                            {lead.referred_by && (
-                              <div className="text-xs text-gray-500">Ref: {lead.referred_by}</div>
-                            )}
+                            <div className="text-[11px] font-mono text-amber-500 font-bold">
+                              {lead.membership_id || 'ID Pending'}
+                            </div>
                           </div>
                         </div>
                       </td>
 
                       {/* Contact Info */}
-                      <td className="p-4">
-                        <div className="text-gray-900 dark:text-gray-200">{lead.email}</div>
-                        <div className="text-xs text-gray-500">{lead.phone || '—'}</div>
-                      </td>
-
-                      {/* Source */}
-                      <td className="p-4">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 capitalize">
-                          {lead.source || 'website'}
-                        </span>
+                      <td className="p-4 text-xs text-gray-600 dark:text-gray-300">
+                        <div className="space-y-0.5">
+                          <div className="font-medium text-gray-900 dark:text-gray-200">{lead.email}</div>
+                          <div className="text-gray-500">{lead.phone || 'No phone'}</div>
+                        </div>
                       </td>
 
                       {/* Tier Badge */}
                       <td className="p-4">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${tierConfig.badgeClass}`}>
-                          {tierConfig.label}
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${tierConfig.badgeClass}`}
+                        >
+                          <span
+                            className="w-1.5 h-1.5 rounded-full inline-block"
+                            style={{ backgroundColor: tierConfig.color }}
+                          />
+                          <span>{tierConfig.label}</span>
                         </span>
                       </td>
 
-                      {/* Date */}
+                      {/* Monthly Impact Story Badge (Quick Action to Impact Tab) */}
+                      <td className="p-4 text-center">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openLeadModal(lead, 'impact');
+                          }}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold transition-all shadow-xs ${
+                            isSubmittedThisMonth
+                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-200'
+                              : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200'
+                          }`}
+                          title={`Click to view/update monthly impact story submissions for ${lead.full_name}`}
+                        >
+                          {isSubmittedThisMonth ? (
+                            <>
+                              <SafeIcon icon={FiCheck} className="w-3 h-3 text-emerald-600 stroke-[3]" />
+                              <span>Yes</span>
+                            </>
+                          ) : (
+                            <>
+                              <SafeIcon icon={FiX} className="w-3 h-3 text-gray-400 stroke-[2.5]" />
+                              <span>No</span>
+                            </>
+                          )}
+                        </button>
+                      </td>
+
+                      {/* Registered Date */}
                       <td className="p-4 text-xs text-gray-500">
                         {new Date(lead.created_at).toLocaleDateString('en-GB', {
                           day: 'numeric',
@@ -642,58 +936,35 @@ const LeadsManagement = () => {
                         })}
                       </td>
 
-                      {/* Quick Move Action */}
-                      <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() => openLeadModal(lead, 'card')}
-                            className="px-2.5 py-1 text-xs font-semibold rounded bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 transition-colors inline-flex items-center gap-1"
-                            title="View Virtual ID Card"
-                          >
-                            <SafeIcon icon={FiCreditCard} className="w-3 h-3" />
-                            <span>Card</span>
-                          </button>
+                      {/* Tier Actions */}
+                      <td className="p-4 text-right">
+                        <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                           {currentTier === 'tier_1' && (
                             <button
                               type="button"
                               onClick={(e) => handleQuickAdvance(e, lead, 'tier_2')}
-                              className="px-2.5 py-1 text-xs font-semibold rounded bg-purple-100 hover:bg-purple-200 text-purple-800 transition-colors inline-flex items-center gap-1"
-                              title="Promote directly to Tier 2"
+                              className="px-2.5 py-1 bg-purple-100 hover:bg-purple-200 text-purple-800 text-xs font-bold rounded-md transition-colors"
+                              title="Promote to Tier 2 (Movement Champion)"
                             >
-                              <span>Promote to Tier 2</span>
-                              <SafeIcon icon={FiArrowRight} className="w-3 h-3" />
+                              ➔ Tier 2
                             </button>
                           )}
                           {currentTier === 'tier_2' && (
                             <button
                               type="button"
                               onClick={(e) => handleQuickAdvance(e, lead, 'tier_3')}
-                              className="px-2.5 py-1 text-xs font-semibold rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-800 transition-colors inline-flex items-center gap-1"
-                              title="Promote directly to Tier 3"
+                              className="px-2.5 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs font-bold rounded-md transition-colors"
+                              title="Promote to Tier 3 (Strategic Leader)"
                             >
-                              <span>Promote to Tier 3</span>
-                              <SafeIcon icon={FiArrowRight} className="w-3 h-3" />
+                              ➔ Tier 3
                             </button>
                           )}
                           <button
                             type="button"
                             onClick={() => openLeadModal(lead, 'tier')}
-                            className="px-2.5 py-1 text-xs font-semibold rounded bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 transition-colors"
+                            className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-semibold rounded-md transition-colors"
                           >
                             Manage
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDeletingLead(lead);
-                              setDeleteError('');
-                            }}
-                            className="p-1.5 text-xs font-semibold rounded bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-400 transition-colors inline-flex items-center"
-                            title="Remove Member"
-                          >
-                            <SafeIcon icon={FiTrash2} className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </td>
@@ -706,7 +977,7 @@ const LeadsManagement = () => {
         )}
       </div>
 
-      {/* Tier Management & Promotion Modal */}
+      {/* INDIVIDUAL LEAD / MEMBER MODAL */}
       <AdminModal isOpen={!!selectedLead} maxWidth="max-w-2xl">
         {selectedLead && (
           <div className="space-y-6">
@@ -716,7 +987,7 @@ const LeadsManagement = () => {
                 <div className="flex items-center gap-2">
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white">{selectedLead.full_name}</h2>
                   <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${TIERS[selectedLead.tier || 'tier_1']?.badgeClass}`}>
-                    Current: {TIERS[selectedLead.tier || 'tier_1']?.label}
+                    {TIERS[selectedLead.tier || 'tier_1']?.label}
                   </span>
                 </div>
                 <div className="text-xs font-mono font-bold text-amber-500 mt-1">
@@ -728,7 +999,7 @@ const LeadsManagement = () => {
               </button>
             </div>
 
-            {/* Modal Tab Navigation */}
+            {/* Modal Tab Navigation: Tier Management | Monthly Impact Stories | Virtual ID Card */}
             <div className="flex border-b border-gray-200 dark:border-gray-700 gap-6 text-sm">
               <button
                 type="button"
@@ -739,12 +1010,26 @@ const LeadsManagement = () => {
                     : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
               >
-                Tier Management & Notes
+                Tier Management &amp; Notes
               </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveModalTab('impact')}
+                className={`pb-2.5 font-bold border-b-2 transition-colors flex items-center gap-1.5 ${
+                  activeModalTab === 'impact'
+                    ? 'border-yellow-400 text-yellow-600 dark:text-yellow-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                <SafeIcon icon={FiBookOpen} className="w-4 h-4" />
+                <span>Monthly Impact Stories</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => setActiveModalTab('card')}
-                className={`pb-2.5 font-bold border-b-2 transition-colors flex items-center gap-2 ${
+                className={`pb-2.5 font-bold border-b-2 transition-colors flex items-center gap-1.5 ${
                   activeModalTab === 'card'
                     ? 'border-yellow-400 text-yellow-600 dark:text-yellow-400'
                     : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
@@ -755,7 +1040,140 @@ const LeadsManagement = () => {
               </button>
             </div>
 
-            {activeModalTab === 'card' ? (
+            {/* TAB 1: MONTHLY IMPACT STORIES TRACKER */}
+            {activeModalTab === 'impact' ? (
+              <div className="space-y-6">
+                {/* Information Banner */}
+                <div className="p-4 bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/80 rounded-xl space-y-1">
+                  <div className="text-xs font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+                    <SafeIcon icon={FiBookOpen} className="w-4 h-4 text-amber-600" />
+                    <span>Monthly Impact Story Verification</span>
+                  </div>
+                  <p className="text-xs text-amber-800 dark:text-amber-200/90 leading-relaxed">
+                    Members are expected to submit impact stories every month on the official WhatsApp community group. Use this dashboard to record whether <strong>{selectedLead.full_name}</strong> has submitted for each month.
+                  </p>
+                </div>
+
+                {/* Year Navigation Bar */}
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedImpactYear((y) => y - 1)}
+                    className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 transition-colors"
+                  >
+                    <SafeIcon icon={FiChevronLeft} className="w-4 h-4" />
+                  </button>
+
+                  <div className="flex items-center gap-2">
+                    <SafeIcon icon={FiCalendar} className="w-4 h-4 text-amber-500" />
+                    <span className="font-bold text-sm text-gray-900 dark:text-white">
+                      Year {selectedImpactYear}
+                    </span>
+                    {selectedImpactYear === currentYear && (
+                      <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200 text-[10px] font-bold rounded">
+                        Current Year
+                      </span>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedImpactYear((y) => y + 1)}
+                    className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 transition-colors"
+                  >
+                    <SafeIcon icon={FiChevronRight} className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Toast message */}
+                {impactToast && (
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs flex items-center gap-2">
+                    <SafeIcon icon={FiCheckCircle} className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                    <span>{impactToast}</span>
+                  </div>
+                )}
+
+                {/* 12 Months Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[380px] overflow-y-auto pr-1">
+                  {MONTH_NAMES.map((m) => {
+                    const monthKey = `${selectedImpactYear}-${m.key}`;
+                    const isSubmitted = impactSubmissionsDraft[monthKey] === true;
+                    const isCurrent = monthKey === currentMonthKey;
+                    const isSavingThis = savingImpactMonth === monthKey;
+
+                    return (
+                      <div
+                        key={monthKey}
+                        className={`p-3.5 rounded-xl border transition-all ${
+                          isCurrent
+                            ? 'border-amber-400 bg-amber-50/30 dark:bg-amber-950/20 shadow-xs'
+                            : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-xs text-gray-900 dark:text-white">
+                              {m.name} {selectedImpactYear}
+                            </span>
+                            {isCurrent && (
+                              <span className="px-1 py-0.2 text-[9px] font-bold bg-amber-400 text-slate-950 rounded">
+                                This Month
+                              </span>
+                            )}
+                          </div>
+
+                          <span
+                            className={`px-2 py-0.5 text-[11px] font-bold rounded-full ${
+                              isSubmitted
+                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                                : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                            }`}
+                          >
+                            {isSubmitted ? 'Submitted ✅' : 'Pending ❌'}
+                          </span>
+                        </div>
+
+                        {/* Yes / No Toggle Buttons */}
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                          <button
+                            type="button"
+                            disabled={isSavingThis}
+                            onClick={() => handleToggleImpactMonth(monthKey, true)}
+                            className={`py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                              isSubmitted
+                                ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-600/30'
+                                : 'bg-gray-100 hover:bg-emerald-50 text-gray-700 hover:text-emerald-700 dark:bg-gray-700 dark:text-gray-300'
+                            }`}
+                          >
+                            <SafeIcon icon={FiCheck} className="w-3.5 h-3.5 stroke-[3]" />
+                            <span>Yes</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            disabled={isSavingThis}
+                            onClick={() => handleToggleImpactMonth(monthKey, false)}
+                            className={`py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                              !isSubmitted
+                                ? 'bg-red-500 text-white shadow-sm ring-2 ring-red-500/30'
+                                : 'bg-gray-100 hover:bg-red-50 text-gray-700 hover:text-red-700 dark:bg-gray-700 dark:text-gray-300'
+                            }`}
+                          >
+                            <SafeIcon icon={FiX} className="w-3.5 h-3.5 stroke-[3]" />
+                            <span>No</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="text-center text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-100 dark:border-gray-700">
+                  Clicking <strong>Yes</strong> or <strong>No</strong> instantly updates and saves the submission record.
+                </div>
+              </div>
+            ) : activeModalTab === 'card' ? (
+              /* TAB 2: VIRTUAL ID CARD */
               <div className="space-y-4">
                 <div className="p-6 bg-slate-900 rounded-2xl flex flex-col items-center shadow-xl">
                   <MemberCard
@@ -771,6 +1189,7 @@ const LeadsManagement = () => {
                 </div>
               </div>
             ) : (
+              /* TAB 3: TIER MANAGEMENT & NOTES */
               <div className="space-y-6">
                 {/* Member Details Snapshot */}
                 <div className="flex flex-col sm:flex-row gap-5 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
@@ -940,11 +1359,11 @@ const LeadsManagement = () => {
                       className="px-5 py-2 bg-yellow-400 text-black font-bold rounded-lg hover:bg-yellow-500 disabled:opacity-50 text-sm inline-flex items-center gap-2 shadow-sm"
                     >
                       {savingTier ? (
-                        <span>Updating & Sending...</span>
+                        <span>Updating &amp; Sending...</span>
                       ) : (
                         <>
                           <SafeIcon icon={FiSend} className="w-4 h-4" />
-                          <span>Save & Apply Tier</span>
+                          <span>Save &amp; Apply Tier</span>
                         </>
                       )}
                     </button>
@@ -1049,33 +1468,35 @@ const LeadsManagement = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold mb-1">Admin Notes (Optional)</label>
+            <label className="block text-xs font-semibold mb-1">Admin Notes</label>
             <textarea
               name="adminNotes"
               value={referralForm.adminNotes}
               onChange={(e) => setReferralForm({ ...referralForm, adminNotes: e.target.value })}
               rows={3}
-              placeholder="Additional background on the referral..."
+              placeholder="Additional background notes about this referral..."
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-400 text-sm"
             />
           </div>
 
           {referralError && (
-            <p className="text-red-600 text-xs">{referralError}</p>
+            <div className="p-3 bg-red-50 border border-red-200 text-red-800 rounded-lg text-xs">
+              {referralError}
+            </div>
           )}
 
           <div className="flex justify-end gap-3 pt-3">
             <button
               type="button"
               onClick={closeReferralForm}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium"
+              className="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50 text-sm font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={referralSaving}
-              className="px-5 py-2 bg-yellow-400 text-black font-bold rounded-lg hover:bg-yellow-500 disabled:opacity-50 text-sm"
+              className="px-4 py-2 bg-yellow-400 text-black font-bold rounded-lg hover:bg-yellow-500 disabled:opacity-50 text-sm"
             >
               {referralSaving ? 'Saving...' : 'Add Member'}
             </button>
@@ -1083,205 +1504,108 @@ const LeadsManagement = () => {
         </form>
       </AdminModal>
 
-      {/* Tier WhatsApp Communities Settings Modal */}
+      {/* WhatsApp Communities Settings Modal */}
       <AdminModal isOpen={showWhatsAppModal} maxWidth="max-w-xl">
-        <div className="space-y-6">
-          <div className="flex justify-between items-start border-b border-gray-200 dark:border-gray-700 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                <SafeIcon icon={FiMessageCircle} className="w-5 h-5" />
+        <div className="flex justify-between items-start mb-4 border-b border-gray-200 dark:border-gray-700 pb-3">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <SafeIcon icon={FiMessageCircle} className="h-5 w-5 text-emerald-600" />
+              <span>Tier WhatsApp Group Links</span>
+            </h2>
+            <p className="text-xs text-gray-500 mt-1">
+              Configure official community invite links included in automated onboarding &amp; tier upgrade emails.
+            </p>
+          </div>
+          <button onClick={() => setShowWhatsAppModal(false)} className="text-gray-400 hover:text-gray-600">
+            <SafeIcon icon={FiX} className="h-6 w-6" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSaveWhatsApp} className="space-y-4 text-sm">
+          {TIER_KEYS.map((key) => {
+            const conf = TIERS[key];
+            return (
+              <div key={key} className="p-3.5 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 space-y-1.5">
+                <label className="block text-xs font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: conf.color }} />
+                  <span>{conf.label} WhatsApp Invite Link</span>
+                </label>
+                <input
+                  type="url"
+                  value={whatsAppLinks[key] || ''}
+                  onChange={(e) => setWhatsAppLinks({ ...whatsAppLinks, [key]: e.target.value })}
+                  placeholder={`https://chat.whatsapp.com/...`}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-400 text-xs font-mono bg-white dark:bg-gray-800"
+                />
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                  Member Tier WhatsApp Communities
-                </h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  Configure the WhatsApp group invite links sent to members upon registration and promotion.
-                </p>
-              </div>
+            );
+          })}
+
+          {whatsAppSuccess && (
+            <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs flex items-center gap-2">
+              <SafeIcon icon={FiCheckCircle} className="w-4 h-4 text-emerald-600" />
+              <span>{whatsAppSuccess}</span>
             </div>
+          )}
+
+          {whatsAppError && (
+            <div className="p-3 bg-red-50 border border-red-200 text-red-800 rounded-lg text-xs">
+              {whatsAppError}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-3 border-t border-gray-100 dark:border-gray-700">
             <button
+              type="button"
               onClick={() => setShowWhatsAppModal(false)}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50 text-sm font-medium"
             >
-              <SafeIcon icon={FiX} className="h-6 w-6" />
+              Close
+            </button>
+            <button
+              type="submit"
+              disabled={whatsAppSaving}
+              className="px-5 py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 disabled:opacity-50 text-sm"
+            >
+              {whatsAppSaving ? 'Saving...' : 'Save Group Links'}
             </button>
           </div>
-
-          <form onSubmit={handleSaveWhatsApp} className="space-y-5">
-            {/* Tier 1 WhatsApp Link */}
-            <div className="p-4 bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60 rounded-xl space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-blue-900 dark:text-blue-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block" />
-                  Tier 1: Personal Advocate WhatsApp Group
-                </label>
-                {whatsAppLinks.tier_1 && (
-                  <a
-                    href={whatsAppLinks.tier_1}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
-                  >
-                    <span>Test Link</span>
-                    <SafeIcon icon={FiExternalLink} className="w-3 h-3" />
-                  </a>
-                )}
-              </div>
-              <input
-                type="url"
-                value={whatsAppLinks.tier_1 || ''}
-                onChange={(e) =>
-                  setWhatsAppLinks({ ...whatsAppLinks, tier_1: e.target.value })
-                }
-                placeholder="https://chat.whatsapp.com/..."
-                className="w-full px-3 py-2 text-xs border border-blue-200 dark:border-blue-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-              <p className="text-[11px] text-blue-700/80 dark:text-blue-300/80">
-                Included in the official Tier 1 Welcome email sent to all new website & referral signups.
-              </p>
-            </div>
-
-            {/* Tier 2 WhatsApp Link */}
-            <div className="p-4 bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/60 rounded-xl space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-purple-900 dark:text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-purple-600 inline-block" />
-                  Tier 2: Movement Champion WhatsApp Group
-                </label>
-                {whatsAppLinks.tier_2 && (
-                  <a
-                    href={whatsAppLinks.tier_2}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 hover:underline inline-flex items-center gap-1"
-                  >
-                    <span>Test Link</span>
-                    <SafeIcon icon={FiExternalLink} className="w-3 h-3" />
-                  </a>
-                )}
-              </div>
-              <input
-                type="url"
-                value={whatsAppLinks.tier_2 || ''}
-                onChange={(e) =>
-                  setWhatsAppLinks({ ...whatsAppLinks, tier_2: e.target.value })
-                }
-                placeholder="https://chat.whatsapp.com/..."
-                className="w-full px-3 py-2 text-xs border border-purple-200 dark:border-purple-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-mono focus:ring-2 focus:ring-purple-500 focus:outline-none"
-              />
-              <p className="text-[11px] text-purple-700/80 dark:text-purple-300/80">
-                Sent to members promoted to Tier 2 (Movement Champion) for public mobilization campaigns.
-              </p>
-            </div>
-
-            {/* Tier 3 WhatsApp Link */}
-            <div className="p-4 bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-xl space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-emerald-900 dark:text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block" />
-                  Tier 3: Strategic Leader WhatsApp Group
-                </label>
-                {whatsAppLinks.tier_3 && (
-                  <a
-                    href={whatsAppLinks.tier_3}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-1"
-                  >
-                    <span>Test Link</span>
-                    <SafeIcon icon={FiExternalLink} className="w-3 h-3" />
-                  </a>
-                )}
-              </div>
-              <input
-                type="url"
-                value={whatsAppLinks.tier_3 || ''}
-                onChange={(e) =>
-                  setWhatsAppLinks({ ...whatsAppLinks, tier_3: e.target.value })
-                }
-                placeholder="https://chat.whatsapp.com/..."
-                className="w-full px-3 py-2 text-xs border border-emerald-200 dark:border-emerald-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-              />
-              <p className="text-[11px] text-emerald-700/80 dark:text-emerald-300/80">
-                Sent to core leadership in Tier 3 driving strategy & sub-committee operations.
-              </p>
-            </div>
-
-            {/* Alerts */}
-            {whatsAppSuccess && (
-              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs flex items-center gap-2">
-                <SafeIcon icon={FiCheckCircle} className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                <span>{whatsAppSuccess}</span>
-              </div>
-            )}
-
-            {whatsAppError && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-800 rounded-lg text-xs flex items-center gap-2">
-                <SafeIcon icon={FiAlertCircle} className="w-4 h-4 text-red-600 flex-shrink-0" />
-                <span>{whatsAppError}</span>
-              </div>
-            )}
-
-            <div className="flex justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowWhatsAppModal(false)}
-                className="px-4 py-2 border border-gray-300 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium"
-              >
-                Close
-              </button>
-              <button
-                type="submit"
-                disabled={whatsAppSaving}
-                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg disabled:opacity-50 text-sm inline-flex items-center gap-2 shadow-sm"
-              >
-                {whatsAppSaving ? (
-                  <span>Saving Links...</span>
-                ) : (
-                  <>
-                    <SafeIcon icon={FiCheckCircle} className="w-4 h-4" />
-                    <span>Save WhatsApp Links</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        </div>
+        </form>
       </AdminModal>
 
       {/* Delete Member Confirmation Modal */}
       <AdminModal isOpen={!!deletingLead} maxWidth="max-w-md">
         {deletingLead && (
-          <div className="space-y-4 p-2">
-            <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/50 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto">
-              <SafeIcon icon={FiTrash2} className="w-6 h-6" />
-            </div>
-            <div className="text-center">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Remove Member</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                Are you sure you want to remove <span className="font-semibold text-gray-900 dark:text-white">{deletingLead.full_name}</span> ({deletingLead.membership_id || 'ID Pending'})?
-              </p>
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                This action cannot be undone. All membership records and digital card data will be permanently removed.
-              </p>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
+              <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-950 flex items-center justify-center flex-shrink-0">
+                <SafeIcon icon={FiTrash2} className="w-5 h-5 text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                  Remove Member
+                </h3>
+                <p className="text-xs text-gray-500">Irreversible administrative action</p>
+              </div>
             </div>
 
+            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+              Are you sure you want to remove <strong className="text-gray-900 dark:text-white">{deletingLead.full_name}</strong> ({deletingLead.email})?
+            </p>
+
             {deleteError && (
-              <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs rounded-lg border border-red-200 dark:border-red-800">
-                {deleteError}
+              <div className="p-3 bg-red-50 border border-red-200 text-red-800 rounded-lg text-xs flex items-center gap-2">
+                <SafeIcon icon={FiAlertCircle} className="w-4 h-4 text-red-600 flex-shrink-0" />
+                <span>{deleteError}</span>
               </div>
             )}
 
-            <div className="flex gap-3 pt-2">
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
               <button
                 type="button"
-                onClick={() => {
-                  setDeletingLead(null);
-                  setDeleteError('');
-                }}
+                onClick={() => setDeletingLead(null)}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                className="px-4 py-2 border border-gray-300 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium"
               >
                 Cancel
               </button>
@@ -1289,9 +1613,9 @@ const LeadsManagement = () => {
                 type="button"
                 onClick={handleConfirmDelete}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+                className="px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 disabled:opacity-50 text-sm inline-flex items-center gap-1.5"
               >
-                {isDeleting ? 'Removing...' : 'Confirm Remove'}
+                {isDeleting ? <span>Removing...</span> : <span>Confirm &amp; Remove</span>}
               </button>
             </div>
           </div>

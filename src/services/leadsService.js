@@ -354,3 +354,36 @@ export const deleteLead = async (leadId) => {
   if (error) throw error;
   return { success: true, id: leadId, data };
 };
+
+/**
+ * Updates a member's monthly impact story submission status for a specific month (e.g. "2026-08": true/false).
+ */
+export const updateLeadImpactSubmission = async (leadId, monthKey, isSubmitted) => {
+  if (!leadId || !monthKey) throw new Error('leadId and monthKey are required');
+
+  // Fetch current submissions
+  const { data: currentLead, error: fetchErr } = await supabase
+    .from('leads')
+    .select('id, impact_submissions')
+    .eq('id', leadId)
+    .single();
+
+  if (fetchErr) throw fetchErr;
+
+  const currentSubmissions = currentLead?.impact_submissions || {};
+  const updatedSubmissions = {
+    ...currentSubmissions,
+    [monthKey]: !!isSubmitted
+  };
+
+  const { data, error: updateErr } = await supabase
+    .from('leads')
+    .update({ impact_submissions: updatedSubmissions })
+    .eq('id', leadId)
+    .select()
+    .single();
+
+  if (updateErr) throw updateErr;
+  return { success: true, impact_submissions: updatedSubmissions, data };
+};
+
