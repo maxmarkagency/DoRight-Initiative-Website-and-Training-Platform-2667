@@ -190,20 +190,47 @@ const Contact = () => {
         </div>
       </section>
 
-      {/* Map Section (Placeholder) */}
+      {/* Map Section */}
       <section className="py-12 sm:py-16 lg:py-20 bg-white">
         <div className="max-w-container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }} className="text-center mb-8 sm:mb-12">
             <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-neutral-900 mb-3 sm:mb-4"> Find Us </h2>
-            <p className="text-sm sm:text-lg text-neutral-700 max-w-2xl mx-auto"> Located in the heart of Lagos,our office is easily accessible by public transport. </p>
+            <p className="text-sm sm:text-lg text-neutral-700 max-w-2xl mx-auto">
+              {siteSettings.contact_address || '28b, Olaminuyun street, Parkview, Lagos, Nigeria 101233'}
+            </p>
           </motion.div>
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} viewport={{ once: true }} className="bg-neutral-200 rounded-lg h-64 sm:h-80 lg:h-96 flex items-center justify-center">
-            <div className="text-center p-4">
-              <SafeIcon icon={FiMapPin} className="w-12 h-12 sm:w-16 sm:h-16 text-neutral-500 mx-auto mb-3 sm:mb-4" />
-              <p className="text-neutral-600 text-base sm:text-lg font-medium"> Interactive Map Would Be Here </p>
-              <p className="text-neutral-500 text-sm sm:text-base"> Integration with Google Maps or similar service </p>
-            </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="rounded-2xl overflow-hidden shadow-lg border border-neutral-200 bg-neutral-100 relative h-72 sm:h-96 lg:h-[450px]"
+          >
+            <iframe
+              title="DoRight Awareness Initiative Office Location"
+              src="https://maps.google.com/maps?q=Parkview+Estate,+Ikoyi,+Lagos,+Nigeria&t=&z=15&ie=UTF8&iwloc=&output=embed"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen=""
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="w-full h-full"
+            />
           </motion.div>
+
+          <div className="mt-4 text-center">
+            <a
+              href="https://www.google.com/maps/search/?api=1&query=Parkview+Estate+Ikoyi+Lagos+Nigeria"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-600 transition-colors"
+            >
+              <SafeIcon icon={FiMapPin} className="w-4 h-4" />
+              <span>Open in Google Maps / Get Directions</span>
+            </a>
+          </div>
         </div>
       </section>
 
@@ -215,7 +242,12 @@ const Contact = () => {
             <p className="text-sm sm:text-lg text-neutral-700 max-w-2xl mx-auto"> Quick answers to common questions about our organization and programs. </p>
           </motion.div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
-            {[{ question: 'How can I volunteer with DoRight?', answer: 'You can apply to volunteer through our Join page or contact our volunteer coordinator directly. We offer flexible opportunities that match your skills and availability.' }, { question: 'Are your training courses free?', answer: 'Yes,all our training courses and certification programs are completely free. Our goal is to make integrity education accessible to all Nigerians.' }, { question: 'How do I report corruption or misconduct?', answer: 'You can use our anonymous reporting hotline or digital platform. All reports are handled confidentially and with appropriate follow-up.' }, { question: 'Can my organization partner with DoRight?', answer: 'We welcome partnerships with organizations that share our values. Contact our partnerships team to discuss collaboration opportunities.' }].map((faq, index) => (
+            {[
+              { question: 'How can I volunteer with DoRight?', answer: 'You can apply to volunteer through our Join page or contact our volunteer coordinator directly. We offer flexible opportunities that match your skills and availability.' },
+              { question: 'How can I become an official DoRight Advocate?', answer: 'Anyone committed to uprightness can join as a Tier 1 Personal Advocate through our Join Us page, instantly receive an official digital membership card, and join our active community.' },
+              { question: 'How do I report corruption or misconduct?', answer: 'You can use our anonymous reporting hotline or digital platform. All reports are handled confidentially and with appropriate follow-up.' },
+              { question: 'Can my organization partner with DoRight?', answer: 'We welcome partnerships with organizations that share our values. Contact our partnerships team to discuss collaboration opportunities.' }
+            ].map((faq, index) => (
               <motion.div key={index} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.1 }} viewport={{ once: true }} className="bg-white rounded-lg border border-neutral-200 p-4 sm:p-6">
                 <h3 className="text-base sm:text-lg font-heading font-bold text-neutral-900 mb-3"> {faq.question} </h3>
                 <p className="text-sm sm:text-base text-neutral-700 leading-relaxed"> {faq.answer} </p>
