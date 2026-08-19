@@ -28,6 +28,8 @@ import Gallery from './pages/Gallery';
 import Events from './pages/Events';
 import Podcast from './pages/Podcast';
 import PodcastEpisode from './pages/PodcastEpisode';
+import MembershipCardPage from './pages/MembershipCardPage';
+import VerifyMemberPage from './pages/VerifyMemberPage';
 
 import AdminLayout from './components/admin/AdminLayout';
 import StudentLayout from './components/student/StudentLayout';
@@ -77,6 +79,8 @@ function AppContent() {
           <Route path="/programs/podcast" element={<Navigate to="/media/podcast" replace />} /> {/* Redirect old route */}
           <Route path="/media/podcast" element={<Podcast />} />
           <Route path="/media/podcast/:slug" element={<PodcastEpisode />} />
+          <Route path="/membership-card" element={<MembershipCardPage />} />
+          <Route path="/verify-member" element={<VerifyMemberPage />} />
 
           <Route path="/training/dashboard" element={<Navigate to="/dashboard" replace />} />
           <Route path="/training/course/:courseId" element={

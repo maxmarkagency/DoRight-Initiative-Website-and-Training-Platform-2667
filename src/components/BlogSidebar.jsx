@@ -17,7 +17,7 @@ const BlogSidebar = ({ recentPosts = [] }) => {
     const tags = ['FASHION', 'HEALTH', 'TECHNOLOGY', 'LIFESTYLE', 'FOOD', 'TRAVEL', 'PHOTOGRAPHY', 'DESIGN', 'NATURE', 'MUSIC', 'ART'];
 
     const socialLinks = [
-        { icon: FiInstagram, name: 'Instagram', bg: 'bg-pink-100', text: 'text-pink-600', link: '#' },
+        { icon: FiInstagram, name: 'Instagram', bg: 'bg-pink-100', text: 'text-pink-600', link: 'https://instagram.com/dorightng' },
         { icon: FiTwitter, name: 'Twitter', bg: 'bg-blue-100', text: 'text-blue-500', link: '#' },
         { icon: FiFacebook, name: 'Facebook', bg: 'bg-blue-50', text: 'text-blue-700', link: '#' },
         { icon: FiYoutube, name: 'Youtube', bg: 'bg-red-100', text: 'text-red-600', link: '#' },

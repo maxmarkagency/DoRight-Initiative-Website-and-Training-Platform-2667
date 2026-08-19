@@ -26,7 +26,7 @@ const AdminSidebar = () => {
       { name: 'Gallery', path: '/admin/gallery', icon: FiImage },
       { name: 'Webinars', path: '/admin/webinars', icon: FiVideo },
       { name: 'Events', path: '/admin/events', icon: FiCalendar },
-      { name: 'Leads', path: '/admin/leads', icon: FiUserPlus },
+      { name: 'Members & Tiers', path: '/admin/leads', icon: FiUserPlus },
       { name: 'Media', path: '/admin/media', icon: FiUpload },
     ];
 

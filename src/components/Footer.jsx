@@ -63,7 +63,9 @@ const Footer=()=> {
                 <SafeIcon icon={FiTwitter} className="w-5 h-5" />
               </a>
               <a
-                href={socialLinks.instagram || '#'}
+                href={socialLinks.instagram || 'https://instagram.com/dorightng'}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-neutral-300 hover:text-accent transition-colors"
                 aria-label="Instagram"
               >

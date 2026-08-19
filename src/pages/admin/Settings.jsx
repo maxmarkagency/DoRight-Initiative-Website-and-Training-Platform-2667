@@ -12,10 +12,15 @@ const { FiSave, FiLoader, FiCheck, FiFacebook, FiTwitter, FiInstagram, FiLinkedi
 // no admin UI to set them at all, only the hardcoded fallback text ever shows.
 const SETTING_KEYS = [
   'site_name', 'contact_email', 'contact_phone', 'contact_address', 'social_links',
-  'allow_registration', 'maintenance_mode'
+  'tier_whatsapp_links', 'allow_registration', 'maintenance_mode'
 ];
 
-const DEFAULT_SOCIAL_LINKS = { facebook: '', twitter: '', instagram: '', linkedin: '', tiktok: '' };
+const DEFAULT_SOCIAL_LINKS = { facebook: '', twitter: '', instagram: 'https://instagram.com/dorightng', linkedin: '', tiktok: '' };
+const DEFAULT_TIER_WHATSAPP_LINKS = {
+  tier_1: 'https://chat.whatsapp.com/DoRightTier1Advocates',
+  tier_2: 'https://chat.whatsapp.com/DoRightTier2Champions',
+  tier_3: 'https://chat.whatsapp.com/DoRightTier3Leaders'
+};
 
 const Settings = () => {
   const [values, setValues] = useState({
@@ -24,6 +29,7 @@ const Settings = () => {
     contact_phone: '',
     contact_address: '',
     social_links: DEFAULT_SOCIAL_LINKS,
+    tier_whatsapp_links: DEFAULT_TIER_WHATSAPP_LINKS,
     allow_registration: true,
     maintenance_mode: false
   });
@@ -44,9 +50,13 @@ const Settings = () => {
 
       const loaded = {};
       (data || []).forEach((row) => {
-        loaded[row.setting_key] = row.setting_key === 'social_links'
-          ? { ...DEFAULT_SOCIAL_LINKS, ...row.setting_value }
-          : row.setting_value;
+        if (row.setting_key === 'social_links') {
+          loaded.social_links = { ...DEFAULT_SOCIAL_LINKS, ...row.setting_value };
+        } else if (row.setting_key === 'tier_whatsapp_links') {
+          loaded.tier_whatsapp_links = { ...DEFAULT_TIER_WHATSAPP_LINKS, ...row.setting_value };
+        } else {
+          loaded[row.setting_key] = row.setting_value;
+        }
       });
       setValues((prev) => ({ ...prev, ...loaded }));
     } catch (error) {
@@ -56,6 +66,13 @@ const Settings = () => {
 
   const updateSocialLink = (platform, url) => {
     setValues((prev) => ({ ...prev, social_links: { ...prev.social_links, [platform]: url } }));
+  };
+
+  const updateTierWhatsAppLink = (tier, url) => {
+    setValues((prev) => ({
+      ...prev,
+      tier_whatsapp_links: { ...prev.tier_whatsapp_links, [tier]: url }
+    }));
   };
 
   const handleSave = async () => {
@@ -191,6 +208,46 @@ const Settings = () => {
                   />
                 </div>
               ))}
+            </div>
+          ))}
+          {renderSettingRow("Member Tier WhatsApp Groups", (
+            <div className="space-y-3 max-w-md">
+              <div>
+                <label className="block text-xs font-bold text-blue-700 dark:text-blue-400 mb-1">
+                  Tier 1: Personal Advocate (Welcome Emails)
+                </label>
+                <input
+                  type="url"
+                  value={values.tier_whatsapp_links?.tier_1 || ''}
+                  onChange={(e) => updateTierWhatsAppLink('tier_1', e.target.value)}
+                  placeholder="https://chat.whatsapp.com/..."
+                  className="w-full border border-neutral-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-purple-700 dark:text-purple-400 mb-1">
+                  Tier 2: Movement Champion (Promotion Emails)
+                </label>
+                <input
+                  type="url"
+                  value={values.tier_whatsapp_links?.tier_2 || ''}
+                  onChange={(e) => updateTierWhatsAppLink('tier_2', e.target.value)}
+                  placeholder="https://chat.whatsapp.com/..."
+                  className="w-full border border-neutral-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-1">
+                  Tier 3: Strategic Leader (Leadership Group)
+                </label>
+                <input
+                  type="url"
+                  value={values.tier_whatsapp_links?.tier_3 || ''}
+                  onChange={(e) => updateTierWhatsAppLink('tier_3', e.target.value)}
+                  placeholder="https://chat.whatsapp.com/..."
+                  className="w-full border border-neutral-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
             </div>
           ))}
           {renderSettingRow("Allow Registration", (
