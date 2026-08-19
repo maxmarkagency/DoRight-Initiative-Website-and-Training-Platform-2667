@@ -147,6 +147,10 @@ Deno.serve(async (req: Request) => {
         ? "https://chat.whatsapp.com/DoRightTier3Leaders"
         : "https://chat.whatsapp.com/DoRightTier2Champions");
 
+    const membershipCardUrl = membershipId
+      ? `${MEMBERSHIP_CARD_BASE_URL}?id=${encodeURIComponent(membershipId)}`
+      : `${MEMBERSHIP_CARD_BASE_URL}`;
+
     const { subject, html, text } = tierTransitionEmail({
       fullName: recipientName,
       membershipId,
