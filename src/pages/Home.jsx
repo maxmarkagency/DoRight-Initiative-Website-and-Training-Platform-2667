@@ -257,7 +257,7 @@ const Home = () => {
           </div>
         </section>
 
-        {/* Training Promo Section */}
+        {/* Training Promo Section — commented out as requested:
         <section className="py-16 sm:py-24 bg-primary w-full relative overflow-hidden">
           <div className="relative w-full max-w-container mx-auto px-4 sm:px-5">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -286,6 +286,7 @@ const Home = () => {
             </div>
           </div>
         </section>
+        */}
 
         {/* Final CTA Section */}
         <section className="py-16 sm:py-24 bg-white text-black w-full relative overflow-hidden">
