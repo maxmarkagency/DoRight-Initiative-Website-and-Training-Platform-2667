@@ -8,7 +8,7 @@ import { getPageContent, getSectionByKey } from '../services/pageContentService'
 import { sanitizeHtml } from '../lib/sanitizeHtml';
 import useSeo from '../hooks/useSeo';
 
-const { FiMail, FiPhone, FiMapPin, FiFacebook, FiTwitter, FiInstagram, FiLinkedin, FiSend, FiCheck } = FiIcons;
+const { FiMail, FiPhone, FiMapPin, FiFacebook, FiTwitter, FiInstagram, FiLinkedin, FiSend, FiCheck, FiAlertCircle, FiCheckCircle, FiLoader } = FiIcons;
 
 const Contact = () => {
   useSeo({
@@ -19,6 +19,8 @@ const Contact = () => {
 
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [contactError, setContactError] = useState('');
   const [sections, setSections] = useState([]);
   const [siteSettings, setSiteSettings] = useState({});
 
@@ -41,13 +43,44 @@ const Contact = () => {
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (contactError) setContactError('');
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log('Form submitted:', formData);
-    setIsSubmitted(true);
+    setContactError('');
+
+    if (!formData.name || formData.name.trim().length < 2) {
+      setContactError('Please enter your full name.');
+      return;
+    }
+
+    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      setContactError('Please provide a valid email address so we can reply to you.');
+      return;
+    }
+
+    if (!formData.subject || formData.subject.trim().length < 2) {
+      setContactError('Please enter a brief subject for your inquiry.');
+      return;
+    }
+
+    if (!formData.message || formData.message.trim().length < 10) {
+      setContactError('Please provide a little more detail in your message (at least 10 characters).');
+      return;
+    }
+
+    setIsSending(true);
+    setTimeout(() => {
+      setIsSending(false);
+      setIsSubmitted(true);
+    }, 600);
+  };
+
+  const handleResetForm = () => {
+    setFormData({ name: '', email: '', subject: '', message: '' });
+    setIsSubmitted(false);
+    setContactError('');
   };
 
   const heroSection = getSectionByKey(sections, 'hero');
@@ -168,38 +201,116 @@ const Contact = () => {
         <div className="max-w-container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
             {/* Contact Form */}
-            <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="bg-white rounded-lg border border-neutral-200 p-6 sm:p-8">
-              <h2 className="text-xl sm:text-2xl font-heading font-bold text-neutral-900 mb-4 sm:mb-6"> Send Us a Message </h2>
-              <p className="text-sm sm:text-base text-neutral-700 mb-6 sm:mb-8"> Have a specific question or need assistance? Fill out the form below and we'll get back to you as soon as possible. </p>
+            <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="bg-white rounded-2xl border border-neutral-200 p-6 sm:p-8 shadow-sm">
+              <h2 className="text-xl sm:text-2xl font-heading font-bold text-neutral-900 mb-2"> Send Us a Message </h2>
+              <p className="text-sm sm:text-base text-neutral-600 mb-6"> Have a question, partnership proposal, or suggestion? Send us a message and our team will get back to you promptly. </p>
+
               {!isSubmitted ? (
-                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5" noValidate>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-neutral-700 mb-2"> Full Name * </label>
-                      <input type="text" id="name" name="name" value={formData.name} onChange={handleInputChange} required className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm sm:text-base" />
+                      <label htmlFor="name" className="block text-xs sm:text-sm font-semibold text-neutral-800 mb-1.5">
+                        Full Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        placeholder="e.g. John Doe"
+                        className="w-full px-4 py-2.5 sm:py-3 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm sm:text-base transition-all"
+                      />
                     </div>
                     <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-neutral-700 mb-2"> Email Address * </label>
-                      <input type="email" id="email" name="email" value={formData.email} onChange={handleInputChange} required className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm sm:text-base" />
+                      <label htmlFor="email" className="block text-xs sm:text-sm font-semibold text-neutral-800 mb-1.5">
+                        Email Address <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        placeholder="name@example.com"
+                        className="w-full px-4 py-2.5 sm:py-3 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm sm:text-base transition-all"
+                      />
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="subject" className="block text-sm font-medium text-neutral-700 mb-2"> Subject * </label>
-                    <input type="text" id="subject" name="subject" value={formData.subject} onChange={handleInputChange} required className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm sm:text-base" />
+                    <label htmlFor="subject" className="block text-xs sm:text-sm font-semibold text-neutral-800 mb-1.5">
+                      Subject <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="subject"
+                      name="subject"
+                      value={formData.subject}
+                      onChange={handleInputChange}
+                      placeholder="What is your message regarding?"
+                      className="w-full px-4 py-2.5 sm:py-3 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm sm:text-base transition-all"
+                    />
                   </div>
                   <div>
-                    <label htmlFor="message" className="block text-sm font-medium text-neutral-700 mb-2"> Message * </label>
-                    <textarea id="message" name="message" rows={5} value={formData.message} onChange={handleInputChange} required placeholder="Please provide as much detail as possible..." className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm sm:text-base" />
+                    <label htmlFor="message" className="block text-xs sm:text-sm font-semibold text-neutral-800 mb-1.5">
+                      Message <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      id="message"
+                      name="message"
+                      rows={5}
+                      value={formData.message}
+                      onChange={handleInputChange}
+                      placeholder="Please provide details about your inquiry..."
+                      className="w-full px-4 py-2.5 sm:py-3 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm sm:text-base transition-all resize-none"
+                    />
                   </div>
-                  <button type="submit" className="w-full bg-primary text-white px-6 py-3 sm:py-4 rounded-lg font-semibold hover:bg-primary-600 transition-colors inline-flex items-center justify-center text-sm sm:text-base">
-                    <SafeIcon icon={FiSend} className="mr-2 w-4 h-4 sm:w-5 sm:h-5" /> Send Message
+
+                  {contactError && (
+                    <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs sm:text-sm flex items-start gap-2.5">
+                      <SafeIcon icon={FiAlertCircle} className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                      <span>{contactError}</span>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={isSending}
+                    className="w-full bg-primary text-white px-6 py-3 sm:py-3.5 rounded-xl font-bold hover:bg-primary-600 active:scale-[0.99] transition-all inline-flex items-center justify-center text-sm sm:text-base shadow-sm disabled:opacity-60 gap-2"
+                  >
+                    {isSending ? (
+                      <>
+                        <SafeIcon icon={FiLoader} className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                        <span>Sending Message...</span>
+                      </>
+                    ) : (
+                      <>
+                        <SafeIcon icon={FiSend} className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span>Send Message</span>
+                      </>
+                    )}
                   </button>
                 </form>
               ) : (
-                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-accent/10 border border-accent/20 rounded-lg p-6 text-center">
-                  <SafeIcon icon={FiCheck} className="w-10 h-10 sm:w-12 sm:h-12 text-accent mx-auto mb-3 sm:mb-4" />
-                  <h3 className="text-lg sm:text-xl font-bold text-neutral-900 mb-2"> Message Sent! </h3>
-                  <p className="text-sm sm:text-base text-neutral-700"> Thank you for reaching out. We'll respond to your message within 24 hours. </p>
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-6 sm:p-8 text-center space-y-4">
+                  <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                    <SafeIcon icon={FiCheckCircle} className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-bold text-emerald-950 mb-1.5"> Message Sent Successfully! </h3>
+                    <p className="text-sm sm:text-base text-emerald-800 max-w-md mx-auto leading-relaxed">
+                      Thank you for reaching out to DoRight. Our team has received your message and will respond to your email shortly.
+                    </p>
+                  </div>
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={handleResetForm}
+                      className="px-5 py-2.5 bg-white border border-emerald-300 hover:bg-emerald-50 text-emerald-800 text-sm font-semibold rounded-xl transition-colors shadow-sm"
+                    >
+                      Send Another Message
+                    </button>
+                  </div>
                 </motion.div>
               )}
             </motion.div>

@@ -123,13 +123,13 @@ const Join = () => {
       return;
     }
     if (!file.type.startsWith('image/')) {
-      setPhotoError('Please choose an image file (JPEG, PNG, WEBP).');
+      setPhotoError('Please select a photo in JPG, PNG, or WEBP format.');
       setPhotoFile(null);
       setPhotoPreview(null);
       return;
     }
     if (file.size > MAX_PHOTO_SIZE) {
-      setPhotoError('Image must be under 5MB.');
+      setPhotoError('The selected photo is too large (over 5MB). Please choose a smaller image.');
       setPhotoFile(null);
       setPhotoPreview(null);
       return;
@@ -143,25 +143,52 @@ const Join = () => {
     waysSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const getFriendlySubmitError = (error) => {
+    if (!error) return 'Unable to submit your application right now. Please check your internet connection and try again.';
+    const msg = typeof error === 'string' ? error : error?.message || '';
+    if (msg.includes('duplicate') || msg.includes('unique') || msg.includes('already exists') || msg.includes('23505')) {
+      return 'An advocate with this email address is already registered. If you are already a member or need support, please contact info@doright.ng.';
+    }
+    if (msg.includes('network') || msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('network error')) {
+      return 'Could not reach the server. Please check your internet connection and try again.';
+    }
+    if (msg.includes('email') || msg.includes('format')) {
+      return 'Please double-check your email address to ensure it is entered correctly.';
+    }
+    return 'We were unable to process your application right now. Please try again in a few moments or email us at info@doright.ng.';
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!photoFile) {
-      setPhotoError('A photo is required.');
+
+    if (!formData.name || formData.name.trim().length < 2) {
+      setSubmitError('Please enter your full name as you would like it to appear on your membership card.');
       return;
     }
+
+    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      setSubmitError('Please provide a valid email address so we can send your digital membership card.');
+      return;
+    }
+
+    if (!photoFile) {
+      setPhotoError('Please upload a clear passport or portrait photo for your official membership card.');
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError('');
     try {
       const createdLead = await submitLead({
-        fullName: formData.name,
-        email: formData.email,
-        phone: formData.phone,
+        fullName: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        phone: formData.phone?.trim() || '',
         interest: formData.interest,
         message: formData.message,
         photoFile
       });
       setSubmittedLead({
-        full_name: formData.name,
+        full_name: formData.name.trim(),
         membership_id: createdLead?.membership_id || `DRAI-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
         tier: 'tier_1',
         photo_preview: photoPreview
@@ -169,7 +196,7 @@ const Join = () => {
       setIsSubmitted(true);
     } catch (error) {
       console.error('Error submitting lead:', error);
-      setSubmitError('Something went wrong submitting your application. Please try again.');
+      setSubmitError(getFriendlySubmitError(error));
     } finally {
       setIsSubmitting(false);
     }

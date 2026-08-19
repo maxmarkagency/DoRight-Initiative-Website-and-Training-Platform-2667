@@ -121,7 +121,7 @@ const LeadsManagement = () => {
       setTimeout(() => setDeleteSuccessToast(''), 4500);
     } catch (err) {
       console.error('Error removing member:', err);
-      setDeleteError(err?.message || 'Failed to remove member. Please check admin database permissions.');
+      setDeleteError('Unable to remove this member right now. Please verify your administrator permissions and try again.');
     } finally {
       setIsDeleting(false);
     }
@@ -260,7 +260,7 @@ const LeadsManagement = () => {
       }, 1400);
     } catch (err) {
       console.error('Error saving tier:', err);
-      setTierActionError('Failed to save tier changes: ' + (err.message || 'Unknown error'));
+      setTierActionError('Unable to update member tier. Please verify your administrator session and try again.');
     } finally {
       setSavingTier(false);
     }
@@ -275,32 +275,22 @@ const LeadsManagement = () => {
 
     try {
       setLoading(true);
-      const oldTier = lead.tier || 'tier_1';
-      const timestamp = new Date().toLocaleDateString('en-GB', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-      const tierLog = `\n[Tier Promoted: ${TIERS[oldTier]?.label || oldTier} ➔ ${TIERS[nextTier]?.label || nextTier} on ${timestamp}]`;
-      const updatedNotes = lead.admin_notes ? `${lead.admin_notes.trim()}${tierLog}` : tierLog.trim();
-
       await updateLeadTier({
         lead,
         newTier: nextTier,
-        adminNotes: updatedNotes,
+        adminNotes: `[Promoted to ${TIERS[nextTier]?.label || nextTier} on ${new Date().toLocaleDateString('en-GB')}]`,
         sendEmail: true
       });
       await fetchLeads();
     } catch (err) {
-      console.error('Error during quick advance:', err);
-      alert('Failed to update tier: ' + err.message);
+      console.error('Quick advance error:', err);
+      alert('Unable to promote member. Please verify your administrator permissions and try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  // Referral Handlers
   const openReferralForm = () => {
     setReferralForm(EMPTY_REFERRAL_FORM);
     setReferralError('');
@@ -315,6 +305,11 @@ const LeadsManagement = () => {
 
   const handleCreateReferral = async (e) => {
     e.preventDefault();
+    if (!referralForm.fullName.trim() || !referralForm.email.trim()) {
+      setReferralError('Please provide both the full name and email address.');
+      return;
+    }
+
     try {
       setReferralSaving(true);
       setReferralError('');
@@ -322,11 +317,11 @@ const LeadsManagement = () => {
       const now = new Date().toISOString();
       const { error } = await supabase.from('leads').insert({
         full_name: referralForm.fullName.trim(),
-        email: referralForm.email.trim(),
-        phone: referralForm.phone.trim(),
+        email: referralForm.email.trim().toLowerCase(),
+        phone: referralForm.phone.trim() || null,
         tier: referralForm.tier || 'tier_1',
         tier_1_at: now,
-        referred_by: referralForm.referredBy.trim(),
+        referred_by: referralForm.referredBy.trim() || null,
         source: 'referral',
         admin_notes: referralForm.adminNotes ? `Interest: ${referralForm.interest}\n${referralForm.adminNotes}` : `Interest: ${referralForm.interest}`
       });
@@ -337,7 +332,7 @@ const LeadsManagement = () => {
       fetchLeads();
     } catch (error) {
       console.error('Error creating referral:', error);
-      setReferralError('Failed to save referral: ' + error.message);
+      setReferralError('Unable to save referral member. Please verify the email address is not already registered.');
     } finally {
       setReferralSaving(false);
     }
@@ -356,7 +351,7 @@ const LeadsManagement = () => {
       setTimeout(() => setWhatsAppSuccess(''), 3000);
     } catch (err) {
       console.error('Error saving WhatsApp links:', err);
-      setWhatsAppError('Failed to save links: ' + err.message);
+      setWhatsAppError('Unable to update WhatsApp group links right now. Please check your network connection.');
     } finally {
       setWhatsAppSaving(false);
     }

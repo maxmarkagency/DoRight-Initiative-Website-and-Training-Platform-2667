@@ -41,6 +41,32 @@ const LoginPage = () => {
     }
   }, [user, profile, navigate, from]);
 
+  const getFriendlyAuthError = (err, isRegisterMode) => {
+    if (!err) return 'An unexpected error occurred. Please try again.';
+    const msg = typeof err === 'string' ? err : err.message || '';
+    if (msg.includes('Invalid login credentials') || msg.includes('invalid_credentials')) {
+      return 'The email address or password you entered is incorrect. Please check your details and try again.';
+    }
+    if (msg.includes('Email not confirmed') || msg.includes('unconfirmed')) {
+      return 'Your email address has not been verified yet. Please check your inbox for the verification link.';
+    }
+    if (msg.includes('User already registered') || msg.includes('already exists')) {
+      return 'An account with this email address already exists. Please sign in with your password.';
+    }
+    if (msg.includes('Password should be at least') || msg.includes('weak_password')) {
+      return 'Your password must be at least 6 characters long.';
+    }
+    if (msg.includes('rate limit') || msg.includes('Too many requests')) {
+      return 'Too many attempts. Please wait a moment before trying again.';
+    }
+    if (msg.includes('Network') || msg.includes('Failed to fetch')) {
+      return 'Could not reach the authentication server. Please check your internet connection.';
+    }
+    return isRegisterMode
+      ? 'Unable to create your account right now. Please check your information and try again.'
+      : 'Unable to sign in. Please check your credentials and try again.';
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
@@ -49,7 +75,7 @@ const LoginPage = () => {
     try {
       await login(email, password);
     } catch (err) {
-      setError(err.message || "Failed to log in. Please check your credentials.");
+      setError(getFriendlyAuthError(err, false));
       setLoading(false);
     }
   };
@@ -57,7 +83,7 @@ const LoginPage = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError("The passwords you entered do not match. Please re-enter them.");
       return;
     }
     setError('');
@@ -65,13 +91,13 @@ const LoginPage = () => {
     setSuccessMessage('');
     try {
       await register(email, password);
-      setSuccessMessage('Registration successful! Please check your email to verify your account.');
-      setIsRegister(false); // Switch to login form
+      setSuccessMessage('Account created successfully! Please check your email to verify your address.');
+      setIsRegister(false);
       setEmail('');
       setPassword('');
       setConfirmPassword('');
     } catch (err) {
-      setError(err.message || "Failed to register. Please try again.");
+      setError(getFriendlyAuthError(err, true));
     } finally {
       setLoading(false);
     }
