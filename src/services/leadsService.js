@@ -135,7 +135,7 @@ export const submitLead = async ({ fullName, email, phone, interest, message, su
 };
 
 export const DEFAULT_TIER_WHATSAPP_LINKS = {
-  tier_1: 'https://chat.whatsapp.com/DoRightTier1Advocates',
+  tier_1: 'https://chat.whatsapp.com/CuwrXFIM8Ry2DZUImaHIxn?s=cl&p=i&ilr=4&amv=1',
   tier_2: 'https://chat.whatsapp.com/DoRightTier2Champions',
   tier_3: 'https://chat.whatsapp.com/DoRightTier3Leaders'
 };

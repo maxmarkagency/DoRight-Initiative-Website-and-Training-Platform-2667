@@ -225,7 +225,7 @@ Deno.serve(async (req: Request) => {
 
   const tierLinks = await lookupTierWhatsAppLinks();
   const whatsappGroupUrl =
-    tierLinks.tier_1 || Deno.env.get("TIER_1_WHATSAPP_URL") || "https://chat.whatsapp.com/DoRightTier1Advocates";
+    tierLinks.tier_1 || Deno.env.get("TIER_1_WHATSAPP_URL") || "https://chat.whatsapp.com/CuwrXFIM8Ry2DZUImaHIxn?s=cl&p=i&ilr=4&amv=1";
 
   const templateInput = {
     fullName: lead.full_name,

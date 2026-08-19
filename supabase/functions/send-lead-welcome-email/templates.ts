@@ -44,7 +44,7 @@ function wrapHtml(bodyHtml: string): string {
   `;
 }
 
-const DEFAULT_WHATSAPP_URL = "https://chat.whatsapp.com/DoRightAdvocates";
+const DEFAULT_WHATSAPP_URL = "https://chat.whatsapp.com/CuwrXFIM8Ry2DZUImaHIxn?s=cl&p=i&ilr=4&amv=1";
 
 /**
  * Official Tier 1 Welcome Email Template

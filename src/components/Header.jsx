@@ -170,7 +170,10 @@ const Header = () => {
 
           <div className="flex items-center">
             <div className="hidden md:flex items-center space-x-2 sm:space-x-4">
-              <Link to="/join" className="group flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-yellow-400 text-xs sm:text-sm font-medium rounded-md text-yellow-400 hover:bg-yellow-400 hover:text-black transition-colors">
+              <Link
+                to="/join"
+                className="group flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md text-black bg-yellow-400 hover:bg-yellow-500 transition-colors shadow-sm"
+              >
                 Join Us
                 <SafeIcon icon={FiArrowRight} className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4 transform transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
@@ -179,10 +182,13 @@ const Header = () => {
               ) : user ? (
                 <UserMenu />
               ) : (
+                /* Login button commented out as requested:
                 <Link to="/login" className="flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md text-black bg-yellow-400 hover:bg-yellow-500 transition-colors">
                   <SafeIcon icon={FiLogIn} className="mr-1 sm:mr-2 -ml-1 h-4 w-4 sm:h-5 sm:w-5" />
                   Login
                 </Link>
+                */
+                null
               )}
             </div>
 
@@ -220,8 +226,11 @@ const Header = () => {
                 )
               ))}
               <div className="border-t border-gray-700 pt-3 sm:pt-4 mt-3 sm:mt-4 space-y-2">
-                <NavLink to="/join" onClick={toggleMenu} className="block px-3 sm:px-4 py-2 text-sm rounded-md font-medium text-yellow-400 hover:bg-yellow-400 hover:text-black transition-colors">
-                  Join Us
+                <NavLink to="/join" onClick={toggleMenu} className="block">
+                  <div className="flex items-center justify-center px-3 sm:px-4 py-2 text-sm font-medium text-black bg-yellow-400 hover:bg-yellow-500 rounded-md transition-colors">
+                    <span>Join Us</span>
+                    <SafeIcon icon={FiArrowRight} className="ml-2 h-4 w-4" />
+                  </div>
                 </NavLink>
                 {loading ? (
                   <div className="flex items-center px-3 sm:px-4">
@@ -231,12 +240,15 @@ const Header = () => {
                 ) : user ? (
                   <UserMenu isMobile={true} closeMenu={toggleMenu} />
                 ) : (
+                  /* Login button commented out as requested:
                   <NavLink to="/login" onClick={toggleMenu} className="block">
                     <div className="flex items-center px-3 sm:px-4 py-2 text-sm font-medium text-black bg-yellow-400 hover:bg-yellow-500 rounded-md transition-colors">
                       <SafeIcon icon={FiLogIn} className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                       Login
                     </div>
                   </NavLink>
+                  */
+                  null
                 )}
               </div>
             </div>

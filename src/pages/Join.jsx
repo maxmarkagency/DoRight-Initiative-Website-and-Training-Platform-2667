@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
-import { FaHandshake } from 'react-icons/fa6';
+import { FaHandshake, FaWhatsapp } from 'react-icons/fa6';
 import { submitLead } from '../services/leadsService';
 import MemberCard from '../components/MemberCard';
 import supabase from '../lib/supabase';
@@ -460,107 +460,124 @@ const Join = () => {
       {/* Pop-up Application Form Modal */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+          <div className="fixed inset-0 z-50 overflow-y-auto overflow-x-hidden p-2.5 xs:p-4 sm:p-6 flex min-h-full items-center justify-center">
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-neutral-900/70 backdrop-blur-sm"
+              className="fixed inset-0 bg-neutral-950/75 backdrop-blur-sm"
               onClick={closeModal}
               aria-hidden="true"
             />
 
             {/* Modal Dialog */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
               transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto z-10 border border-neutral-100"
+              className="relative bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-2xl max-h-[calc(100dvh-1.5rem)] sm:max-h-[90vh] flex flex-col z-10 border border-neutral-100 overflow-hidden my-auto"
               role="dialog"
               aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="sticky top-0 bg-white/95 backdrop-blur px-6 py-4 sm:px-8 sm:py-5 border-b border-neutral-200 flex items-center justify-between z-20">
-                <div>
-                  <h3 className="text-xl sm:text-2xl font-heading font-bold text-neutral-900">
-                    Join the Movement
+              <div className="sticky top-0 bg-white/95 backdrop-blur-md px-4 py-3.5 sm:px-6 sm:py-4 md:px-8 md:py-5 border-b border-neutral-100 flex items-center justify-between z-20 flex-shrink-0">
+                <div className="pr-2 min-w-0">
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-heading font-bold text-neutral-900 tracking-tight">
+                    {isSubmitted ? 'Official Membership Ready' : 'Join the Movement'}
                   </h3>
-                  <p className="text-sm text-neutral-600">
-                    Fill out the form below to get started with DoRight Initiative.
+                  <p className="text-xs sm:text-sm text-neutral-500 mt-0.5 leading-snug">
+                    {isSubmitted ? 'Your virtual member card and details are confirmed.' : 'Fill out the form below to get started with DoRight Initiative.'}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="p-2 -mr-2 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded-full transition-colors"
+                  className="p-2 -mr-1.5 sm:mr-0 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded-full transition-colors flex-shrink-0 active:scale-95"
                   aria-label="Close dialog"
                 >
-                  <SafeIcon icon={FiX} className="w-6 h-6" />
+                  <SafeIcon icon={FiX} className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
               </div>
 
               {/* Modal Body */}
-              <div className="p-6 sm:p-8">
+              <div className="overflow-y-auto p-4 sm:p-6 md:p-8 overscroll-contain">
                 {isSubmitted ? (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="text-center py-3 px-1 space-y-6"
+                    className="text-center py-2 sm:py-4 space-y-4 sm:space-y-6"
                   >
-                    <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
-                      <SafeIcon icon={FiCheckCircle} className="w-8 h-8" />
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                      <SafeIcon icon={FiCheckCircle} className="w-6 h-6 sm:w-9 sm:h-9" />
                     </div>
                     <div>
-                      <h4 className="text-2xl font-bold text-neutral-900">Welcome to DoRight Initiative!</h4>
-                      <p className="text-sm text-neutral-600 max-w-md mx-auto mt-1">
+                      <h4 className="text-xl sm:text-2xl font-bold text-neutral-900">Welcome to DoRight Initiative!</h4>
+                      <p className="text-xs sm:text-sm text-neutral-600 max-w-md mx-auto mt-1 leading-relaxed">
                         Your registration has been activated in <strong>Tier 1 (Personal Advocate)</strong>. Your official virtual membership card is ready below:
                       </p>
                     </div>
 
-                    {/* Member Card Component */}
-                    <div className="p-4 sm:p-6 bg-slate-900 rounded-2xl flex flex-col items-center shadow-xl">
+                    {/* Member Card Component Container */}
+                    <div className="p-2 xs:p-3 sm:p-6 bg-slate-900 rounded-2xl flex flex-col items-center shadow-xl w-full overflow-hidden">
                       <MemberCard lead={submittedLead} />
                     </div>
 
-                    <p className="text-xs text-neutral-500 max-w-md mx-auto">
+                    <p className="text-xs text-neutral-500 max-w-md mx-auto leading-relaxed">
                       A confirmation email containing your Membership ID (<strong>{submittedLead?.membership_id}</strong>) and your card download link has also been sent to <strong>{formData.email}</strong>.
                     </p>
 
-                    <div>
+                    <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
+                      <a
+                        href="https://chat.whatsapp.com/CuwrXFIM8Ry2DZUImaHIxn?s=cl&p=i&ilr=4&amv=1"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full sm:w-auto flex-1 min-w-[200px] bg-[#25D366] hover:bg-[#20bd5a] text-white px-6 py-3 rounded-xl font-bold transition-all shadow-md text-sm inline-flex items-center justify-center gap-2 active:scale-95"
+                      >
+                        <SafeIcon icon={FaWhatsapp} className="w-5 h-5 text-white" />
+                        <span>Join Tier 1 WhatsApp</span>
+                      </a>
                       <button
                         type="button"
                         onClick={closeModal}
-                        className="bg-primary text-white px-8 py-3 rounded-xl font-semibold hover:bg-primary-600 transition-colors shadow-md text-sm"
+                        className="w-full sm:w-auto min-w-[120px] bg-neutral-100 hover:bg-neutral-200 text-neutral-800 px-6 py-3 rounded-xl font-bold transition-all text-sm active:scale-95"
                       >
                         Done
                       </button>
                     </div>
                   </motion.div>
                 ) : (
-                  <form onSubmit={handleSubmit} className="space-y-5">
+                  <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
                     {/* Area of Interest */}
                     <div>
-                      <label className="block text-sm font-medium text-neutral-800 mb-2">
+                      <label className="block text-xs sm:text-sm font-semibold text-neutral-800 mb-2">
                         Area of Interest <span className="text-red-500">*</span>
                       </label>
-                      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                         {INTEREST_OPTIONS.map((option) => {
                           const isSelected = formData.interest === option;
+                          const IconComponent = option === 'Volunteering' ? FiUsers : option === 'Donating' ? FiHeart : FaHandshake;
                           return (
                             <button
                               key={option}
                               type="button"
                               onClick={() => setFormData({ ...formData, interest: option })}
-                              className={`py-3 px-3 rounded-lg text-sm font-semibold border text-center transition-all ${
+                              className={`py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold border transition-all flex items-center sm:justify-center justify-between gap-2.5 ${
                                 isSelected
                                   ? 'bg-primary text-white border-primary shadow-sm ring-2 ring-primary/20'
                                   : 'bg-white text-neutral-700 border-neutral-300 hover:border-neutral-400 hover:bg-neutral-50'
                               }`}
                             >
-                              {option}
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <SafeIcon icon={IconComponent} className={`w-4 h-4 flex-shrink-0 ${isSelected ? 'text-white' : 'text-neutral-500'}`} />
+                                <span className="truncate">{option}</span>
+                              </div>
+                              {isSelected && (
+                                <SafeIcon icon={FiCheck} className="w-4 h-4 text-white sm:hidden flex-shrink-0" />
+                              )}
                             </button>
                           );
                         })}
@@ -569,7 +586,7 @@ const Join = () => {
 
                     {/* Full Name */}
                     <div>
-                      <label htmlFor="modal-name" className="block text-sm font-medium text-neutral-800 mb-1.5">
+                      <label htmlFor="modal-name" className="block text-xs sm:text-sm font-semibold text-neutral-800 mb-1 sm:mb-1.5">
                         Full Name <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -580,14 +597,14 @@ const Join = () => {
                         onChange={handleInputChange}
                         required
                         placeholder="e.g. Amina Bello"
-                        className="w-full px-4 py-3 border border-neutral-300 rounded-lg text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-neutral-400"
+                        className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl text-neutral-900 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-neutral-400 transition-all"
                       />
                     </div>
 
                     {/* Email & Phone Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
                       <div>
-                        <label htmlFor="modal-email" className="block text-sm font-medium text-neutral-800 mb-1.5">
+                        <label htmlFor="modal-email" className="block text-xs sm:text-sm font-semibold text-neutral-800 mb-1 sm:mb-1.5">
                           Email Address <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -598,11 +615,11 @@ const Join = () => {
                           onChange={handleInputChange}
                           required
                           placeholder="amina@example.com"
-                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-neutral-400"
+                          className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl text-neutral-900 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-neutral-400 transition-all"
                         />
                       </div>
                       <div>
-                        <label htmlFor="modal-phone" className="block text-sm font-medium text-neutral-800 mb-1.5">
+                        <label htmlFor="modal-phone" className="block text-xs sm:text-sm font-semibold text-neutral-800 mb-1 sm:mb-1.5">
                           Phone Number <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -613,15 +630,15 @@ const Join = () => {
                           onChange={handleInputChange}
                           required
                           placeholder="+234 800 000 0000"
-                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-neutral-400"
+                          className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl text-neutral-900 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-neutral-400 transition-all"
                         />
                       </div>
                     </div>
 
                     {/* Message */}
                     <div>
-                      <label htmlFor="modal-message" className="block text-sm font-medium text-neutral-800 mb-1.5">
-                        Message <span className="text-neutral-500 font-normal">(Optional)</span>
+                      <label htmlFor="modal-message" className="block text-xs sm:text-sm font-semibold text-neutral-800 mb-1 sm:mb-1.5">
+                        Message <span className="text-neutral-400 font-normal">(Optional)</span>
                       </label>
                       <textarea
                         id="modal-message"
@@ -630,28 +647,40 @@ const Join = () => {
                         value={formData.message}
                         onChange={handleInputChange}
                         placeholder="Tell us a little about your background or how you would like to collaborate..."
-                        className="w-full px-4 py-3 border border-neutral-300 rounded-lg text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-neutral-400 resize-none"
+                        className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl text-neutral-900 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-neutral-400 resize-none transition-all"
                       />
                     </div>
 
                     {/* Photo Upload */}
                     <div>
-                      <label className="block text-sm font-medium text-neutral-800 mb-1.5">
-                        Your Photo / Passport <span className="text-red-500">*</span>
-                      </label>
-                      <div className="flex items-center gap-4">
-                        {photoPreview && (
-                          <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-primary flex-shrink-0">
+                      <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-0.5 sm:gap-2 mb-1.5">
+                        <label className="block text-xs sm:text-sm font-semibold text-neutral-800">
+                          Your Photo / Passport <span className="text-red-500">*</span>
+                        </label>
+                        <span className="text-[11px] sm:text-xs text-neutral-500">JPG, PNG, WEBP &lt; 5MB</span>
+                      </div>
+                      <div className="flex items-center gap-2.5 sm:gap-4">
+                        {photoPreview ? (
+                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden ring-2 ring-primary/40 flex-shrink-0 shadow-sm">
                             <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-400 flex-shrink-0">
+                            <SafeIcon icon={FiUsers} className="w-5 h-5 sm:w-6 sm:h-6" />
                           </div>
                         )}
                         <label
                           htmlFor="modal-photo"
-                          className="flex-1 border-2 border-dashed border-neutral-300 hover:border-primary rounded-lg px-4 py-3 text-center cursor-pointer transition-colors bg-neutral-50/50 hover:bg-neutral-50"
+                          className="flex-1 min-w-0 border-2 border-dashed border-neutral-300 hover:border-primary rounded-xl px-3 sm:px-4 py-2.5 text-left sm:text-center cursor-pointer transition-colors bg-neutral-50/60 hover:bg-neutral-50 flex items-center gap-2.5 sm:justify-center"
                         >
-                          <div className="flex items-center justify-center gap-2 text-neutral-700 text-sm font-medium">
-                            <SafeIcon icon={FiUploadCloud} className="w-5 h-5 text-primary" />
-                            <span>{photoFile ? photoFile.name : 'Click to select an image (under 5MB)'}</span>
+                          <SafeIcon icon={FiUploadCloud} className="w-5 h-5 text-primary flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs sm:text-sm font-semibold text-neutral-800 truncate">
+                              {photoFile ? photoFile.name : 'Upload Passport Photo'}
+                            </div>
+                            <div className="text-[10px] sm:text-xs text-neutral-500">
+                              {photoFile ? `${(photoFile.size / 1024).toFixed(0)} KB selected` : 'Tap to select from device'}
+                            </div>
                           </div>
                           <input
                             type="file"
@@ -664,14 +693,14 @@ const Join = () => {
                           />
                         </label>
                       </div>
-                      {photoError && <p className="text-red-600 text-sm mt-1.5">{photoError}</p>}
+                      {photoError && <p className="text-red-600 text-xs sm:text-sm mt-1.5">{photoError}</p>}
                     </div>
 
                     {/* Submission Error */}
                     {submitError && (
-                      <div className="flex items-start bg-red-50 border border-red-200 rounded-lg p-3.5">
+                      <div className="flex items-start bg-red-50 border border-red-200 rounded-xl p-3 sm:p-3.5">
                         <SafeIcon icon={FiAlertCircle} className="w-5 h-5 text-red-600 mr-2.5 mt-0.5 flex-shrink-0" />
-                        <p className="text-red-700 text-sm">{submitError}</p>
+                        <p className="text-red-700 text-xs sm:text-sm">{submitError}</p>
                       </div>
                     )}
 
@@ -680,12 +709,18 @@ const Join = () => {
                       <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full bg-primary text-white py-3.5 px-6 rounded-lg font-semibold hover:bg-primary-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md hover:shadow-lg flex items-center justify-center"
+                        className="w-full bg-primary text-white py-3 sm:py-3.5 px-6 rounded-xl font-bold hover:bg-primary-600 active:scale-[0.99] transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-sm sm:text-base"
                       >
                         {isSubmitting ? (
-                          <span>Submitting Application...</span>
+                          <>
+                            <SafeIcon icon={FiIcons.FiLoader || FiUsers} className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                            <span>Submitting Application...</span>
+                          </>
                         ) : (
-                          <span>Submit Application</span>
+                          <>
+                            <span>Submit Application</span>
+                            <SafeIcon icon={FiArrowRight} className="w-4 h-4 sm:w-5 sm:h-5" />
+                          </>
                         )}
                       </button>
                     </div>

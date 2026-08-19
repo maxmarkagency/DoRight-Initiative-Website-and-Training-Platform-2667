@@ -227,9 +227,6 @@ export function generateQRMatrix(text) {
   return matrix;
 }
 
-/**
- * Generates an SVG Data URI for any given text / URL.
- */
 export function generateQRCodeSVG(text, size = 120) {
   const matrix = generateQRMatrix(text);
   const matrixSize = matrix.length;
@@ -244,5 +241,6 @@ export function generateQRCodeSVG(text, size = 120) {
     }
   }
 
-  return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}"><rect width="${size}" height="${size}" fill="#FFFFFF" rx="8" />${rects}</svg>`;
+  const svgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}"><rect width="${size}" height="${size}" fill="#FFFFFF" rx="8" />${rects}</svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svgString)}`;
 }
