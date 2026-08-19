@@ -160,6 +160,7 @@ export const submitLead = async ({ fullName, email, phone, interest, message, su
     supabase.functions.invoke('send-lead-welcome-email', {
       body: {
         type: 'INSERT',
+        table: 'leads',
         record: insertedLead
       }
     }).catch((err) => console.warn('Welcome email trigger warning:', err));

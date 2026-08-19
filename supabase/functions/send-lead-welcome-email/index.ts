@@ -91,11 +91,16 @@ async function lookupTierWhatsAppLinks(): Promise<{ [key: string]: string }> {
   }
 }
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 Deno.serve(async (req: Request) => {
-  // Check authorization header
-  const webhookSecret = Deno.env.get("LEAD_WEBHOOK_SECRET");
-  const authHeader = req.headers.get("Authorization");
-  const isAuthorized = !webhookSecret || authHeader === `Bearer ${webhookSecret}`;
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
 
   let payload: WebhookPayload;
   try {
@@ -103,18 +108,20 @@ Deno.serve(async (req: Request) => {
   } catch {
     return new Response(JSON.stringify({ error: "Invalid JSON payload" }), {
       status: 400,
-      headers: { "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
   const resendApiKey = Deno.env.get("RESEND_API_KEY");
   if (!resendApiKey) {
     console.error("send-lead-welcome-email: RESEND_API_KEY is not configured");
-    return new Response(JSON.stringify({ error: "Email provider not configured" }), {
+    return new Response(JSON.stringify({ error: "Email provider not configured (RESEND_API_KEY missing)" }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+
+  const defaultFrom = Deno.env.get("RESEND_FROM_EMAIL") || "DoRight Initiative <onboarding@doright.ng>";
 
   // --- Branch 1: Tier Transition Email ---
   if (payload?.action === "TIER_TRANSITION" || payload?.type === "TIER_TRANSITION") {
@@ -160,7 +167,7 @@ Deno.serve(async (req: Request) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "DoRight Initiative <onboarding@doright.ng>",
+          from: defaultFrom,
           to: [recipientEmail],
           subject,
           html,
@@ -173,45 +180,42 @@ Deno.serve(async (req: Request) => {
         console.error("send-lead-welcome-email: failed sending tier email via Resend", errText);
         return new Response(JSON.stringify({ error: "Failed sending email via provider", details: errText }), {
           status: 500,
-          headers: { "Content-Type": "application/json" },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
       return new Response(JSON.stringify({ success: true, tier: toTier, recipient: recipientEmail }), {
         status: 200,
-        headers: { "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error("send-lead-welcome-email: error sending tier transition email", err);
-      return new Response(JSON.stringify({ error: "Failed to send email" }), {
+      return new Response(JSON.stringify({ error: "Failed to send email", details: err?.message }), {
         status: 500,
-        headers: { "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
   }
 
-  // --- Branch 2: Database INSERT Trigger (New Lead Welcome) ---
-  if (!isAuthorized) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+  // --- Branch 2: New Lead Welcome Email (Trigger or Direct Invoke) ---
+  if (!payload?.record && payload?.lead) {
+    payload.record = payload.lead as any;
   }
 
-  if (payload?.type !== "INSERT" || payload?.table !== "leads" || !payload.record) {
-    return new Response(JSON.stringify({ skipped: true }), {
+  if (!payload?.record) {
+    return new Response(JSON.stringify({ skipped: true, reason: "No lead record in payload" }), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
   const lead = payload.record;
 
   if (!lead.email) {
-    console.error(`send-lead-welcome-email: lead ${lead.id} has no email, skipping send`);
+    console.error(`send-lead-welcome-email: lead ${lead.id || 'unknown'} has no email, skipping send`);
     return new Response(JSON.stringify({ skipped: true, reason: "no email on lead" }), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
@@ -221,7 +225,7 @@ Deno.serve(async (req: Request) => {
 
   const membershipCardUrl = lead.membership_id
     ? `${MEMBERSHIP_CARD_BASE_URL}?id=${encodeURIComponent(lead.membership_id)}`
-    : `${MEMBERSHIP_CARD_BASE_URL}?leadId=${encodeURIComponent(lead.id)}`;
+    : `${MEMBERSHIP_CARD_BASE_URL}?leadId=${encodeURIComponent(lead.id || '')}`;
 
   const tierLinks = await lookupTierWhatsAppLinks();
   const whatsappGroupUrl =
@@ -261,7 +265,7 @@ Deno.serve(async (req: Request) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "DoRight Initiative <onboarding@doright.ng>",
+        from: defaultFrom,
         to: [lead.email],
         subject,
         html,
@@ -275,7 +279,7 @@ Deno.serve(async (req: Request) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "DoRight Notifications <notifications@doright.ng>",
+        from: defaultFrom,
         to: [adminEmailRecipient],
         subject: adminEmail.subject,
         html: adminEmail.html,
@@ -286,26 +290,38 @@ Deno.serve(async (req: Request) => {
 
   try {
     const [welcomeRes, adminRes] = await Promise.all(sendPromises);
+    let welcomeError = null;
+    let adminError = null;
 
     if (!welcomeRes.ok) {
-      const errText = await welcomeRes.text();
-      console.error(`send-lead-welcome-email: failed to send welcome email to ${lead.email}:`, errText);
+      welcomeError = await welcomeRes.text();
+      console.error(`send-lead-welcome-email: failed to send welcome email to ${lead.email}:`, welcomeError);
     }
 
     if (!adminRes.ok) {
-      const errText = await adminRes.text();
-      console.error(`send-lead-welcome-email: failed to send admin notification to ${adminEmailRecipient}:`, errText);
+      adminError = await adminRes.text();
+      console.error(`send-lead-welcome-email: failed to send admin notification to ${adminEmailRecipient}:`, adminError);
     }
 
-    return new Response(JSON.stringify({ success: true, lead_id: lead.id }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (err) {
+    return new Response(
+      JSON.stringify({
+        success: !welcomeError,
+        lead_id: lead.id,
+        welcome_status: welcomeRes.status,
+        welcome_error: welcomeError,
+        admin_status: adminRes.status,
+        admin_error: adminError,
+      }),
+      {
+        status: welcomeError ? 500 : 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+  } catch (err: any) {
     console.error("send-lead-welcome-email: error dispatching emails via Resend:", err);
-    return new Response(JSON.stringify({ error: "Failed to dispatch email" }), {
+    return new Response(JSON.stringify({ error: "Failed to dispatch email", details: err?.message }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
