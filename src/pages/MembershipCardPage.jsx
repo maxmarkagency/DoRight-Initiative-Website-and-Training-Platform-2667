@@ -111,13 +111,15 @@ const MembershipCardPage = () => {
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold uppercase tracking-wider">
             <SafeIcon icon={FiShield} className="w-3.5 h-3.5" />
-            Official Member Credential
+            {member?.tier === 'tier_1' || !member?.tier ? 'Official Advocate Credential' : 'Official Member Credential'}
           </div>
           <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
-            Virtual Membership Card
+            {member?.tier === 'tier_1' || !member?.tier ? 'Your Advocate Card' : 'Your Virtual Membership Card'}
           </h1>
           <p className="text-sm text-slate-400 max-w-lg mx-auto">
-            Save or print your official DoRight Awareness Initiative membership card. Use your card for identification at community events and webinars.
+            {member?.tier === 'tier_1' || !member?.tier
+              ? 'Save or print your official DoRight Advocate Card. When you advance to Tier 2, you unlock the official Movement Champion Membership Card.'
+              : 'Save or print your official DoRight Awareness Initiative membership card. Use your card for identification at leadership forums and community initiatives.'}
           </p>
         </div>
 
@@ -125,14 +127,14 @@ const MembershipCardPage = () => {
         {loading ? (
           <div className="bg-slate-800/80 rounded-2xl border border-slate-700 p-12 text-center flex flex-col items-center justify-center space-y-4">
             <SafeIcon icon={FiLoader} className="w-8 h-8 text-amber-400 animate-spin" />
-            <p className="text-sm text-slate-300">Retrieving your membership card...</p>
+            <p className="text-sm text-slate-300">Retrieving your card...</p>
           </div>
         ) : error ? (
           <div className="bg-red-950/40 border border-red-800/60 rounded-2xl p-8 text-center space-y-4">
             <SafeIcon icon={FiAlertCircle} className="w-10 h-10 text-red-400 mx-auto" />
             <div className="text-lg font-bold text-red-200">{error}</div>
             <p className="text-xs text-red-300">
-              Please check your confirmation email link or reach out to <a href="mailto:support@doright.ng" className="underline font-bold">support@doright.ng</a>.
+              Please check your confirmation email link or reach out to <a href="mailto:info@doright.ng" className="underline font-bold">info@doright.ng</a>.
             </p>
           </div>
         ) : (
@@ -142,7 +144,7 @@ const MembershipCardPage = () => {
             transition={{ duration: 0.4 }}
             className="space-y-8"
           >
-            {/* The Membership Card Render */}
+            {/* The Card Render */}
             <div className="p-4 sm:p-8 bg-slate-800/60 border border-slate-700 rounded-3xl backdrop-blur shadow-2xl flex flex-col items-center">
               <MemberCard lead={member} />
             </div>
@@ -151,42 +153,47 @@ const MembershipCardPage = () => {
             <div className="p-6 bg-slate-800/80 border border-slate-700 rounded-2xl space-y-4">
               <h3 className="text-base font-bold text-amber-400 flex items-center gap-2">
                 <SafeIcon icon={FiShield} className="w-4 h-4" />
-                How to Store & Print Your Advocate Card
+                {member?.tier === 'tier_1' || !member?.tier ? 'How to Save & Print Your Advocate Card' : 'How to Save & Print Your Membership Card'}
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-slate-300">
                 <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-700/60 space-y-1.5">
                   <div className="font-bold text-white text-sm">1. Save to Device</div>
                   <p className="leading-relaxed text-slate-400">
-                    Click <strong>Download Card</strong> to save a high-resolution PNG image directly to your phone gallery or mobile wallet.
+                    Click <strong>Download Card</strong> to save a high-resolution PNG image directly to your phone gallery or device.
                   </p>
                 </div>
                 <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-700/60 space-y-1.5">
                   <div className="font-bold text-white text-sm">2. Print Hard Copy</div>
                   <p className="leading-relaxed text-slate-400">
-                    Click <strong>Print / PDF</strong> to print on cardstock or save as a printable PDF badge. Standard ID-1 card proportions.
+                    Click <strong>Print / PDF</strong> to print on cardstock or save as a printable badge in standard card proportions.
                   </p>
                 </div>
                 <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-700/60 space-y-1.5">
                   <div className="font-bold text-white text-sm">3. 1-Year Validity</div>
                   <p className="leading-relaxed text-slate-400">
-                    Your card is active and valid for 1 year. The embedded QR code enables instant physical & digital verification.
+                    Your card is active and valid for 1 year with real-time QR verification for authenticity.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Member Details & Benefits summary */}
+            {/* Member Details & Tier summary */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Member Tier Card */}
               <div className="p-5 bg-slate-800/70 border border-slate-700 rounded-2xl space-y-2">
-                <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Membership Tier</div>
+                <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Level & Card</div>
                 <div className="text-lg font-bold text-white flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full" style={{ backgroundColor: tierConf.color }} />
-                  {tierConf.name}
+                  {tierConf.name} {member?.tier === 'tier_1' || !member?.tier ? '(Advocate Card)' : '(Membership Card)'}
                 </div>
                 <p className="text-xs text-slate-300 leading-relaxed">
                   {tierConf.description}
                 </p>
+                {member?.tier === 'tier_1' || !member?.tier ? (
+                  <div className="pt-2 text-[11px] text-amber-400/90 font-medium">
+                    ✦ Progress to Tier 2 (Movement Champion) to receive your official DoRight Membership Card!
+                  </div>
+                ) : null}
               </div>
 
               {/* Status Verification */}

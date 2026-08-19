@@ -548,7 +548,7 @@ const Join = () => {
                     <div>
                       <h4 className="text-xl sm:text-2xl font-bold text-neutral-900">Welcome to DoRight Initiative!</h4>
                       <p className="text-xs sm:text-sm text-neutral-600 max-w-md mx-auto mt-1 leading-relaxed">
-                        Your registration has been activated in <strong>Tier 1 (Personal Advocate)</strong>. Your official virtual membership card is ready below:
+                        Your registration has been activated in <strong>Tier 1 (Personal Advocate)</strong>. Your official <strong>Advocate Card</strong> is ready below:
                       </p>
                     </div>
 
@@ -558,7 +558,7 @@ const Join = () => {
                     </div>
 
                     <p className="text-xs text-neutral-500 max-w-md mx-auto leading-relaxed">
-                      A confirmation email containing your Membership ID (<strong>{submittedLead?.membership_id}</strong>) and your card download link has also been sent to <strong>{formData.email}</strong>.
+                      A confirmation email containing your Advocate ID (<strong>{submittedLead?.membership_id}</strong>) and card download link has also been sent to <strong>{formData.email}</strong>.
                     </p>
 
                     <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
