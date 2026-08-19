@@ -57,7 +57,7 @@ export function websiteWelcomeEmail({
   whatsappGroupUrl,
 }: WelcomeEmailInput): ComposedEmail {
   const name = escapeHtml(fullName.trim());
-  const cardUrl = membershipCardUrl || `https://doright.ng/#/membership-card?id=${encodeURIComponent(membershipId || '')}`;
+  const cardUrl = membershipCardUrl || `https://doright.ng/membership-card?id=${encodeURIComponent(membershipId || '')}`;
   const whatsappUrl = whatsappGroupUrl || DEFAULT_WHATSAPP_URL;
 
   const subject = "Welcome to the Doing Right Awareness Initiative (Do-Right)!";
@@ -315,8 +315,8 @@ export interface TierTransitionInput {
 }
 
 const DEFAULT_TIER_2_WHATSAPP = "https://chat.whatsapp.com/DoRightTier2Champions";
-const DEFAULT_PAYMENT_URL = "https://doright.ng/#/donate";
-const DEFAULT_SOCIAL_URL = "https://doright.ng/#/contact";
+const DEFAULT_PAYMENT_URL = "https://doright.ng/donate";
+const DEFAULT_SOCIAL_URL = "https://doright.ng/contact";
 
 /**
  * Official Tier 2 Progression Email Template:
@@ -332,7 +332,7 @@ export function tier2AdvancementEmail({
   socialMediaUrl,
 }: TierTransitionInput): ComposedEmail {
   const name = escapeHtml(fullName.trim());
-  const cardUrl = membershipCardUrl || `https://doright.ng/#/membership-card?id=${encodeURIComponent(membershipId || '')}`;
+  const cardUrl = membershipCardUrl || `https://doright.ng/membership-card?id=${encodeURIComponent(membershipId || '')}`;
   const whatsappUrl = whatsappGroupUrl || DEFAULT_TIER_2_WHATSAPP;
   const paymentUrl = paymentPortalUrl || DEFAULT_PAYMENT_URL;
   const socialUrl = socialMediaUrl || DEFAULT_SOCIAL_URL;
@@ -491,10 +491,10 @@ export function tier2AdvancementEmail({
 /** Email sent when an admin advances a member to Tier 3 (Strategic Leader). */
 export function tier3AdvancementEmail(input: TierTransitionInput): ComposedEmail {
   const name = escapeHtml(input.fullName.trim());
-  const cardUrl = input.membershipCardUrl || `https://doright.ng/#/membership-card?id=${encodeURIComponent(input.membershipId || '')}`;
+  const cardUrl = input.membershipCardUrl || `https://doright.ng/membership-card?id=${encodeURIComponent(input.membershipId || '')}`;
   const whatsappUrl = input.whatsappGroupUrl || "https://chat.whatsapp.com/DoRightTier3Leaders";
-  const paymentUrl = "https://doright.ng/#/donate";
-  const subCommitteesUrl = "https://doright.ng/#/sub-committees";
+  const paymentUrl = "https://doright.ng/donate";
+  const subCommitteesUrl = "https://doright.ng/sub-committees";
   const notes = input.customNotes ? escapeHtml(input.customNotes) : null;
 
   const subject = "Leadership Advancement: Welcome to Tier 3 (Strategic Leader) 🌟";

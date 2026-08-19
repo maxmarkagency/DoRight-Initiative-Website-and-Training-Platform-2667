@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { AuthProvider } from './context/AuthContext';
 import { TrainingProvider } from './context/TrainingContext';
@@ -36,7 +36,16 @@ import StudentLayout from './components/student/StudentLayout';
 
 function AppContent() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Backward compatibility: If an old link arrives with #/ (e.g. #/membership-card?id=...), redirect cleanly
+  useEffect(() => {
+    if (window.location.hash && window.location.hash.startsWith('#/')) {
+      const cleanPath = window.location.hash.replace(/^#\//, '/');
+      navigate(cleanPath, { replace: true });
+    }
+  }, [navigate]);
 
   useEffect(() => {
     setIsLoading(true);

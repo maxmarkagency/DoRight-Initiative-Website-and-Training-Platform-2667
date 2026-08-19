@@ -12,9 +12,9 @@ import {
   tierTransitionEmail
 } from "./templates.ts";
 
-const SUB_COMMITTEES_URL = "https://doright.ng/#/sub-committees";
-const JOIN_FORM_URL = "https://doright.ng/#/join";
-const MEMBERSHIP_CARD_BASE_URL = "https://doright.ng/#/membership-card";
+const SUB_COMMITTEES_URL = "https://doright.ng/sub-committees";
+const JOIN_FORM_URL = "https://doright.ng/join";
+const MEMBERSHIP_CARD_BASE_URL = "https://doright.ng/membership-card";
 
 interface LeadRecord {
   id: string;
@@ -155,8 +155,8 @@ Deno.serve(async (req: Request) => {
       customNotes,
       membershipCardUrl,
       whatsappGroupUrl,
-      paymentPortalUrl: Deno.env.get("PAYMENT_PORTAL_URL") || "https://doright.ng/#/donate",
-      socialMediaUrl: Deno.env.get("SOCIAL_MEDIA_URL") || "https://doright.ng/#/contact",
+      paymentPortalUrl: Deno.env.get("PAYMENT_PORTAL_URL") || "https://doright.ng/donate",
+      socialMediaUrl: Deno.env.get("SOCIAL_MEDIA_URL") || "https://doright.ng/contact",
     });
 
     try {

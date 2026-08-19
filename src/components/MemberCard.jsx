@@ -50,7 +50,7 @@ const MemberCard = ({
   const issueDate = formatDateDDMMYYYY(lead?.tier_1_at || lead?.created_at);
   const expiryDate = getExpiryDateDDMMYYYY(lead?.tier_1_at || lead?.created_at);
 
-  const verificationUrl = `https://doright.ng/#/verify-member?id=${encodeURIComponent(membershipId)}`;
+  const verificationUrl = `https://doright.ng/verify-member?id=${encodeURIComponent(membershipId)}`;
   const qrCodeDataUri = generateQRCodeSVG(verificationUrl, 160);
 
   // Helper: Round Rectangle path
