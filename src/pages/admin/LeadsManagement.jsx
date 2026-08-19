@@ -10,6 +10,7 @@ import {
   TIER_KEYS,
   getActiveSubCommittees,
   updateLeadTier,
+  deleteLead,
   sendTierNotificationEmail,
   getTierWhatsAppLinks,
   saveTierWhatsAppLinks,
@@ -34,7 +35,8 @@ const {
   FiAlertCircle,
   FiCreditCard,
   FiMessageCircle,
-  FiExternalLink
+  FiExternalLink,
+  FiTrash2
 } = FiIcons;
 
 const EMPTY_REFERRAL_FORM = {
@@ -83,6 +85,12 @@ const LeadsManagement = () => {
   const [whatsAppSuccess, setWhatsAppSuccess] = useState('');
   const [whatsAppError, setWhatsAppError] = useState('');
 
+  // Delete Member Confirmation
+  const [deletingLead, setDeletingLead] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const [deleteSuccessToast, setDeleteSuccessToast] = useState('');
+
   // Sub-committees (for legacy view if referenced)
   const [subCommittees, setSubCommittees] = useState([]);
 
@@ -94,6 +102,30 @@ const LeadsManagement = () => {
     getActiveSubCommittees().then(setSubCommittees);
     getTierWhatsAppLinks().then(setWhatsAppLinks);
   }, []);
+
+  const handleConfirmDelete = async () => {
+    if (!deletingLead) return;
+    try {
+      setIsDeleting(true);
+      setDeleteError('');
+      await deleteLead(deletingLead.id);
+
+      const removedName = deletingLead.full_name || 'Member';
+      setLeads((prev) => prev.filter((l) => l.id !== deletingLead.id));
+
+      if (selectedLead?.id === deletingLead.id) {
+        closeLeadModal();
+      }
+      setDeletingLead(null);
+      setDeleteSuccessToast(`Member "${removedName}" was successfully removed.`);
+      setTimeout(() => setDeleteSuccessToast(''), 4500);
+    } catch (err) {
+      console.error('Error removing member:', err);
+      setDeleteError(err?.message || 'Failed to remove member. Please check admin database permissions.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const fetchLeads = async () => {
     try {
@@ -372,6 +404,29 @@ const LeadsManagement = () => {
         </div>
       </div>
 
+      {/* Success Notification Banner */}
+      <AnimatePresence>
+        {deleteSuccessToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 rounded-xl text-sm font-medium flex items-center justify-between shadow-sm"
+          >
+            <div className="flex items-center gap-2.5">
+              <SafeIcon icon={FiCheckCircle} className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+              <span>{deleteSuccessToast}</span>
+            </div>
+            <button
+              onClick={() => setDeleteSuccessToast('')}
+              className="text-emerald-700 dark:text-emerald-300 hover:text-emerald-900"
+            >
+              <SafeIcon icon={FiX} className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Tier Summary Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* All Members */}
@@ -633,6 +688,18 @@ const LeadsManagement = () => {
                           >
                             Manage
                           </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeletingLead(lead);
+                              setDeleteError('');
+                            }}
+                            className="p-1.5 text-xs font-semibold rounded bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-400 transition-colors inline-flex items-center"
+                            title="Remove Member"
+                          >
+                            <SafeIcon icon={FiTrash2} className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -851,29 +918,42 @@ const LeadsManagement = () => {
                 )}
 
                 {/* Actions */}
-                <div className="flex justify-end gap-3 pt-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
                   <button
                     type="button"
-                    onClick={closeLeadModal}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium"
+                    onClick={() => {
+                      setDeletingLead(selectedLead);
+                      setDeleteError('');
+                    }}
+                    className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-400 transition-colors inline-flex items-center justify-center gap-1.5 border border-red-200/50 dark:border-red-900/40"
                   >
-                    Cancel
+                    <SafeIcon icon={FiTrash2} className="w-4 h-4" />
+                    <span>Remove Member</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={handleSaveTier}
-                    disabled={savingTier}
-                    className="px-5 py-2 bg-yellow-400 text-black font-bold rounded-lg hover:bg-yellow-500 disabled:opacity-50 text-sm inline-flex items-center gap-2 shadow-sm"
-                  >
-                    {savingTier ? (
-                      <span>Updating & Sending...</span>
-                    ) : (
-                      <>
-                        <SafeIcon icon={FiSend} className="w-4 h-4" />
-                        <span>Save & Apply Tier</span>
-                      </>
-                    )}
-                  </button>
+                  <div className="flex justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={closeLeadModal}
+                      className="px-4 py-2 border border-gray-300 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveTier}
+                      disabled={savingTier}
+                      className="px-5 py-2 bg-yellow-400 text-black font-bold rounded-lg hover:bg-yellow-500 disabled:opacity-50 text-sm inline-flex items-center gap-2 shadow-sm"
+                    >
+                      {savingTier ? (
+                        <span>Updating & Sending...</span>
+                      ) : (
+                        <>
+                          <SafeIcon icon={FiSend} className="w-4 h-4" />
+                          <span>Save & Apply Tier</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -1173,6 +1253,54 @@ const LeadsManagement = () => {
             </div>
           </form>
         </div>
+      </AdminModal>
+
+      {/* Delete Member Confirmation Modal */}
+      <AdminModal isOpen={!!deletingLead} maxWidth="max-w-md">
+        {deletingLead && (
+          <div className="space-y-4 p-2">
+            <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/50 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto">
+              <SafeIcon icon={FiTrash2} className="w-6 h-6" />
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Remove Member</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                Are you sure you want to remove <span className="font-semibold text-gray-900 dark:text-white">{deletingLead.full_name}</span> ({deletingLead.membership_id || 'ID Pending'})?
+              </p>
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                This action cannot be undone. All membership records and digital card data will be permanently removed.
+              </p>
+            </div>
+
+            {deleteError && (
+              <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs rounded-lg border border-red-200 dark:border-red-800">
+                {deleteError}
+              </div>
+            )}
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setDeletingLead(null);
+                  setDeleteError('');
+                }}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+              >
+                {isDeleting ? 'Removing...' : 'Confirm Remove'}
+              </button>
+            </div>
+          </div>
+        )}
       </AdminModal>
     </motion.div>
   );

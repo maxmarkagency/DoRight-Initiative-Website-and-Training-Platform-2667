@@ -302,3 +302,34 @@ export const updateLeadTier = async ({
 
   return { success: true, emailResult };
 };
+
+/**
+ * Deletes / removes a member lead from the database and cleans up their uploaded photo if present.
+ */
+export const deleteLead = async (leadId) => {
+  if (!leadId) throw new Error('Lead ID is required for deletion');
+
+  // Attempt to clean up lead photo from storage
+  try {
+    const { data: lead } = await supabase
+      .from('leads')
+      .select('photo_url')
+      .eq('id', leadId)
+      .maybeSingle();
+
+    if (lead?.photo_url) {
+      await supabase.storage.from('lead-photos').remove([lead.photo_url]);
+    }
+  } catch (err) {
+    console.warn('Could not clean up lead photo on deletion:', err);
+  }
+
+  const { data, error } = await supabase
+    .from('leads')
+    .delete()
+    .eq('id', leadId)
+    .select();
+
+  if (error) throw error;
+  return { success: true, id: leadId, data };
+};
