@@ -175,7 +175,7 @@ const Settings = () => {
               type="tel"
               value={values.contact_phone}
               onChange={(e) => setValues({ ...values, contact_phone: e.target.value })}
-              placeholder="+234 (0) 123 456 7890"
+              placeholder="+234 912 339 9968"
               className="w-full max-w-md border border-neutral-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
             />
           ))}

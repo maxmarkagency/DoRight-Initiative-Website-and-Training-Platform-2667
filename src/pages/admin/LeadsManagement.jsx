@@ -925,7 +925,7 @@ const LeadsManagement = () => {
                 value={referralForm.phone}
                 onChange={(e) => setReferralForm({ ...referralForm, phone: e.target.value })}
                 required
-                placeholder="+234 800 000 0000"
+                placeholder="+234 912 339 9968"
                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-400 text-sm"
               />
             </div>

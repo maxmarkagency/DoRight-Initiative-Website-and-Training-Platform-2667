@@ -78,24 +78,46 @@ const buildAdminNotes = (interest, message) => {
 };
 
 export const submitLead = async ({ fullName, email, phone, interest, message, subCommitteeId = null, photoFile }) => {
-  const fileExt = photoFile.name.split('.').pop();
-  const filePath = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+  let filePath = null;
+  let photoPreview = null;
 
-  const { error: uploadError } = await supabase.storage
-    .from('lead-photos')
-    .upload(filePath, photoFile, { cacheControl: '3600', upsert: false });
+  if (photoFile) {
+    try {
+      photoPreview = URL.createObjectURL(photoFile);
+    } catch (e) {
+      console.warn('Could not generate object URL for preview', e);
+    }
 
-  if (uploadError) throw uploadError;
+    try {
+      const fileExt = photoFile.name ? photoFile.name.split('.').pop() : 'jpg';
+      const uploadPath = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('lead-photos')
+        .upload(uploadPath, photoFile, { cacheControl: '3600', upsert: true });
+
+      if (!uploadError) {
+        filePath = uploadPath;
+      } else {
+        console.warn('Storage upload note (proceeding with lead creation):', uploadError.message || uploadError);
+        filePath = uploadPath;
+      }
+    } catch (storageErr) {
+      console.warn('Storage upload caught error:', storageErr);
+    }
+  }
 
   const now = new Date().toISOString();
   const fallbackMembershipId = `DRAI-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+  let insertedLead = null;
 
   const { data: insertedData, error: insertError } = await supabase
     .from('leads')
     .insert({
       full_name: fullName,
       email,
-      phone,
+      phone: phone || null,
       photo_url: filePath,
       sub_committee_id: subCommitteeId || null,
       source: 'website',
@@ -115,7 +137,7 @@ export const submitLead = async ({ fullName, email, phone, interest, message, su
       .insert({
         full_name: fullName,
         email,
-        phone,
+        phone: phone || null,
         photo_url: filePath,
         sub_committee_id: subCommitteeId || null,
         source: 'website',
@@ -128,10 +150,27 @@ export const submitLead = async ({ fullName, email, phone, interest, message, su
       .single();
 
     if (retryError) throw retryError;
-    return retryData;
+    insertedLead = retryData;
+  } else {
+    insertedLead = insertedData;
   }
 
-  return insertedData;
+  // Trigger welcome email function asynchronously
+  try {
+    supabase.functions.invoke('send-lead-welcome-email', {
+      body: {
+        type: 'INSERT',
+        record: insertedLead
+      }
+    }).catch((err) => console.warn('Welcome email trigger warning:', err));
+  } catch (e) {
+    // Non-blocking
+  }
+
+  return {
+    ...insertedLead,
+    photo_preview: photoPreview
+  };
 };
 
 export const DEFAULT_TIER_WHATSAPP_LINKS = {

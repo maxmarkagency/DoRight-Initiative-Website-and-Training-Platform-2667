@@ -8,7 +8,7 @@ import { getPageContent, getSectionByKey } from '../services/pageContentService'
 import { sanitizeHtml } from '../lib/sanitizeHtml';
 import useSeo from '../hooks/useSeo';
 
-const { FiMail, FiMapPin, FiFacebook, FiTwitter, FiInstagram, FiLinkedin, FiSend, FiCheck } = FiIcons;
+const { FiMail, FiPhone, FiMapPin, FiFacebook, FiTwitter, FiInstagram, FiLinkedin, FiSend, FiCheck } = FiIcons;
 
 const Contact = () => {
   useSeo({
@@ -53,8 +53,11 @@ const Contact = () => {
   const heroSection = getSectionByKey(sections, 'hero');
   const socialLinks = siteSettings.social_links || {};
 
+  const contactPhone = siteSettings.contact_phone || '+234 912 339 9968';
+
   const contactInfo = [
     { icon: FiMail, title: 'Email Us', details: [siteSettings.contact_email || 'info@doright.ng', 'support@doright.ng'], color: 'text-primary' },
+    { icon: FiPhone, title: 'Call Us', details: [contactPhone], color: 'text-primary' },
     { icon: FiMapPin, title: 'Visit Us', details: siteSettings.contact_address ? [siteSettings.contact_address] : ['DoRight Awareness Initiative', '28b, Olaminuyun street , Parkview', 'Lagos, Nigeria 101233'], color: 'text-primary' }
   ];
 
@@ -62,7 +65,7 @@ const Contact = () => {
     { name: 'General Inquiries', email: 'info@doright.ng', description: 'General questions about our organization and programs' },
     { name: 'Partnerships', email: 'partnerships@doright.ng', description: 'Collaboration opportunities and strategic partnerships' },
     { name: 'Volunteer Coordination', email: 'volunteer@doright.ng', description: 'Volunteer opportunities and community engagement' },
-    { name: 'Training Programs', email: 'training@doright.ng', description: 'Course inquiries and certification support' },
+    // { name: 'Training Programs', email: 'training@doright.ng', description: 'Course inquiries and certification support' },
     { name: 'Media & Press', email: 'media@doright.ng', description: 'Press inquiries and media relations' }
   ];
 
@@ -85,7 +88,7 @@ const Contact = () => {
             <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-neutral-900 mb-3 sm:mb-4"> Contact Information </h2>
             <p className="text-sm sm:text-lg text-neutral-700 max-w-2xl mx-auto"> Multiple ways to reach us. Choose the method that works best for you. </p>
           </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-3xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
             {contactInfo.map((info, index) => (
               <motion.div key={info.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.1 }} viewport={{ once: true }} className="text-center">
                 <div className={`${info.color} w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 mx-auto mb-4 sm:mb-6 bg-neutral-100 rounded-full flex items-center justify-center`}>

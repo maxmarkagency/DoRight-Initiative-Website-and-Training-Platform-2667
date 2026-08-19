@@ -356,7 +356,11 @@ const Join = () => {
                     <SafeIcon icon={FiPhone} className="w-6 h-6 text-primary mr-3 mt-1 flex-shrink-0" />
                     <div>
                       <h4 className="font-semibold text-neutral-900 mb-0.5">Call Us</h4>
-                      <p className="text-neutral-700 text-sm">{siteSettings.contact_phone || '+234 (0) 123 456 7890'}</p>
+                      <p className="text-neutral-700 text-sm">
+                        <a href={`tel:${(siteSettings.contact_phone || '+234 912 339 9968').replace(/\s+/g, '')}`} className="hover:text-primary transition-colors">
+                          {siteSettings.contact_phone || '+234 912 339 9968'}
+                        </a>
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start sm:col-span-2">
@@ -629,7 +633,7 @@ const Join = () => {
                           value={formData.phone}
                           onChange={handleInputChange}
                           required
-                          placeholder="+234 800 000 0000"
+                          placeholder="+234 912 339 9968"
                           className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl text-neutral-900 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-neutral-400 transition-all"
                         />
                       </div>
@@ -688,7 +692,6 @@ const Join = () => {
                             name="photo"
                             accept="image/*"
                             onChange={handlePhotoChange}
-                            required
                             className="hidden"
                           />
                         </label>

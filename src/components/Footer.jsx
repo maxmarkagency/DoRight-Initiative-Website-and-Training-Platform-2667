@@ -5,7 +5,7 @@ import { SiTiktok } from 'react-icons/si';
 import * as FiIcons from 'react-icons/fi';
 import supabase from '../lib/supabase';
 
-const {FiFacebook,FiTwitter,FiInstagram,FiLinkedin,FiMail,FiMapPin}=FiIcons;
+const {FiFacebook,FiTwitter,FiInstagram,FiLinkedin,FiMail,FiPhone,FiMapPin}=FiIcons;
 
 const Footer=()=> {
   const [siteSettings, setSiteSettings] = useState({});
@@ -14,7 +14,7 @@ const Footer=()=> {
     supabase
       .from('site_settings')
       .select('setting_key, setting_value')
-      .in('setting_key', ['contact_email', 'contact_address', 'social_links'])
+      .in('setting_key', ['contact_email', 'contact_phone', 'contact_address', 'social_links'])
       .then(({ data, error }) => {
         if (error) {
           console.error('Error loading footer settings:', error);
@@ -158,6 +158,15 @@ const Footer=()=> {
               <div className="flex items-center space-x-3">
                 <SafeIcon icon={FiMail} className="w-4 h-4 text-accent flex-shrink-0" />
                 <span className="text-neutral-300 text-sm sm:text-base break-all">{siteSettings.contact_email || 'info@doingright.ng'}</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <SafeIcon icon={FiPhone} className="w-4 h-4 text-accent flex-shrink-0" />
+                <a
+                  href={`tel:${(siteSettings.contact_phone || '+234 912 339 9968').replace(/\s+/g, '')}`}
+                  className="text-neutral-300 hover:text-accent transition-colors text-sm sm:text-base break-all"
+                >
+                  {siteSettings.contact_phone || '+234 912 339 9968'}
+                </a>
               </div>
               <div className="flex items-start space-x-3">
                 <SafeIcon icon={FiMapPin} className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
