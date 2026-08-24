@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
@@ -477,12 +478,13 @@ const Join = () => {
                 Start Volunteering
                 <SafeIcon icon={FiArrowRight} className="ml-2 w-5 h-5" />
               </button>
-              <button
-                onClick={() => openModal('Donating')}
+              <Link
+                to="/pay"
                 className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-primary transition-colors inline-flex items-center justify-center"
               >
-                Make a Donation
-              </button>
+                Sponsor / Make a Payment
+                <SafeIcon icon={FiArrowRight} className="ml-2 w-5 h-5" />
+              </Link>
             </div>
           </motion.div>
         </div>
@@ -546,9 +548,23 @@ const Join = () => {
                       <SafeIcon icon={FiCheckCircle} className="w-6 h-6 sm:w-9 sm:h-9" />
                     </div>
                     <div>
-                      <h4 className="text-xl sm:text-2xl font-bold text-neutral-900">Welcome to DoRight Initiative!</h4>
+                      <h4 className="text-xl sm:text-2xl font-bold text-neutral-900">
+                        {formData.interest === 'Donating'
+                          ? 'Thank You for Supporting DoRight!'
+                          : formData.interest === 'Partnership'
+                          ? 'Thank You for Your Partnership Interest!'
+                          : 'Welcome to DoRight Initiative!'}
+                      </h4>
                       <p className="text-xs sm:text-sm text-neutral-600 max-w-md mx-auto mt-1 leading-relaxed">
-                        Your registration has been activated in <strong>Tier 1 (Personal Advocate)</strong>. Your official <strong>Advocate Card</strong> is ready below:
+                        {formData.interest === 'Donating'
+                          ? 'Our official GTBank banking details and confirmation instructions have been sent to your email.'
+                          : formData.interest === 'Partnership'
+                          ? 'Our collaboration opportunities and next steps have been sent to your email.'
+                          : (
+                            <>
+                              Your registration has been activated in <strong>Tier 1 (Personal Advocate)</strong>. Your official <strong>Advocate Card</strong> is ready below:
+                            </>
+                          )}
                       </p>
                     </div>
 
@@ -558,19 +574,30 @@ const Join = () => {
                     </div>
 
                     <p className="text-xs text-neutral-500 max-w-md mx-auto leading-relaxed">
-                      A confirmation email containing your Advocate ID (<strong>{submittedLead?.membership_id}</strong>) and card download link has also been sent to <strong>{formData.email}</strong>.
+                      A confirmation email containing your Advocate ID (<strong>{submittedLead?.membership_id}</strong>) and details has also been sent to <strong>{formData.email}</strong>.
                     </p>
 
                     <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
-                      <a
-                        href="https://chat.whatsapp.com/CuwrXFIM8Ry2DZUImaHIxn?s=cl&p=i&ilr=4&amv=1"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full sm:w-auto flex-1 min-w-[200px] bg-[#25D366] hover:bg-[#20bd5a] text-white px-6 py-3 rounded-xl font-bold transition-all shadow-md text-sm inline-flex items-center justify-center gap-2 active:scale-95"
-                      >
-                        <SafeIcon icon={FaWhatsapp} className="w-5 h-5 text-white" />
-                        <span>Join Tier 1 WhatsApp</span>
-                      </a>
+                      {formData.interest === 'Donating' ? (
+                        <Link
+                          to="/pay?purpose=donation"
+                          onClick={closeModal}
+                          className="w-full sm:w-auto flex-1 min-w-[200px] bg-accent hover:brightness-90 text-neutral-900 px-6 py-3 rounded-xl font-bold transition-all shadow-md text-sm inline-flex items-center justify-center gap-2 active:scale-95"
+                        >
+                          <span>Proceed to Payment Portal</span>
+                          <SafeIcon icon={FiArrowRight} className="w-4 h-4" />
+                        </Link>
+                      ) : (
+                        <a
+                          href="https://chat.whatsapp.com/CuwrXFIM8Ry2DZUImaHIxn?s=cl&p=i&ilr=4&amv=1"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full sm:w-auto flex-1 min-w-[200px] bg-[#25D366] hover:bg-[#20bd5a] text-white px-6 py-3 rounded-xl font-bold transition-all shadow-md text-sm inline-flex items-center justify-center gap-2 active:scale-95"
+                        >
+                          <SafeIcon icon={FaWhatsapp} className="w-5 h-5 text-white" />
+                          <span>Join Tier 1 WhatsApp</span>
+                        </a>
+                      )}
                       <button
                         type="button"
                         onClick={closeModal}
@@ -613,6 +640,20 @@ const Join = () => {
                           );
                         })}
                       </div>
+
+                      {/* Direct Pay Prompt if Donating is selected */}
+                      {formData.interest === 'Donating' && (
+                        <div className="mt-2.5 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-center justify-between gap-2">
+                          <span>Want to pay instantly online or via direct GTBank transfer?</span>
+                          <Link
+                            to="/pay?purpose=donation"
+                            onClick={closeModal}
+                            className="bg-primary text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-primary-600 transition-colors whitespace-nowrap"
+                          >
+                            Go to Payment Page →
+                          </Link>
+                        </div>
+                      )}
                     </div>
 
                     {/* Full Name */}

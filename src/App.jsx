@@ -30,6 +30,7 @@ import Podcast from './pages/Podcast';
 import PodcastEpisode from './pages/PodcastEpisode';
 import MembershipCardPage from './pages/MembershipCardPage';
 import VerifyMemberPage from './pages/VerifyMemberPage';
+import PaymentPage from './pages/PaymentPage';
 
 import AdminLayout from './components/admin/AdminLayout';
 import StudentLayout from './components/student/StudentLayout';
@@ -92,6 +93,10 @@ function AppContent() {
           <Route path="/media/podcast/:slug" element={<PodcastEpisode />} />
           <Route path="/membership-card" element={<MembershipCardPage />} />
           <Route path="/verify-member" element={<VerifyMemberPage />} />
+          <Route path="/pay" element={<PaymentPage />} />
+          <Route path="/payments" element={<Navigate to="/pay" replace />} />
+          <Route path="/donate" element={<PaymentPage />} />
+          <Route path="/give" element={<Navigate to="/pay" replace />} />
 
           {/* Training dashboard/course routes commented out:
           <Route path="/training/dashboard" element={<Navigate to="/dashboard" replace />} />

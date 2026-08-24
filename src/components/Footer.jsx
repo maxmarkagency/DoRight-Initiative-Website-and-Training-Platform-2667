@@ -148,6 +148,14 @@ const Footer=()=> {
                   Get Involved
                 </Link>
               </li>
+              <li>
+                <Link
+                  to="/pay"
+                  className="text-neutral-300 hover:text-accent transition-colors text-sm sm:text-base break-words font-medium text-yellow-400/90"
+                >
+                  Support / Make Payment
+                </Link>
+              </li>
             </ul>
           </div>
 

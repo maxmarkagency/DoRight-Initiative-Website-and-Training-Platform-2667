@@ -9,7 +9,10 @@ import {
   adminNotificationEmail,
   referralWelcomeEmail,
   websiteWelcomeEmail,
-  tierTransitionEmail
+  tierTransitionEmail,
+  donorInquiryEmail,
+  donorContributionAcknowledgementEmail,
+  partnershipInquiryEmail
 } from "./templates.ts";
 
 const SUB_COMMITTEES_URL = "https://doright.ng/sub-committees";
@@ -201,7 +204,59 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  // --- Branch 2: New Lead Welcome Email (Trigger or Direct Invoke) ---
+  // --- Branch 2: Payment Contribution Acknowledgement ---
+  if (payload?.action === "PAYMENT_ACKNOWLEDGEMENT" || payload?.type === "PAYMENT_ACKNOWLEDGEMENT") {
+    const recipientEmail = payload.record?.email || (payload as any).email;
+    const recipientName = payload.record?.full_name || payload.record?.customer_name || (payload as any).fullName || "Supporter";
+    const amount = payload.record?.amount || (payload as any).amount;
+
+    if (!recipientEmail) {
+      return new Response(JSON.stringify({ error: "Recipient email is missing" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const { subject, html, text } = donorContributionAcknowledgementEmail({
+      fullName: recipientName,
+      amount,
+    });
+
+    try {
+      const emailRes = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: defaultFrom,
+          to: [recipientEmail],
+          subject,
+          html,
+          text,
+        }),
+      });
+
+      if (!emailRes.ok) {
+        const errText = await emailRes.text();
+        console.error("send-lead-welcome-email: failed sending payment receipt via Resend", errText);
+      }
+
+      return new Response(JSON.stringify({ success: true, recipient: recipientEmail }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (err: any) {
+      console.error("send-lead-welcome-email: error sending donation acknowledgement email", err);
+      return new Response(JSON.stringify({ error: "Failed to send email", details: err?.message }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  }
+
+  // --- Branch 3: New Lead Welcome / Inquiry Email (Trigger or Direct Invoke) ---
   if (!payload?.record && payload?.lead) {
     payload.record = payload.lead as any;
   }
@@ -246,8 +301,28 @@ Deno.serve(async (req: Request) => {
     whatsappGroupUrl,
   };
 
-  const { subject, html, text } =
-    lead.source === "referral" ? referralWelcomeEmail(templateInput) : websiteWelcomeEmail(templateInput);
+  // Determine user interest
+  const interestMatch = lead.admin_notes?.match(/Interest:\s*([^\n\r]+)/i);
+  const detectedInterest = ((lead as any).interest || (interestMatch ? interestMatch[1].trim() : '')).toLowerCase();
+
+  let composed: { subject: string; html: string; text: string };
+  if (detectedInterest.includes('donat') || detectedInterest === 'donating') {
+    composed = donorInquiryEmail({
+      fullName: lead.full_name,
+      paymentPortalUrl: "https://doright.ng/pay?purpose=donation",
+    });
+  } else if (detectedInterest.includes('partner') || detectedInterest.includes('sponsor')) {
+    composed = partnershipInquiryEmail({
+      fullName: lead.full_name,
+      organizationName: (lead as any).organization || null,
+    });
+  } else if (lead.source === "referral") {
+    composed = referralWelcomeEmail(templateInput);
+  } else {
+    composed = websiteWelcomeEmail(templateInput);
+  }
+
+  const { subject, html, text } = composed;
 
   const adminEmailRecipient = Deno.env.get("ENQUIRIES_EMAIL") || "enquires@doright.ng";
   const adminEmail = adminNotificationEmail({

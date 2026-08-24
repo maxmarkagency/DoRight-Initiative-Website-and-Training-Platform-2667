@@ -651,3 +651,316 @@ export function tierTransitionEmail(input: TierTransitionInput): ComposedEmail {
   }
   return tier3AdvancementEmail(input);
 }
+
+export interface DonorInquiryInput {
+  fullName: string;
+  paymentPortalUrl?: string;
+}
+
+/**
+ * Template responding to individuals or organizations who select/click the "Donate" tab.
+ */
+export function donorInquiryEmail({ fullName, paymentPortalUrl }: DonorInquiryInput): ComposedEmail {
+  const name = escapeHtml(fullName.trim() || 'Supporter');
+  const portalUrl = paymentPortalUrl || 'https://doright.ng/pay?purpose=donation';
+
+  const subject = 'Thank you for your interest in supporting Doing Right Awareness Initiative (DRAI)';
+
+  const html = wrapHtml(`
+    <p style="font-size: 16px; margin-top: 0; color: #0f172a;">Dear <strong>${name}</strong>,</p>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      Thank you for reaching out and for your desire to support the <strong>Doing Right Awareness Initiative</strong> also known as <strong>Do-Right</strong>! We are truly grateful for your contribution in advancing our mission to promote ethical leadership, social responsibility, and integrity across our communities.
+    </p>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      Your financial support directly enables us to fund our ongoing community projects, youth outreach campaigns, and educational initiatives.
+    </p>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65; margin-bottom: 8px;">
+      Below are our official banking details for local transfers:
+    </p>
+
+    <div style="background-color: #0F172A; color: #ffffff; border-radius: 10px; padding: 20px 24px; margin: 20px 0;">
+      <div style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: #F59E0B; margin-bottom: 12px;">
+        Official Banking Details
+      </div>
+      <div style="font-size: 14px; margin-bottom: 6px;">
+        <span style="color: #94a3b8;">Account Name:</span> <strong>DOING RIGHT AWARENESS INITIATIVE</strong>
+      </div>
+      <div style="font-size: 14px; margin-bottom: 6px;">
+        <span style="color: #94a3b8;">Bank Name:</span> <strong>Guaranty Trust Bank [GTB]</strong>
+      </div>
+      <div style="font-size: 14px; margin-bottom: 6px;">
+        <span style="color: #94a3b8;">Account Number (NGN):</span> <strong style="font-family: monospace; font-size: 17px; color: #F59E0B; letter-spacing: 1px;">0694857871</strong>
+      </div>
+      <div style="font-size: 14px;">
+        <span style="color: #94a3b8;">Account Type:</span> <strong>Corporate Account</strong>
+      </div>
+    </div>
+
+    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px 18px; margin: 20px 0;">
+      <p style="font-size: 14px; color: #334155; margin: 0 0 10px; line-height: 1.55;">
+        <em>(Optional – For payment using our third-party gateway)</em><br>
+        Click on this link to redirect to our payment portal:
+      </p>
+      <div>
+        <a href="${portalUrl}" style="background-color: #005BBB; color: #ffffff; padding: 10px 22px; border-radius: 6px; font-weight: bold; font-size: 13px; text-decoration: none; display: inline-block;">
+          👉 Open DoRight Payment Portal
+        </a>
+      </div>
+    </div>
+
+    <div style="background-color: #fffbeb; border-left: 4px solid #F59E0B; border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 22px 0;">
+      <div style="font-size: 14px; font-weight: bold; color: #92400e; margin-bottom: 6px;">
+        Important Note Regarding Confirmation:
+      </div>
+      <p style="font-size: 13px; color: #78350f; margin: 0 0 8px; line-height: 1.55;">
+        Once you have completed your transfer, please reply to this email or send payment confirmation / receipt to <a href="mailto:admin@doright.ng" style="color: #005BBB; font-weight: bold;">admin@doright.ng</a> with the following details:
+      </p>
+      <ul style="margin: 0; padding-left: 18px; font-size: 13px; color: #78350f; line-height: 1.55;">
+        <li>Full Name / Organization Name (for tax receipt and acknowledgment)</li>
+        <li>Transaction Date &amp; Reference Number</li>
+        <li>Specific Program / Campaign (Optional): If you would like your donation directed toward a specific initiative (e.g., Mentorship program, Workshops, Community Advocacy, After School Training etc.).</li>
+      </ul>
+    </div>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      If you require an official invoice, formal tax-deductible receipt, or wish to discuss long-term sponsorship or partnership opportunities, please let us know by responding to this email and we will be delighted to collaborate with you.
+    </p>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      Thank you once again for standing with us to champion positive change.
+    </p>
+
+    <div style="border-top: 1px solid #e2e8f0; padding-top: 18px; margin-top: 24px; font-size: 14px; color: #475569;">
+      <p style="margin: 0 0 4px;">Kind regards,</p>
+      <p style="margin: 0; font-weight: bold; color: #0f172a; font-size: 15px;">Pastor Wale Adefarasin</p>
+      <p style="margin: 2px 0 0; color: #005BBB; font-weight: 600;">Doing Right Awareness Initiative (DRAI)</p>
+    </div>
+  `);
+
+  const text =
+    `Subject: ${subject}\n\n` +
+    `Dear ${fullName.trim() || 'Supporter'},\n\n` +
+    `Thank you for reaching out and for your desire to support the Doing Right Awareness Initiative also known as Do-Right! We are truly grateful for your contribution in advancing our mission to promote ethical leadership, social responsibility, and integrity across our communities.\n\n` +
+    `Your financial support directly enables us to fund our ongoing community projects, youth outreach campaigns, and educational initiatives.\n\n` +
+    `Below are our official banking details for local transfers:\n\n` +
+    `Official Banking Details\n` +
+    `Account Name: DOING RIGHT AWARENESS INITIATIVE\n` +
+    `Bank Name: Guaranty Trust Bank [GTB]\n` +
+    `Account Number (NGN): 0694857871\n` +
+    `Account Type: Corporate Account\n\n` +
+    `(Optional – For payment using our third-party gateway)\n` +
+    `Click on this link to redirect to our payment portal – 👉 ${portalUrl}\n\n` +
+    `Important Note Regarding Confirmation:\n` +
+    `Once you have completed your transfer, please reply to this email or send payment confirmation /receipt to admin@doright.ng with the following details:\n\n` +
+    `- Full Name / Organization Name (for tax receipt and acknowledgment)\n` +
+    `- Transaction Date & Reference Number\n` +
+    `- Specific Program / Campaign (Optional): If you would like your donation directed toward a specific initiative (e.g., Mentorship program, Workshops, Community Advocacy, After School Training etc.).\n\n` +
+    `If you require an official invoice, formal tax-deductible receipt, or wish to discuss long-term sponsorship or partnership opportunities, please let us know by responding to this email and we will be delighted to collaborate with you.\n\n` +
+    `Thank you once again for standing with us to champion positive change.\n\n` +
+    `Kind regards,\n\n` +
+    `Pastor Wale Adefarasin\n` +
+    `Doing Right Awareness Initiative (DRAI)`;
+
+  return { subject, html, text };
+}
+
+export interface DonorContributionAcknowledgementInput {
+  fullName: string;
+  amount?: string | number;
+}
+
+/**
+ * Template response thanking donors for their financial contributions.
+ */
+export function donorContributionAcknowledgementEmail({
+  fullName,
+  amount,
+}: DonorContributionAcknowledgementInput): ComposedEmail {
+  const name = escapeHtml(fullName.trim() || 'Supporter');
+  const amountStr = amount ? ` of <strong>${typeof amount === 'number' ? `₦${amount.toLocaleString()}` : escapeHtml(String(amount))}</strong>` : '';
+  const plainAmountStr = amount ? ` of ${typeof amount === 'number' ? `₦${amount.toLocaleString()}` : String(amount)}` : '';
+
+  const subject = 'Thank you for your generous contribution to the Doing Right Awareness Initiative (DRAI)!';
+
+  const html = wrapHtml(`
+    <p style="font-size: 16px; margin-top: 0; color: #0f172a;">Dear <strong>${name}</strong>,</p>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      On behalf of the entire team at the <strong>Doing Right Awareness Initiative</strong> also known as <strong>Do-Right</strong>! I want to express our deepest gratitude for your generous donation${amountStr}.
+    </p>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      Your support helps us promote integrity, accountability, and civic responsibility. Because of you, we can drive grassroots campaigns, host educational workshops, and empower young leaders to champion ethical leadership.
+    </p>
+
+    <div style="background-color: #f0fdf4; border-left: 4px solid #16a34a; border-radius: 0 8px 8px 0; padding: 16px 20px; margin: 24px 0;">
+      <div style="font-size: 14px; font-weight: bold; color: #166534; margin-bottom: 8px;">
+        Your Impact:
+      </div>
+      <p style="font-size: 13px; color: #14532d; margin: 0 0 6px; line-height: 1.55;">
+        With your help, we are continuing to:
+      </p>
+      <ul style="margin: 0; padding-left: 18px; font-size: 13px; color: #14532d; line-height: 1.55;">
+        <li>Expand our school mentorship projects and youth integrity workshops.</li>
+        <li>Run grassroots community campaigns focused on transparency and civic pride.</li>
+        <li>Advocate for sustainable policy reform and civic engagement.</li>
+      </ul>
+    </div>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      We are truly honored to have you as a partner in this movement toward building a more just and accountable society.
+    </p>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      We will keep you updated on the progress of our programs and the difference your contribution is making. In the meantime, feel free to visit our website at <a href="https://doright.ng" style="color: #005BBB; font-weight: bold;">www.doright.ng</a> or follow us on our social channels (<a href="https://instagram.com/dorightng" style="color: #005BBB;">@dorightng</a>) to see our latest activities.
+    </p>
+
+    <p style="font-size: 14px; color: #475569; line-height: 1.6; background-color: #f8fafc; padding: 12px 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
+      📞 You can also reach out to us on <strong>+ 234 912 339 9968</strong> or <a href="mailto:admin@doright.ng" style="color: #005BBB; font-weight: bold;">admin@doright.ng</a>
+    </p>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      Thank you once again for standing with us and doing right.
+    </p>
+
+    <div style="border-top: 1px solid #e2e8f0; padding-top: 18px; margin-top: 24px; font-size: 14px; color: #475569;">
+      <p style="margin: 0 0 4px;">Kind regards,</p>
+      <p style="margin: 0; font-weight: bold; color: #0f172a; font-size: 15px;">Pastor Wale Adefarasin</p>
+      <p style="margin: 2px 0 0; color: #005BBB; font-weight: 600;">Doing Right Awareness Initiative (DRAI)</p>
+    </div>
+  `);
+
+  const text =
+    `Subject: ${subject}\n\n` +
+    `Dear ${fullName.trim() || 'Supporter'},\n\n` +
+    `On behalf of the entire team at the Doing Right Awareness Initiative also known as Do-Right! I want to express our deepest gratitude for your generous donation${plainAmountStr}.\n\n` +
+    `Your support helps us promote integrity, accountability, and civic responsibility. Because of you, we can drive grassroots campaigns, host educational workshops, and empower young leaders to champion ethical leadership.\n\n` +
+    `Your Impact:\n` +
+    `With your help, we are continuing to:\n` +
+    `- Expand our school mentorship projects and youth integrity workshops.\n` +
+    `- Run grassroots community campaigns focused on transparency and civic pride.\n` +
+    `- Advocate for sustainable policy reform and civic engagement.\n\n` +
+    `We are truly honored to have you as a partner in this movement toward building a more just and accountable society.\n\n` +
+    `We will keep you updated on the progress of our programs and the difference your contribution is making. In the meantime, feel free to visit our website at www.doright.ng or follow us on our social channels to see our latest activities.\n\n` +
+    `You can also reach out to us on + 234 912 339 9968 or admin@doright.ng\n\n` +
+    `Thank you once again for standing with us and doing right.\n\n` +
+    `Kind regards,\n\n` +
+    `Pastor Wale Adefarasin\n` +
+    `Doing Right Awareness Initiative (DRAI)`;
+
+  return { subject, html, text };
+}
+
+export interface PartnershipInquiryInput {
+  fullName: string;
+  organizationName?: string | null;
+}
+
+/**
+ * Template email for potential partners (NGOs, corporate organizations, community groups, educational institutions, or sponsors) who click the "Partner" tab.
+ */
+export function partnershipInquiryEmail({
+  fullName,
+  organizationName,
+}: PartnershipInquiryInput): ComposedEmail {
+  const partnerName = escapeHtml(
+    organizationName ? `${fullName.trim()} / ${organizationName.trim()}` : fullName.trim() || 'Partner'
+  );
+
+  const subject = 'Partnering with Doing Right Awareness Initiative (DRAI) – Collaboration Opportunities';
+
+  const html = wrapHtml(`
+    <p style="font-size: 16px; margin-top: 0; color: #0f172a;">Dear <strong>${partnerName}</strong>,</p>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      Thank you for your interest in partnering with the <strong>Doing Right Awareness Initiative</strong> also known as <strong>Do-Right</strong>! We are thrilled to connect with like-minded individuals and organizations dedicated to fostering ethical leadership, civic engagement, and positive social impact in our communities.
+    </p>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      At Do-Right, we believe that meaningful, lasting change is driven through strategic collaboration. Whether through joint community projects, educational workshops, advocacy campaigns, or resource sharing, we welcome partnerships that align with our core values and vision.
+    </p>
+
+    <div style="margin: 26px 0 20px;">
+      <h3 style="font-size: 16px; font-weight: bold; color: #0f172a; margin: 0 0 10px; border-bottom: 2px solid #F59E0B; padding-bottom: 5px; display: inline-block;">
+        How We Can Partner
+      </h3>
+      <p style="font-size: 14px; color: #475569; margin: 8px 0 12px;">Depending on your interests and goals, potential collaboration avenues include:</p>
+
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px;">
+        <strong style="color: #005BBB; font-size: 14px;">• Program &amp; Event Co-hosting:</strong>
+        <span style="color: #334155; font-size: 13px;"> Partnering on youth &amp; young adult programs, community outreach initiatives, webinars &amp; other virtual interactive sessions.</span>
+      </div>
+
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px;">
+        <strong style="color: #005BBB; font-size: 14px;">• Corporate Social Responsibility (CSR):</strong>
+        <span style="color: #334155; font-size: 13px;"> Supporting or co-branding specific social impact campaigns and community development projects.</span>
+      </div>
+
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px;">
+        <strong style="color: #005BBB; font-size: 14px;">• Sponsorship &amp; In-Kind Support:</strong>
+        <span style="color: #334155; font-size: 13px;"> Providing financial, logistical, or material resources for targeted initiatives.</span>
+      </div>
+
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px;">
+        <strong style="color: #005BBB; font-size: 14px;">• Knowledge &amp; Resource Sharing:</strong>
+        <span style="color: #334155; font-size: 13px;"> Combining expertise, networks, and platforms to amplify shared advocacy goals.</span>
+      </div>
+    </div>
+
+    <div style="background-color: #eff6ff; border-left: 4px solid #005BBB; border-radius: 0 8px 8px 0; padding: 16px 20px; margin: 24px 0;">
+      <div style="font-size: 14px; font-weight: bold; color: #1e40af; margin-bottom: 6px;">
+        Next Steps
+      </div>
+      <p style="font-size: 13px; color: #1e3a8a; margin: 0 0 8px; line-height: 1.55;">
+        To help us understand how we can best work together, please let us know:
+      </p>
+      <ol style="margin: 0; padding-left: 20px; font-size: 13px; color: #1e3a8a; line-height: 1.6;">
+        <li><strong>Brief Introduction:</strong> A quick summary of your organization/initiative and core areas of focus.</li>
+        <li><strong>Partnership Vision:</strong> Any specific project, campaign, or collaboration idea you have in mind.</li>
+        <li><strong>Availability for a Discovery Meeting:</strong> Your preferred dates and times for a brief virtual or in-person meeting to discuss possibilities.</li>
+      </ol>
+    </div>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      Alternatively, you can share any relevant proposal or presentation materials by replying directly to this email.
+    </p>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      We look forward to exploring how we can combine our strengths to create greater impact together.
+    </p>
+
+    <div style="border-top: 1px solid #e2e8f0; padding-top: 18px; margin-top: 24px; font-size: 14px; color: #475569;">
+      <p style="margin: 0 0 4px;">Kind regards,</p>
+      <p style="margin: 0; font-weight: bold; color: #0f172a; font-size: 15px;">Oluwatoyin Olayemi</p>
+      <p style="margin: 2px 0 0; color: #005BBB; font-weight: 600;">Doing Right Awareness Initiative (DRAI)</p>
+    </div>
+  `);
+
+  const text =
+    `Subject: ${subject}\n\n` +
+    `Dear ${organizationName ? `${fullName.trim()} / ${organizationName.trim()}` : fullName.trim() || 'Partner'},\n\n` +
+    `Thank you for your interest in partnering with the Doing Right Awareness Initiative also known as Do-Right! We are thrilled to connect with like-minded individuals and organizations dedicated to fostering ethical leadership, civic engagement, and positive social impact in our communities.\n\n` +
+    `At Do-Right, we believe that meaningful, lasting change is driven through strategic collaboration. Whether through joint community projects, educational workshops, advocacy campaigns, or resource sharing, we welcome partnerships that align with our core values and vision.\n\n` +
+    `How We Can Partner\n\n` +
+    `Depending on your interests and goals, potential collaboration avenues include:\n` +
+    `- Program & Event Co-hosting: Partnering on youth & young adult programs, community outreach initiatives, webinars & other virtual interactive sessions.\n` +
+    `- Corporate Social Responsibility (CSR): Supporting or co-branding specific social impact campaigns and community development projects.\n` +
+    `- Sponsorship & In-Kind Support: Providing financial, logistical, or material resources for targeted initiatives.\n` +
+    `- Knowledge & Resource Sharing: Combining expertise, networks, and platforms to amplify shared advocacy goals.\n\n` +
+    `Next Steps\n\n` +
+    `To help us understand how we can best work together, please let us know:\n` +
+    `1. Brief Introduction: A quick summary of your organization/initiative and core areas of focus.\n` +
+    `2. Partnership Vision: Any specific project, campaign, or collaboration idea you have in mind.\n` +
+    `3. Availability for a Discovery Meeting: Your preferred dates and times for a brief virtual or in-person meeting to discuss possibilities.\n\n` +
+    `Alternatively, you can share any relevant proposal or presentation materials by replying directly to this email.\n\n` +
+    `We look forward to exploring how we can combine our strengths to create greater impact together.\n\n` +
+    `Kind regards,\n\n` +
+    `Oluwatoyin Olayemi\n` +
+    `Doing Right Awareness Initiative (DRAI)`;
+
+  return { subject, html, text };
+}
+

@@ -70,6 +70,7 @@ const Header = () => {
       ]
     },
     { name: 'Contact', path: '/contact' },
+    { name: 'Support / Pay', path: '/pay' },
   ];
 
   const NavLink = ({ to, children, isDropdown, onClick }) => {
@@ -230,6 +231,12 @@ const Header = () => {
                   <div className="flex items-center justify-center px-3 sm:px-4 py-2 text-sm font-medium text-black bg-yellow-400 hover:bg-yellow-500 rounded-md transition-colors">
                     <span>Join Us</span>
                     <SafeIcon icon={FiArrowRight} className="ml-2 h-4 w-4" />
+                  </div>
+                </NavLink>
+                <NavLink to="/pay" onClick={toggleMenu} className="block">
+                  <div className="flex items-center justify-center px-3 sm:px-4 py-2 text-sm font-medium text-white bg-gray-700/80 hover:bg-gray-700 border border-yellow-400/40 rounded-md transition-colors">
+                    <span>Support / Make Payment</span>
+                    <SafeIcon icon={FiArrowRight} className="ml-2 h-4 w-4 text-yellow-400" />
                   </div>
                 </NavLink>
                 {loading ? (

@@ -28,6 +28,7 @@ const STATIC_ROUTES = [
   { loc: '/gallery', changefreq: 'monthly', priority: '0.5' },
   { loc: '/events', changefreq: 'weekly', priority: '0.7' },
   { loc: '/media/podcast', changefreq: 'weekly', priority: '0.7' },
+  { loc: '/pay', changefreq: 'monthly', priority: '0.8' },
 ];
 
 async function fetchBlogPostUrls() {
