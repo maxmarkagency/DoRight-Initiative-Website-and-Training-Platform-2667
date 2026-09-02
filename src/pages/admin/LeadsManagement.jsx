@@ -4,6 +4,7 @@ import SafeIcon from '../../common/SafeIcon';
 import AdminModal from '../../components/admin/AdminModal';
 import * as FiIcons from 'react-icons/fi';
 import MemberCard from '../../components/MemberCard';
+import MemberAvatar from '../../common/MemberAvatar';
 import supabase from '../../lib/supabase';
 import {
   TIERS,
@@ -158,6 +159,35 @@ const LeadsManagement = () => {
         tier: item.tier || 'tier_1',
         impact_submissions: item.impact_submissions || {}
       }));
+
+      // Batch pre-generate signed URLs for member photos stored in storage
+      const photoPaths = normalised
+        .filter((l) => l.photo_url && !l.photo_url.startsWith('http') && !l.photo_url.startsWith('data:'))
+        .map((l) => l.photo_url);
+
+      if (photoPaths.length > 0) {
+        try {
+          const { data: signedData, error: signedError } = await supabase.storage
+            .from('lead-photos')
+            .createSignedUrls(photoPaths, 3600);
+
+          if (!signedError && signedData) {
+            const urlMap = {};
+            signedData.forEach((item) => {
+              if (item.path && item.signedUrl) {
+                urlMap[item.path] = item.signedUrl;
+              }
+            });
+            normalised.forEach((lead) => {
+              if (lead.photo_url) {
+                lead.photo_url_signed = urlMap[lead.photo_url] || (lead.photo_url.startsWith('http') ? lead.photo_url : null);
+              }
+            });
+          }
+        } catch (storageErr) {
+          console.warn('Batch signed URL generation warning:', storageErr);
+        }
+      }
 
       setLeads(normalised);
     } catch (error) {
@@ -863,9 +893,11 @@ const LeadsManagement = () => {
                       {/* Name & Avatar */}
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-300 font-bold text-xs flex-shrink-0">
-                            {lead.full_name?.charAt(0)?.toUpperCase() || 'M'}
-                          </div>
+                          <MemberAvatar
+                            lead={lead}
+                            size="md"
+                            className="ring-2 ring-gray-100 dark:ring-gray-700"
+                          />
                           <div>
                             <div className="font-semibold text-gray-900 dark:text-white flex items-center gap-1.5">
                               <span>{lead.full_name}</span>
@@ -983,15 +1015,23 @@ const LeadsManagement = () => {
           <div className="space-y-6">
             {/* Modal Header */}
             <div className="flex justify-between items-start border-b border-gray-200 dark:border-gray-700 pb-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">{selectedLead.full_name}</h2>
-                  <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${TIERS[selectedLead.tier || 'tier_1']?.badgeClass}`}>
-                    {TIERS[selectedLead.tier || 'tier_1']?.label}
-                  </span>
-                </div>
-                <div className="text-xs font-mono font-bold text-amber-500 mt-1">
-                  Membership ID: {selectedLead.membership_id || 'DRAI-2026-PENDING'}
+              <div className="flex items-center gap-3.5">
+                <MemberAvatar
+                  lead={selectedLead}
+                  src={photoUrl || selectedLead.photo_url_signed}
+                  size="lg"
+                  className="ring-2 ring-yellow-400/60 shadow-sm"
+                />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">{selectedLead.full_name}</h2>
+                    <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${TIERS[selectedLead.tier || 'tier_1']?.badgeClass}`}>
+                      {TIERS[selectedLead.tier || 'tier_1']?.label}
+                    </span>
+                  </div>
+                  <div className="text-xs font-mono font-bold text-amber-500 mt-0.5">
+                    Membership ID: {selectedLead.membership_id || 'DRAI-2026-PENDING'}
+                  </div>
                 </div>
               </div>
               <button onClick={closeLeadModal} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
@@ -1578,9 +1618,11 @@ const LeadsManagement = () => {
         {deletingLead && (
           <div className="space-y-4">
             <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
-              <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-950 flex items-center justify-center flex-shrink-0">
-                <SafeIcon icon={FiTrash2} className="w-5 h-5 text-red-600 dark:text-red-400" />
-              </div>
+              <MemberAvatar
+                lead={deletingLead}
+                size="md"
+                className="ring-2 ring-red-200 dark:ring-red-900"
+              />
               <div>
                 <h3 className="text-base font-bold text-gray-900 dark:text-white">
                   Remove Member
