@@ -281,6 +281,57 @@ export const sendTierNotificationEmail = async ({ lead, toTier, fromTier = null,
 };
 
 /**
+ * Dispatches one of the three official member reminder emails:
+ * - 'CARD_DOWNLOAD_REMINDER': Advocacy Card Claim / Download
+ * - 'MONTHLY_STORY_REMINDER': Monthly Impact Story Reminder
+ * - 'ANNUAL_RENEWAL_CHECKIN': Annual Renewal & Engagement Check-in
+ */
+export const sendMemberReminderEmail = async ({
+  lead,
+  reminderType,
+  customNotes = null,
+  completionRate = null,
+  submittedCount = null,
+}) => {
+  if (!lead || !lead.email) {
+    return { success: false, error: 'Member email is required' };
+  }
+
+  try {
+    const whatsappLinks = await getTierWhatsAppLinks();
+    const whatsappGroupUrl = whatsappLinks[lead.tier] || whatsappLinks.tier_1;
+
+    const { data, error } = await supabase.functions.invoke('send-lead-welcome-email', {
+      body: {
+        action: reminderType,
+        customNotes,
+        customMessage: customNotes,
+        completionRate,
+        submittedCount,
+        whatsappGroupUrl,
+        lead: {
+          id: lead.id,
+          membership_id: lead.membership_id,
+          full_name: lead.full_name,
+          email: lead.email,
+          tier: lead.tier || 'tier_1',
+        },
+      },
+    });
+
+    if (error) {
+      console.warn(`Reminder ${reminderType} invocation returned error:`, error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (err) {
+    console.error(`Error sending reminder ${reminderType}:`, err);
+    return { success: false, error: err.message };
+  }
+};
+
+/**
  * Updates a member's tier and optionally dispatches an automated notification email.
  */
 export const updateLeadTier = async ({

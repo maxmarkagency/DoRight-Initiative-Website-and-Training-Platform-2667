@@ -14,6 +14,7 @@ import {
   deleteLead,
   updateLeadImpactSubmission,
   sendTierNotificationEmail,
+  sendMemberReminderEmail,
   getTierWhatsAppLinks,
   saveTierWhatsAppLinks,
   DEFAULT_TIER_WHATSAPP_LINKS
@@ -106,6 +107,12 @@ const LeadsManagement = () => {
   const [savingTier, setSavingTier] = useState(false);
   const [tierActionSuccess, setTierActionSuccess] = useState('');
   const [tierActionError, setTierActionError] = useState('');
+
+  // Reminder Email States
+  const [sendingReminderType, setSendingReminderType] = useState(null);
+  const [reminderToast, setReminderToast] = useState(null);
+  const [customStoryNote, setCustomStoryNote] = useState('');
+  const [customRenewalNote, setCustomRenewalNote] = useState('');
 
   // Monthly Impact Stories Modal State
   const currentYear = new Date().getFullYear();
@@ -346,6 +353,71 @@ const LeadsManagement = () => {
     setTierActionSuccess('');
     setTierActionError('');
     setImpactToast('');
+    setReminderToast(null);
+    setSendingReminderType(null);
+    setCustomStoryNote('');
+    setCustomRenewalNote('');
+  };
+
+  // Dispatches reminder emails (Advocacy Card, Monthly Impact Story, Annual Renewal)
+  const handleSendReminder = async (reminderType) => {
+    if (!selectedLead || !selectedLead.email) {
+      setReminderToast({ type: 'error', message: 'No valid recipient email address found for this member.' });
+      return;
+    }
+
+    setSendingReminderType(reminderType);
+    setReminderToast(null);
+
+    // Compute annual completion rate & count for this member
+    const submissions = selectedLead.impact_submissions || {};
+    let submittedCount = 0;
+    for (let m = 1; m <= 12; m++) {
+      const key = `${selectedImpactYear || currentYear}-${String(m).padStart(2, '0')}`;
+      if (submissions[key] === true) submittedCount++;
+    }
+    const completionRate = Math.round((submittedCount / 12) * 100);
+
+    const customNotes = reminderType === 'MONTHLY_STORY_REMINDER'
+      ? customStoryNote.trim()
+      : reminderType === 'ANNUAL_RENEWAL_CHECKIN'
+        ? customRenewalNote.trim()
+        : null;
+
+    try {
+      const res = await sendMemberReminderEmail({
+        lead: selectedLead,
+        reminderType,
+        customNotes,
+        completionRate,
+        submittedCount
+      });
+
+      if (res.success) {
+        let label = 'Reminder email sent successfully!';
+        if (reminderType === 'CARD_DOWNLOAD_REMINDER') {
+          label = `Advocacy Card claim reminder dispatched to ${selectedLead.email}!`;
+        } else if (reminderType === 'MONTHLY_STORY_REMINDER') {
+          label = `Monthly Impact Story reminder sent to ${selectedLead.email}!`;
+        } else if (reminderType === 'ANNUAL_RENEWAL_CHECKIN') {
+          label = `Annual Renewal & Review check-in dispatched to ${selectedLead.email}!`;
+        }
+        setReminderToast({ type: 'success', message: label });
+      } else {
+        setReminderToast({
+          type: 'error',
+          message: res.error || 'Failed to send reminder email. Please verify email settings.'
+        });
+      }
+    } catch (err) {
+      console.error('Error sending reminder email:', err);
+      setReminderToast({
+        type: 'error',
+        message: 'Network error while attempting to send email. Please try again.'
+      });
+    } finally {
+      setSendingReminderType(null);
+    }
   };
 
   // Toggle Impact Story Submission for a Month
@@ -1083,7 +1155,7 @@ const LeadsManagement = () => {
               </button>
             </div>
 
-            {/* Modal Tab Navigation: Tier Management | Monthly Impact Stories | Virtual ID Card */}
+            {/* Modal Tab Navigation: Tier Management | Monthly Impact Stories | Virtual ID Card | Send Reminders */}
             <div className="flex border-b border-gray-200 dark:border-gray-700 gap-6 text-sm">
               <button
                 type="button"
@@ -1121,6 +1193,19 @@ const LeadsManagement = () => {
               >
                 <SafeIcon icon={FiCreditCard} className="w-4 h-4" />
                 <span>Virtual ID Card</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveModalTab('reminders')}
+                className={`pb-2.5 font-bold border-b-2 transition-colors flex items-center gap-1.5 ${
+                  activeModalTab === 'reminders'
+                    ? 'border-yellow-400 text-yellow-600 dark:text-yellow-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                <SafeIcon icon={FiMail} className="w-4 h-4" />
+                <span>Send Reminders</span>
               </button>
             </div>
 
@@ -1188,6 +1273,15 @@ const LeadsManagement = () => {
                     >
                       <SafeIcon icon={FiPrinter} className="w-3.5 h-3.5 text-emerald-600" />
                       <span>Print / PDF</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveModalTab('reminders')}
+                      className="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold rounded-lg transition-colors inline-flex items-center gap-1.5 shadow-2xs"
+                      title="Send official reminders to this member"
+                    >
+                      <SafeIcon icon={FiMail} className="w-3.5 h-3.5" />
+                      <span>Send Reminder</span>
                     </button>
                   </div>
                 </div>
@@ -1293,6 +1387,238 @@ const LeadsManagement = () => {
                 </div>
                 <div className="text-center text-xs text-gray-500 dark:text-gray-400">
                   This preview renders the live card at current or staged tier ({TIERS[targetTier]?.label}).
+                </div>
+              </div>
+            ) : activeModalTab === 'reminders' ? (
+              /* TAB 4: SEND REMINDERS */
+              <div className="space-y-6">
+                {/* Banner Status Toast */}
+                {reminderToast && (
+                  <div
+                    className={`p-3.5 rounded-xl border text-xs flex items-center justify-between gap-3 shadow-sm ${
+                      reminderToast.type === 'success'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
+                        : 'bg-red-50 dark:bg-red-950/40 border-red-300 dark:border-red-800 text-red-900 dark:text-red-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <SafeIcon
+                        icon={reminderToast.type === 'success' ? FiCheckCircle : FiAlertCircle}
+                        className={`w-4 h-4 flex-shrink-0 ${
+                          reminderToast.type === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
+                        }`}
+                      />
+                      <span className="font-medium">{reminderToast.message}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setReminderToast(null)}
+                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                    >
+                      <SafeIcon icon={FiX} className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Header Information */}
+                <div className="p-4 bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/80 rounded-xl space-y-1">
+                  <div className="text-xs font-bold text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
+                    <SafeIcon icon={FiMail} className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <span>Member Engagement &amp; Compliance Reminders</span>
+                  </div>
+                  <p className="text-xs text-blue-800 dark:text-blue-200/90 leading-relaxed">
+                    Send official email reminders to <strong>{selectedLead.full_name}</strong> ({selectedLead.email}). Emails are sent securely through the official DRAI mail engine with sender signature and personalized links.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-5">
+                  {/* 1. Advocacy Card Claim Reminder */}
+                  <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xs hover:border-amber-300 transition-colors space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-700 pb-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 rounded text-[10px] font-bold uppercase tracking-wider">
+                            Card Download Nudge
+                          </span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            Tier: {TIERS[selectedLead.tier || 'tier_1']?.label || 'Tier 1'}
+                          </span>
+                        </div>
+                        <h4 className="text-sm font-bold text-gray-900 dark:text-white mt-1">
+                          Virtual Advocacy Card Download Reminder
+                        </h4>
+                        <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
+                          Subject: Have you claimed your Virtual Advocacy Card? 💳
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={sendingReminderType !== null}
+                        onClick={() => handleSendReminder('CARD_DOWNLOAD_REMINDER')}
+                        className="self-start sm:self-center px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-slate-950 font-bold text-xs rounded-lg transition-all shadow-xs flex items-center gap-1.5"
+                      >
+                        {sendingReminderType === 'CARD_DOWNLOAD_REMINDER' ? (
+                          <>
+                            <div className="w-3.5 h-3.5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
+                            <span>Sending...</span>
+                          </>
+                        ) : (
+                          <>
+                            <SafeIcon icon={FiSend} className="w-3.5 h-3.5" />
+                            <span>Send Card Reminder</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg text-xs text-gray-600 dark:text-gray-300 space-y-1.5 border border-gray-100 dark:border-gray-800">
+                      <p className="font-semibold text-gray-700 dark:text-gray-200">Email Message Summary:</p>
+                      <p className="italic">
+                        "Hi {selectedLead.full_name}, Showcase your commitment! As a {TIERS[selectedLead.tier || 'tier_1']?.label || 'Tier 1'} member, your official virtual Advocacy Card is ready for you to access and download... You can save it to your phone or print it out to carry with you. Don't forget to attach your photo to make it official!"
+                      </p>
+                      <div className="pt-1 text-[11px] text-gray-500 flex items-center gap-1">
+                        <SafeIcon icon={FiCreditCard} className="w-3 h-3 text-amber-500" />
+                        <span>Includes direct link to member card: <code>doright.ng/membership-card?id={selectedLead.membership_id || selectedLead.id}</code></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2. Monthly Impact Story Reminder */}
+                  <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xs hover:border-emerald-300 transition-colors space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-700 pb-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-200 rounded text-[10px] font-bold uppercase tracking-wider">
+                            Monthly Story Reflection
+                          </span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            WhatsApp Community Prompt
+                          </span>
+                        </div>
+                        <h4 className="text-sm font-bold text-gray-900 dark:text-white mt-1">
+                          Monthly Impact Story Submission Reminder
+                        </h4>
+                        <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                          Subject: Share Your Story: Living the Values this Month ✨
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={sendingReminderType !== null}
+                        onClick={() => handleSendReminder('MONTHLY_STORY_REMINDER')}
+                        className="self-start sm:self-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs rounded-lg transition-all shadow-xs flex items-center gap-1.5"
+                      >
+                        {sendingReminderType === 'MONTHLY_STORY_REMINDER' ? (
+                          <>
+                            <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <span>Sending...</span>
+                          </>
+                        ) : (
+                          <>
+                            <SafeIcon icon={FiSend} className="w-3.5 h-3.5" />
+                            <span>Send Story Reminder</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg text-xs text-gray-600 dark:text-gray-300 space-y-1.5 border border-gray-100 dark:border-gray-800">
+                      <p className="font-semibold text-gray-700 dark:text-gray-200">Email Message Summary:</p>
+                      <p className="italic">
+                        "As a Tier 1 Personal Advocate, your daily actions pave the way for real change! We’d love to hear how you’ve been modeling our core values this past month. Please take 2 minutes to submit your monthly impact story on the community group... You can also share directly with admin on + 234 912 339 9968 or admin@doright.ng."
+                      </p>
+                    </div>
+
+                    {/* Optional Custom Note for Story */}
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                        Add Optional Custom Note (e.g. specific focus theme or message):
+                      </label>
+                      <input
+                        type="text"
+                        value={customStoryNote}
+                        onChange={(e) => setCustomStoryNote(e.target.value)}
+                        placeholder="e.g. This month's focus is on community accountability and integrity..."
+                        className="w-full px-3 py-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 3. Annual Renewal & Engagement Check-in */}
+                  <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xs hover:border-purple-300 transition-colors space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-700 pb-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 rounded text-[10px] font-bold uppercase tracking-wider">
+                            Annual Renewal Check-in
+                          </span>
+                          {/* Live Completion Calculation */}
+                          {(() => {
+                            const submissions = selectedLead.impact_submissions || {};
+                            let count = 0;
+                            for (let m = 1; m <= 12; m++) {
+                              const k = `${selectedImpactYear || currentYear}-${String(m).padStart(2, '0')}`;
+                              if (submissions[k] === true) count++;
+                            }
+                            const pct = Math.round((count / 12) * 100);
+                            return (
+                              <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 rounded text-[10px] font-bold">
+                                {count}/12 Stories ({pct}% Rate)
+                              </span>
+                            );
+                          })()}
+                        </div>
+                        <h4 className="text-sm font-bold text-gray-900 dark:text-white mt-1">
+                          Annual Renewal &amp; Engagement Check-in
+                        </h4>
+                        <p className="text-xs text-purple-700 dark:text-purple-400 font-medium">
+                          Subject: Your Advocacy Year in Review – Time to Renew! 🌟
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={sendingReminderType !== null}
+                        onClick={() => handleSendReminder('ANNUAL_RENEWAL_CHECKIN')}
+                        className="self-start sm:self-center px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-bold text-xs rounded-lg transition-all shadow-xs flex items-center gap-1.5"
+                      >
+                        {sendingReminderType === 'ANNUAL_RENEWAL_CHECKIN' ? (
+                          <>
+                            <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <span>Sending...</span>
+                          </>
+                        ) : (
+                          <>
+                            <SafeIcon icon={FiSend} className="w-3.5 h-3.5" />
+                            <span>Send Renewal Check-in</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg text-xs text-gray-600 dark:text-gray-300 space-y-1.5 border border-gray-100 dark:border-gray-800">
+                      <p className="font-semibold text-gray-700 dark:text-gray-200">Email Message Summary:</p>
+                      <p className="italic">
+                        "Your membership due date is coming up in one month, and we want to celebrate everything you’ve accomplished as a Personal Advocate over the past year! Please ensure your activity log is up to date... Quick reminder: Fulfilling your core responsibilities keep your membership active automatically. If you have any questions about your activity status or moving to Tier 2, just reply to this message!"
+                      </p>
+                    </div>
+
+                    {/* Optional Custom Note for Renewal */}
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                        Add Optional Renewal Message / Note:
+                      </label>
+                      <input
+                        type="text"
+                        value={customRenewalNote}
+                        onChange={(e) => setCustomRenewalNote(e.target.value)}
+                        placeholder="e.g. Congratulations on maintaining an active record throughout your inaugural year..."
+                        className="w-full px-3 py-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-400 focus:outline-none"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             ) : (

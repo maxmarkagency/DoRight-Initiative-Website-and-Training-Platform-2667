@@ -1208,3 +1208,251 @@ export function partnershipInquiryEmail({
   return { subject, html, text };
 }
 
+export interface AdvocacyCardReminderInput {
+  fullName: string;
+  membershipId?: string | null;
+  membershipCardUrl?: string | null;
+  tier?: string | null;
+}
+
+/**
+ * 1. Advocacy Card Download Reminder
+ * Reminds Tier 1 advocates to access, attach photo, and download/print their virtual card.
+ */
+export function advocacyCardReminderEmail({
+  fullName,
+  membershipId,
+  membershipCardUrl,
+  tier = 'tier_1',
+}: AdvocacyCardReminderInput): ComposedEmail {
+  const name = escapeHtml(fullName.trim() || 'Advocate');
+  const cardUrl =
+    membershipCardUrl ||
+    (membershipId
+      ? `https://doright.ng/membership-card?id=${encodeURIComponent(membershipId)}`
+      : 'https://doright.ng/membership-card');
+  const tierLabel = tier === 'tier_2' ? 'Tier 2' : tier === 'tier_3' ? 'Tier 3' : 'Tier 1';
+
+  const subject = 'Have you claimed your Virtual Advocacy Card? 💳';
+
+  const html = wrapHtml(`
+    <p style="font-size: 16px; margin-top: 0; color: #0f172a;">Hi <strong>${name}</strong>,</p>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      Showcase your commitment! As a ${tierLabel} member, your official virtual Advocacy Card is ready for you to access and download.
+    </p>
+
+    <div style="text-align: center; margin: 28px 0;">
+      <a href="${cardUrl}" style="background-color: #F59E0B; color: #000000; font-size: 15px; font-weight: bold; padding: 14px 28px; border-radius: 8px; text-decoration: none; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        👉 Click Here to Access Your Advocacy Card
+      </a>
+    </div>
+
+    ${membershipId ? `
+    <div style="background-color: #0F172A; color: #ffffff; border-radius: 8px; padding: 12px 16px; text-align: center; margin: 16px 0 24px;">
+      <span style="font-size: 12px; color: #94A3B8; text-transform: uppercase;">Membership ID: </span>
+      <span style="font-size: 15px; font-family: monospace; font-weight: bold; color: #F59E0B;">${escapeHtml(membershipId)}</span>
+    </div>
+    ` : ''}
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      You can save it to your phone or print it out to carry with you. Don&#39;t forget to attach your photo to make it official!
+    </p>
+
+    <div style="border-top: 1px solid #e2e8f0; padding-top: 18px; margin-top: 26px; font-size: 14px; color: #475569;">
+      <p style="margin: 0 0 4px;">Kind regards,</p>
+      <p style="margin: 0; font-weight: bold; color: #0f172a; font-size: 15px;">DRAI Admin Team</p>
+      <p style="margin: 2px 0 0; color: #005BBB;">
+        <a href="mailto:admin@doright.ng" style="color: #005BBB; text-decoration: none;">admin@doright.ng</a> | <a href="https://doright.ng" style="color: #005BBB; text-decoration: none;">www.doright.ng</a>
+      </p>
+    </div>
+  `);
+
+  const text =
+    `Subject: ${subject}\n\n` +
+    `Hi ${fullName.trim()},\n\n` +
+    `Showcase your commitment! As a ${tierLabel} member, your official virtual Advocacy Card is ready for you to access and download.\n\n` +
+    `[Click Here to Access Your Advocacy Card]: ${cardUrl}\n\n` +
+    (membershipId ? `Membership ID: ${membershipId}\n\n` : '') +
+    `You can save it to your phone or print it out to carry with you. Don't forget to attach your photo to make it official!\n\n` +
+    `Kind regards,\n` +
+    `DRAI Admin Team\n` +
+    `admin@doright.ng | www.doright.ng`;
+
+  return { subject, html, text };
+}
+
+export interface MonthlyImpactStoryReminderInput {
+  fullName: string;
+  membershipId?: string | null;
+  whatsappGroupUrl?: string | null;
+  customMessage?: string | null;
+}
+
+/**
+ * 2. Monthly Impact Story Reminder
+ * Prompts Tier 1 Personal Advocates to submit their monthly story on the community group or to admin.
+ */
+export function monthlyImpactStoryReminderEmail({
+  fullName,
+  membershipId,
+  whatsappGroupUrl,
+  customMessage,
+}: MonthlyImpactStoryReminderInput): ComposedEmail {
+  const name = escapeHtml(fullName.trim() || 'Advocate');
+  const communityUrl =
+    whatsappGroupUrl || 'https://chat.whatsapp.com/CuwrXFIM8Ry2DZUImaHIxn?s=cl&p=i&ilr=4&amv=1';
+
+  const subject = 'Share Your Story: Living the Values this Month ✨';
+
+  const html = wrapHtml(`
+    <p style="font-size: 16px; margin-top: 0; color: #0f172a;">Hi <strong>${name}</strong>,</p>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      As a Tier 1 Personal Advocate, your daily actions pave the way for real change! We’d love to hear how you’ve been modeling our core values this past month.
+    </p>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      Please take 2 minutes to submit your monthly impact story on the community group.
+    </p>
+
+    <div style="text-align: center; margin: 26px 0;">
+      <a href="${communityUrl}" style="background-color: #25D366; color: #ffffff; font-size: 15px; font-weight: bold; padding: 13px 26px; border-radius: 8px; text-decoration: none; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        💬 Share on Community WhatsApp Group
+      </a>
+    </div>
+
+    ${customMessage ? `
+    <div style="background-color: #eff6ff; border-left: 4px solid #005BBB; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 18px 0;">
+      <div style="font-size: 12px; font-weight: bold; color: #1e40af; text-transform: uppercase; margin-bottom: 3px;">Message from Admin:</div>
+      <div style="font-size: 14px; color: #1e3a8a;">${escapeHtml(customMessage)}</div>
+    </div>
+    ` : ''}
+
+    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 18px; margin: 20px 0;">
+      <p style="font-size: 14px; color: #334155; margin: 0; line-height: 1.6;">
+        You can also share your story directly with the admin team on <strong>+ 234 912 339 9968</strong> or <a href="mailto:admin@doright.ng" style="color: #005BBB; font-weight: 600;">admin@doright.ng</a>
+      </p>
+    </div>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      Your stories inspire our entire community. Thank you for continuing to lead by example!
+    </p>
+
+    <div style="border-top: 1px solid #e2e8f0; padding-top: 18px; margin-top: 26px; font-size: 14px; color: #475569;">
+      <p style="margin: 0 0 4px;">Kind regards,</p>
+      <p style="margin: 0; font-weight: bold; color: #0f172a; font-size: 15px;">DRAI Admin Team</p>
+      <p style="margin: 2px 0 0; color: #005BBB;">
+        <a href="mailto:admin@doright.ng" style="color: #005BBB; text-decoration: none;">admin@doright.ng</a> | <a href="https://doright.ng" style="color: #005BBB; text-decoration: none;">www.doright.ng</a>
+      </p>
+    </div>
+  `);
+
+  const text =
+    `Subject: ${subject}\n\n` +
+    `Hi ${fullName.trim()},\n\n` +
+    `As a Tier 1 Personal Advocate, your daily actions pave the way for real change! We’d love to hear how you’ve been modeling our core values this past month.\n\n` +
+    `Please take 2 minutes to submit your monthly impact story on the community group:\n${communityUrl}\n\n` +
+    (customMessage ? `Note from Admin: ${customMessage}\n\n` : '') +
+    `You can also share your story directly with the admin team on + 234 912 339 9968 or admin@doright.ng\n\n` +
+    `Your stories inspire our entire community. Thank you for continuing to lead by example!\n\n` +
+    `Kind regards,\n` +
+    `DRAI Admin Team\n` +
+    `admin@doright.ng | www.doright.ng`;
+
+  return { subject, html, text };
+}
+
+export interface AnnualRenewalCheckinInput {
+  fullName: string;
+  membershipId?: string | null;
+  completionRate?: string | number | null;
+  submittedCount?: number | null;
+  customNotes?: string | null;
+}
+
+/**
+ * 3. Annual Renewal & Engagement Check-in
+ * Celebrates 1-year advocacy anniversary, checks activity log, reviews completion rate, and introduces Tier 2 progression.
+ */
+export function annualRenewalCheckinEmail({
+  fullName,
+  membershipId,
+  completionRate,
+  submittedCount,
+  customNotes,
+}: AnnualRenewalCheckinInput): ComposedEmail {
+  const name = escapeHtml(fullName.trim() || 'Advocate');
+  const rateText =
+    completionRate !== undefined && completionRate !== null
+      ? `${completionRate}%`
+      : submittedCount !== undefined && submittedCount !== null
+      ? `${Math.round((submittedCount / 12) * 100)}% (${submittedCount}/12 stories)`
+      : null;
+
+  const subject = 'Your Advocacy Year in Review – Time to Renew! 🌟';
+
+  const html = wrapHtml(`
+    <p style="font-size: 16px; margin-top: 0; color: #0f172a;">Hi <strong>${name}</strong>,</p>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      Your membership due date is coming up in one month, and we want to celebrate everything you’ve accomplished as a Personal Advocate over the past year!
+    </p>
+
+    ${rateText ? `
+    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin: 20px 0; display: flex; align-items: center; justify-content: space-between;">
+      <span style="font-size: 14px; color: #475569; font-weight: 600;">Your Annual Impact Story Completion Rate:</span>
+      <strong style="font-size: 16px; color: #047857;">${rateText}</strong>
+    </div>
+    ` : ''}
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      Please ensure your activity log is up to date. Reach out to admin to get your activity log.
+    </p>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      You can also review your completion rate with the admin team.
+    </p>
+
+    <div style="background-color: #fffbeb; border-left: 4px solid #F59E0B; border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 22px 0;">
+      <p style="font-size: 14px; color: #92400e; margin: 0; line-height: 1.55;">
+        <strong>Quick reminder:</strong> Fulfilling your core responsibilities keep your membership active automatically.
+      </p>
+    </div>
+
+    ${customNotes ? `
+    <div style="background-color: #f1f5f9; border-radius: 8px; padding: 14px 16px; margin: 18px 0; font-size: 14px; color: #334155;">
+      <strong>Admin Notes:</strong> ${escapeHtml(customNotes)}
+    </div>
+    ` : ''}
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      If you have any questions about your activity status or moving to Tier 2, just reply to this message!
+    </p>
+
+    <div style="border-top: 1px solid #e2e8f0; padding-top: 18px; margin-top: 26px; font-size: 14px; color: #475569;">
+      <p style="margin: 0 0 4px;">Kind regards,</p>
+      <p style="margin: 0; font-weight: bold; color: #0f172a; font-size: 15px;">DRAI Admin Team</p>
+      <p style="margin: 2px 0 0; color: #005BBB;">
+        <a href="mailto:admin@doright.ng" style="color: #005BBB; text-decoration: none;">admin@doright.ng</a> | <a href="https://doright.ng" style="color: #005BBB; text-decoration: none;">www.doright.ng</a>
+      </p>
+    </div>
+  `);
+
+  const text =
+    `Subject: ${subject}\n\n` +
+    `Hi ${fullName.trim()},\n\n` +
+    `Your membership due date is coming up in one month, and we want to celebrate everything you’ve accomplished as a Personal Advocate over the past year!\n\n` +
+    (rateText ? `Your Annual Impact Story Completion Rate: ${rateText}\n\n` : '') +
+    `Please ensure your activity log is up to date. Reach out to admin to get your activity log.\n\n` +
+    `You can also review your completion rate with the admin team.\n\n` +
+    `Quick reminder: Fulfilling your core responsibilities keep your membership active automatically.\n\n` +
+    (customNotes ? `Admin Notes: ${customNotes}\n\n` : '') +
+    `If you have any questions about your activity status or moving to Tier 2, just reply to this message!\n\n` +
+    `Kind regards,\n` +
+    `DRAI Admin Team\n` +
+    `admin@doright.ng | www.doright.ng`;
+
+  return { subject, html, text };
+}
+

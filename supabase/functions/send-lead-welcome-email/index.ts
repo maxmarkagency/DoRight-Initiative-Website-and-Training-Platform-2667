@@ -14,7 +14,10 @@ import {
   tierTransitionEmail,
   donorInquiryEmail,
   donorContributionAcknowledgementEmail,
-  partnershipInquiryEmail
+  partnershipInquiryEmail,
+  advocacyCardReminderEmail,
+  monthlyImpactStoryReminderEmail,
+  annualRenewalCheckinEmail,
 } from "./templates.ts";
 
 const SUB_COMMITTEES_URL = "https://doright.ng/sub-committees";
@@ -199,6 +202,197 @@ Deno.serve(async (req: Request) => {
       });
     } catch (err: any) {
       console.error("send-lead-welcome-email: error sending tier transition email", err);
+      return new Response(JSON.stringify({ error: "Failed to send email", details: err?.message }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  }
+
+  // --- Branch: Advocacy Card Download Reminder ---
+  if (payload?.action === "CARD_DOWNLOAD_REMINDER" || payload?.type === "CARD_DOWNLOAD_REMINDER") {
+    const recipientEmail = payload.lead?.email || payload.record?.email || (payload as any).email;
+    const recipientName = payload.lead?.full_name || payload.record?.full_name || (payload as any).fullName || "Advocate";
+    const membershipId = payload.lead?.membership_id || payload.record?.membership_id || (payload as any).membershipId || null;
+    const tier = payload.lead?.tier || payload.record?.tier || (payload as any).tier || "tier_1";
+
+    if (!recipientEmail) {
+      return new Response(JSON.stringify({ error: "Recipient email is missing" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const membershipCardUrl = membershipId
+      ? `${MEMBERSHIP_CARD_BASE_URL}?id=${encodeURIComponent(membershipId)}`
+      : MEMBERSHIP_CARD_BASE_URL;
+
+    const { subject, html, text } = advocacyCardReminderEmail({
+      fullName: recipientName,
+      membershipId,
+      membershipCardUrl,
+      tier,
+    });
+
+    try {
+      const emailRes = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: defaultFrom,
+          to: [recipientEmail],
+          subject,
+          html,
+          text,
+        }),
+      });
+
+      if (!emailRes.ok) {
+        const errText = await emailRes.text();
+        console.error("send-lead-welcome-email: failed sending card reminder via Resend", errText);
+        return new Response(JSON.stringify({ error: "Failed sending email via provider", details: errText }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true, recipient: recipientEmail, action: "CARD_DOWNLOAD_REMINDER" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (err: any) {
+      console.error("send-lead-welcome-email: error sending card reminder email", err);
+      return new Response(JSON.stringify({ error: "Failed to send email", details: err?.message }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  }
+
+  // --- Branch: Monthly Impact Story Reminder ---
+  if (payload?.action === "MONTHLY_STORY_REMINDER" || payload?.type === "MONTHLY_STORY_REMINDER") {
+    const recipientEmail = payload.lead?.email || payload.record?.email || (payload as any).email;
+    const recipientName = payload.lead?.full_name || payload.record?.full_name || (payload as any).fullName || "Advocate";
+    const membershipId = payload.lead?.membership_id || payload.record?.membership_id || (payload as any).membershipId || null;
+    const customMessage = (payload as any).customMessage || payload.customNotes || null;
+
+    if (!recipientEmail) {
+      return new Response(JSON.stringify({ error: "Recipient email is missing" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const tierLinks = await lookupTierWhatsAppLinks();
+    const whatsappGroupUrl =
+      (payload as any).whatsappGroupUrl ||
+      tierLinks.tier_1 ||
+      Deno.env.get("TIER_1_WHATSAPP_URL") ||
+      "https://chat.whatsapp.com/CuwrXFIM8Ry2DZUImaHIxn?s=cl&p=i&ilr=4&amv=1";
+
+    const { subject, html, text } = monthlyImpactStoryReminderEmail({
+      fullName: recipientName,
+      membershipId,
+      whatsappGroupUrl,
+      customMessage,
+    });
+
+    try {
+      const emailRes = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: defaultFrom,
+          to: [recipientEmail],
+          subject,
+          html,
+          text,
+        }),
+      });
+
+      if (!emailRes.ok) {
+        const errText = await emailRes.text();
+        console.error("send-lead-welcome-email: failed sending monthly story reminder via Resend", errText);
+        return new Response(JSON.stringify({ error: "Failed sending email via provider", details: errText }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true, recipient: recipientEmail, action: "MONTHLY_STORY_REMINDER" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (err: any) {
+      console.error("send-lead-welcome-email: error sending monthly story reminder email", err);
+      return new Response(JSON.stringify({ error: "Failed to send email", details: err?.message }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  }
+
+  // --- Branch: Annual Renewal & Engagement Check-in ---
+  if (payload?.action === "ANNUAL_RENEWAL_CHECKIN" || payload?.type === "ANNUAL_RENEWAL_CHECKIN") {
+    const recipientEmail = payload.lead?.email || payload.record?.email || (payload as any).email;
+    const recipientName = payload.lead?.full_name || payload.record?.full_name || (payload as any).fullName || "Advocate";
+    const membershipId = payload.lead?.membership_id || payload.record?.membership_id || (payload as any).membershipId || null;
+    const completionRate = (payload as any).completionRate;
+    const submittedCount = (payload as any).submittedCount;
+    const customNotes = payload.customNotes || (payload as any).customNotes || null;
+
+    if (!recipientEmail) {
+      return new Response(JSON.stringify({ error: "Recipient email is missing" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { subject, html, text } = annualRenewalCheckinEmail({
+      fullName: recipientName,
+      membershipId,
+      completionRate,
+      submittedCount,
+      customNotes,
+    });
+
+    try {
+      const emailRes = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: defaultFrom,
+          to: [recipientEmail],
+          subject,
+          html,
+          text,
+        }),
+      });
+
+      if (!emailRes.ok) {
+        const errText = await emailRes.text();
+        console.error("send-lead-welcome-email: failed sending annual checkin via Resend", errText);
+        return new Response(JSON.stringify({ error: "Failed sending email via provider", details: errText }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true, recipient: recipientEmail, action: "ANNUAL_RENEWAL_CHECKIN" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (err: any) {
+      console.error("send-lead-welcome-email: error sending annual renewal checkin email", err);
       return new Response(JSON.stringify({ error: "Failed to send email", details: err?.message }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
