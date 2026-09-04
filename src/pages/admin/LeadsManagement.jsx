@@ -45,8 +45,18 @@ const {
   FiBookOpen,
   FiChevronLeft,
   FiChevronRight,
-  FiRefreshCw
+  FiRefreshCw,
+  FiDownload,
+  FiPrinter,
+  FiFileText
 } = FiIcons;
+
+import {
+  exportCollectiveImpactReportCSV,
+  exportIndividualImpactReportCSV,
+  printCollectiveImpactReport,
+  printIndividualImpactReport
+} from '../../utils/impactReportExport';
 
 const EMPTY_REFERRAL_FORM = {
   fullName: '',
@@ -130,6 +140,11 @@ const LeadsManagement = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   const [deleteSuccessToast, setDeleteSuccessToast] = useState('');
+
+  // Collective Export Modal State
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportYear, setExportYear] = useState(currentYear);
+  const [exportScope, setExportScope] = useState('all'); // 'all' | 'filtered'
 
   // Sub-committees
   const [subCommittees, setSubCommittees] = useState([]);
@@ -537,7 +552,16 @@ const LeadsManagement = () => {
             Track user form submissions, verify monthly impact stories, promote members across tiers, and manage community communications.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowExportModal(true)}
+            className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors inline-flex items-center gap-2 shadow-sm text-sm"
+            title="Export collective monthly impact stories report"
+          >
+            <SafeIcon icon={FiDownload} className="h-4 w-4" />
+            <span>Export Impact Stories</span>
+          </button>
           <button
             type="button"
             onClick={() => {
@@ -826,11 +850,20 @@ const LeadsManagement = () => {
               </div>
             </div>
 
-            {/* Reset Filters & Count Indicator */}
+            {/* Reset Filters, Export & Count Indicator */}
             <div className="flex items-center gap-3">
               <span className="text-gray-500 text-xs font-medium">
                 Showing <strong className="text-gray-900 dark:text-white">{filteredLeads.length}</strong> of {leads.length} members
               </span>
+              <button
+                type="button"
+                onClick={() => setShowExportModal(true)}
+                className="px-2.5 py-1 rounded bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs font-semibold inline-flex items-center gap-1 transition-colors border border-blue-200 dark:border-blue-800"
+                title="Export collective impact report"
+              >
+                <SafeIcon icon={FiDownload} className="w-3 h-3 text-blue-600" />
+                <span>Export Report</span>
+              </button>
               {hasActiveFilters && (
                 <button
                   type="button"
@@ -993,6 +1026,17 @@ const LeadsManagement = () => {
                           )}
                           <button
                             type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              exportIndividualImpactReportCSV({ lead, year: currentYear });
+                            }}
+                            className="p-1.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded transition-colors"
+                            title={`Export ${lead.full_name}'s impact stories report (CSV)`}
+                          >
+                            <SafeIcon icon={FiDownload} className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => openLeadModal(lead, 'tier')}
                             className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-semibold rounded-md transition-colors"
                           >
@@ -1094,35 +1138,58 @@ const LeadsManagement = () => {
                   </p>
                 </div>
 
-                {/* Year Navigation Bar */}
-                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedImpactYear((y) => y - 1)}
-                    className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 transition-colors"
-                  >
-                    <SafeIcon icon={FiChevronLeft} className="w-4 h-4" />
-                  </button>
-
+                {/* Year Navigation & Individual Member Export Actions */}
+                <div className="flex flex-col sm:flex-row items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 gap-3">
                   <div className="flex items-center gap-2">
-                    <SafeIcon icon={FiCalendar} className="w-4 h-4 text-amber-500" />
-                    <span className="font-bold text-sm text-gray-900 dark:text-white">
-                      Year {selectedImpactYear}
-                    </span>
-                    {selectedImpactYear === currentYear && (
-                      <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200 text-[10px] font-bold rounded">
-                        Current Year
+                    <button
+                      type="button"
+                      onClick={() => setSelectedImpactYear((y) => y - 1)}
+                      className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 transition-colors"
+                    >
+                      <SafeIcon icon={FiChevronLeft} className="w-4 h-4" />
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      <SafeIcon icon={FiCalendar} className="w-4 h-4 text-amber-500" />
+                      <span className="font-bold text-sm text-gray-900 dark:text-white">
+                        Year {selectedImpactYear}
                       </span>
-                    )}
+                      {selectedImpactYear === currentYear && (
+                        <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200 text-[10px] font-bold rounded">
+                          Current Year
+                        </span>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedImpactYear((y) => y + 1)}
+                      className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 transition-colors"
+                    >
+                      <SafeIcon icon={FiChevronRight} className="w-4 h-4" />
+                    </button>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setSelectedImpactYear((y) => y + 1)}
-                    className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 transition-colors"
-                  >
-                    <SafeIcon icon={FiChevronRight} className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => exportIndividualImpactReportCSV({ lead: selectedLead, year: selectedImpactYear })}
+                      className="px-2.5 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold rounded-lg transition-colors inline-flex items-center gap-1.5 shadow-2xs"
+                      title="Download member's impact report in CSV format"
+                    >
+                      <SafeIcon icon={FiDownload} className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Export CSV</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => printIndividualImpactReport({ lead: selectedLead, year: selectedImpactYear })}
+                      className="px-2.5 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold rounded-lg transition-colors inline-flex items-center gap-1.5 shadow-2xs"
+                      title="Print or save official PDF impact report"
+                    >
+                      <SafeIcon icon={FiPrinter} className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Print / PDF</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Toast message */}
@@ -1662,6 +1729,128 @@ const LeadsManagement = () => {
             </div>
           </div>
         )}
+      </AdminModal>
+
+      {/* Collective Impact Report Export Modal */}
+      <AdminModal isOpen={showExportModal} maxWidth="max-w-md">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-600 flex items-center justify-center">
+                <SafeIcon icon={FiDownload} className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-gray-900 dark:text-white">Export Impact Stories Report</h3>
+                <p className="text-xs text-gray-500">Collective audit of monthly story submissions</p>
+              </div>
+            </div>
+            <button onClick={() => setShowExportModal(false)} className="text-gray-400 hover:text-gray-600">
+              <SafeIcon icon={FiX} className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="space-y-3.5 text-xs">
+            {/* Year Selection */}
+            <div>
+              <label className="block font-bold text-gray-700 dark:text-gray-300 mb-1">Select Reporting Year</label>
+              <select
+                value={exportYear}
+                onChange={(e) => setExportYear(Number(e.target.value))}
+                className="w-full px-3 py-2 border rounded-lg bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 font-semibold text-gray-900 dark:text-white focus:ring-2 focus:ring-yellow-400 text-sm"
+              >
+                {[currentYear, currentYear - 1, currentYear - 2].map((yr) => (
+                  <option key={yr} value={yr}>Year {yr} {yr === currentYear ? '(Current Year)' : ''}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Scope Selection */}
+            <div>
+              <label className="block font-bold text-gray-700 dark:text-gray-300 mb-1.5">Member Scope</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setExportScope('all')}
+                  className={`p-2.5 rounded-lg border text-left transition-all ${
+                    exportScope === 'all'
+                      ? 'border-blue-500 bg-blue-50/60 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200 ring-2 ring-blue-500/20'
+                      : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  <div className="font-bold text-xs">All Members</div>
+                  <div className="text-[11px] text-gray-500 mt-0.5">{leads.length} total records</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setExportScope('filtered')}
+                  className={`p-2.5 rounded-lg border text-left transition-all ${
+                    exportScope === 'filtered'
+                      ? 'border-blue-500 bg-blue-50/60 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200 ring-2 ring-blue-500/20'
+                      : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  <div className="font-bold text-xs">Filtered List</div>
+                  <div className="text-[11px] text-gray-500 mt-0.5">{filteredLeads.length} matching filters</div>
+                </button>
+              </div>
+            </div>
+
+            {/* Summary preview box */}
+            <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 space-y-1">
+              <div className="flex justify-between">
+                <span>Selected Year:</span>
+                <strong className="text-gray-900 dark:text-white">{exportYear}</strong>
+              </div>
+              <div className="flex justify-between">
+                <span>Members Included:</span>
+                <strong className="text-gray-900 dark:text-white">
+                  {exportScope === 'filtered' ? filteredLeads.length : leads.length} members
+                </strong>
+              </div>
+              <div className="flex justify-between">
+                <span>Breakdown Included:</span>
+                <span>Jan – Dec (12 Months), Total Count &amp; Compliance Rate</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row gap-2 justify-end">
+            <button
+              type="button"
+              onClick={() => setShowExportModal(false)}
+              className="px-3 py-2 border rounded-lg text-gray-600 hover:bg-gray-50 text-xs font-semibold"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const listToExport = exportScope === 'filtered' ? filteredLeads : leads;
+                const scopeLabel = exportScope === 'filtered' ? 'Filtered Members' : 'All Members';
+                printCollectiveImpactReport({ leads: listToExport, year: exportYear, scopeLabel });
+                setShowExportModal(false);
+              }}
+              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs inline-flex items-center justify-center gap-1.5 shadow-xs"
+            >
+              <SafeIcon icon={FiPrinter} className="w-3.5 h-3.5" />
+              <span>Print / PDF View</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const listToExport = exportScope === 'filtered' ? filteredLeads : leads;
+                const scopeLabel = exportScope === 'filtered' ? 'Filtered Members' : 'All Members';
+                exportCollectiveImpactReportCSV({ leads: listToExport, year: exportYear, scopeLabel });
+                setShowExportModal(false);
+              }}
+              className="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded-lg text-xs inline-flex items-center justify-center gap-1.5 shadow-xs"
+            >
+              <SafeIcon icon={FiDownload} className="w-3.5 h-3.5" />
+              <span>Download CSV</span>
+            </button>
+          </div>
+        </div>
       </AdminModal>
     </motion.div>
   );
