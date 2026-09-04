@@ -113,6 +113,13 @@ const LeadsManagement = () => {
   const [reminderToast, setReminderToast] = useState(null);
   const [customStoryNote, setCustomStoryNote] = useState('');
   const [customRenewalNote, setCustomRenewalNote] = useState('');
+  const [reminderTierTab, setReminderTierTab] = useState('tier_1');
+  const [tier2Stage, setTier2Stage] = useState('1_month');
+  const [tier2WeeksLeft, setTier2WeeksLeft] = useState(3);
+  const [tier2RenewalDate, setTier2RenewalDate] = useState('');
+  const [tier3Stage, setTier3Stage] = useState('3_months');
+  const [tier3WeeksLeft, setTier3WeeksLeft] = useState(3);
+  const [tier3RenewalDate, setTier3RenewalDate] = useState('');
 
   // Monthly Impact Stories Modal State
   const currentYear = new Date().getFullYear();
@@ -329,6 +336,18 @@ const LeadsManagement = () => {
     setSelectedImpactYear(currentYear);
     setPhotoUrl(null);
 
+    // Initialize renewal dates and reminder tab matching lead tier
+    const baseDate = new Date(lead.tier_3_at || lead.tier_2_at || lead.created_at || Date.now());
+    baseDate.setFullYear(baseDate.getFullYear() + 1);
+    const formattedRenewal = baseDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    setTier2RenewalDate(formattedRenewal);
+    setTier3RenewalDate(formattedRenewal);
+    setReminderTierTab(lead.tier === 'tier_2' ? 'tier_2' : (lead.tier === 'tier_3' || lead.tier === 'tier_4' || lead.tier === 'tier_5') ? 'tier_3' : 'tier_1');
+    setTier2Stage('1_month');
+    setTier2WeeksLeft(3);
+    setTier3Stage('3_months');
+    setTier3WeeksLeft(3);
+
     if (lead.photo_url) {
       setPhotoLoading(true);
       supabase.storage
@@ -359,8 +378,8 @@ const LeadsManagement = () => {
     setCustomRenewalNote('');
   };
 
-  // Dispatches reminder emails (Advocacy Card, Monthly Impact Story, Annual Renewal)
-  const handleSendReminder = async (reminderType) => {
+  // Dispatches reminder emails (Advocacy Card, Monthly Impact Story, Annual Renewal, Tier 2, Tier 3)
+  const handleSendReminder = async (reminderType, options = {}) => {
     if (!selectedLead || !selectedLead.email) {
       setReminderToast({ type: 'error', message: 'No valid recipient email address found for this member.' });
       return;
@@ -384,13 +403,20 @@ const LeadsManagement = () => {
         ? customRenewalNote.trim()
         : null;
 
+    const renewalDate = options.renewalDate || (reminderType === 'TIER2_RENEWAL_REMINDER' ? tier2RenewalDate : tier3RenewalDate);
+    const reminderStage = options.reminderStage || (reminderType === 'TIER2_RENEWAL_REMINDER' ? tier2Stage : tier3Stage);
+    const weeksLeft = options.weeksLeft || (reminderType === 'TIER2_RENEWAL_REMINDER' ? tier2WeeksLeft : tier3WeeksLeft);
+
     try {
       const res = await sendMemberReminderEmail({
         lead: selectedLead,
         reminderType,
         customNotes,
         completionRate,
-        submittedCount
+        submittedCount,
+        renewalDate,
+        reminderStage,
+        weeksLeft,
       });
 
       if (res.success) {
@@ -401,6 +427,10 @@ const LeadsManagement = () => {
           label = `Monthly Impact Story reminder sent to ${selectedLead.email}!`;
         } else if (reminderType === 'ANNUAL_RENEWAL_CHECKIN') {
           label = `Annual Renewal & Review check-in dispatched to ${selectedLead.email}!`;
+        } else if (reminderType === 'TIER2_RENEWAL_REMINDER') {
+          label = `Tier 2 Movement Champion renewal reminder (${reminderStage}) sent to ${selectedLead.email}!`;
+        } else if (reminderType === 'TIER3_RENEWAL_REMINDER') {
+          label = `Tier 3+ Strategic Leader renewal reminder (${reminderStage}) sent to ${selectedLead.email}!`;
         }
         setReminderToast({ type: 'success', message: label });
       } else {
@@ -1431,195 +1461,616 @@ const LeadsManagement = () => {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-5">
-                  {/* 1. Advocacy Card Claim Reminder */}
-                  <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xs hover:border-amber-300 transition-colors space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-700 pb-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 rounded text-[10px] font-bold uppercase tracking-wider">
-                            Card Download Nudge
-                          </span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
-                            Tier: {TIERS[selectedLead.tier || 'tier_1']?.label || 'Tier 1'}
-                          </span>
+                {/* Suite Category Switcher */}
+                <div className="flex flex-wrap items-center gap-2 p-1.5 bg-gray-100 dark:bg-gray-800 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setReminderTierTab('tier_1')}
+                    className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 ${
+                      reminderTierTab === 'tier_1'
+                        ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-xs'
+                        : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                    }`}
+                  >
+                    <span>Tier 1: Personal Advocates</span>
+                    {(selectedLead.tier || 'tier_1') === 'tier_1' && (
+                      <span className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 text-[10px] rounded">
+                        Current
+                      </span>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setReminderTierTab('tier_2')}
+                    className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 ${
+                      reminderTierTab === 'tier_2'
+                        ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-xs'
+                        : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                    }`}
+                  >
+                    <span>Tier 2: Movement Champions</span>
+                    {selectedLead.tier === 'tier_2' && (
+                      <span className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 text-[10px] rounded">
+                        Current
+                      </span>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setReminderTierTab('tier_3')}
+                    className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 ${
+                      reminderTierTab === 'tier_3' || reminderTierTab === 'tier_4' || reminderTierTab === 'tier_5'
+                        ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-xs'
+                        : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                    }`}
+                  >
+                    <span>Tier 3+: Strategic Leaders &amp; Council</span>
+                    {(selectedLead.tier === 'tier_3' || selectedLead.tier === 'tier_4' || selectedLead.tier === 'tier_5') && (
+                      <span className="px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 text-[10px] rounded">
+                        Current
+                      </span>
+                    )}
+                  </button>
+                </div>
+
+                {/* SUITE 1: TIER 1 PERSONAL ADVOCATES */}
+                {reminderTierTab === 'tier_1' && (
+                  <div className="grid grid-cols-1 gap-5">
+                    {/* 1. Advocacy Card Claim Reminder */}
+                    <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xs hover:border-amber-300 transition-colors space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-700 pb-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 rounded text-[10px] font-bold uppercase tracking-wider">
+                              Card Download Nudge
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              Tier: {TIERS[selectedLead.tier || 'tier_1']?.label || 'Tier 1'}
+                            </span>
+                          </div>
+                          <h4 className="text-sm font-bold text-gray-900 dark:text-white mt-1">
+                            Virtual Advocacy Card Download Reminder
+                          </h4>
+                          <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
+                            Subject: Have you claimed your Virtual Advocacy Card? 💳
+                          </p>
                         </div>
-                        <h4 className="text-sm font-bold text-gray-900 dark:text-white mt-1">
-                          Virtual Advocacy Card Download Reminder
-                        </h4>
-                        <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
-                          Subject: Have you claimed your Virtual Advocacy Card? 💳
+
+                        <button
+                          type="button"
+                          disabled={sendingReminderType !== null}
+                          onClick={() => handleSendReminder('CARD_DOWNLOAD_REMINDER')}
+                          className="self-start sm:self-center px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-slate-950 font-bold text-xs rounded-lg transition-all shadow-xs flex items-center gap-1.5"
+                        >
+                          {sendingReminderType === 'CARD_DOWNLOAD_REMINDER' ? (
+                            <>
+                              <div className="w-3.5 h-3.5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
+                              <span>Sending...</span>
+                            </>
+                          ) : (
+                            <>
+                              <SafeIcon icon={FiSend} className="w-3.5 h-3.5" />
+                              <span>Send Card Reminder</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg text-xs text-gray-600 dark:text-gray-300 space-y-1.5 border border-gray-100 dark:border-gray-800">
+                        <p className="font-semibold text-gray-700 dark:text-gray-200">Email Message Summary:</p>
+                        <p className="italic">
+                          "Hi {selectedLead.full_name}, Showcase your commitment! As a {TIERS[selectedLead.tier || 'tier_1']?.label || 'Tier 1'} member, your official virtual Advocacy Card is ready for you to access and download... You can save it to your phone or print it out to carry with you. Don't forget to attach your photo to make it official!"
+                        </p>
+                        <div className="pt-1 text-[11px] text-gray-500 flex items-center gap-1">
+                          <SafeIcon icon={FiCreditCard} className="w-3 h-3 text-amber-500" />
+                          <span>Includes direct link to member card: <code>doright.ng/membership-card?id={selectedLead.membership_id || selectedLead.id}</code></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 2. Monthly Impact Story Reminder */}
+                    <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xs hover:border-emerald-300 transition-colors space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-700 pb-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-200 rounded text-[10px] font-bold uppercase tracking-wider">
+                              Monthly Story Reflection
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              WhatsApp Community Prompt
+                            </span>
+                          </div>
+                          <h4 className="text-sm font-bold text-gray-900 dark:text-white mt-1">
+                            Monthly Impact Story Submission Reminder
+                          </h4>
+                          <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                            Subject: Share Your Story: Living the Values this Month ✨
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          disabled={sendingReminderType !== null}
+                          onClick={() => handleSendReminder('MONTHLY_STORY_REMINDER')}
+                          className="self-start sm:self-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs rounded-lg transition-all shadow-xs flex items-center gap-1.5"
+                        >
+                          {sendingReminderType === 'MONTHLY_STORY_REMINDER' ? (
+                            <>
+                              <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              <span>Sending...</span>
+                            </>
+                          ) : (
+                            <>
+                              <SafeIcon icon={FiSend} className="w-3.5 h-3.5" />
+                              <span>Send Story Reminder</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg text-xs text-gray-600 dark:text-gray-300 space-y-1.5 border border-gray-100 dark:border-gray-800">
+                        <p className="font-semibold text-gray-700 dark:text-gray-200">Email Message Summary:</p>
+                        <p className="italic">
+                          "As a Tier 1 Personal Advocate, your daily actions pave the way for real change! We’d love to hear how you’ve been modeling our core values this past month. Please take 2 minutes to submit your monthly impact story on the community group... You can also share directly with admin on + 234 912 339 9968 or admin@doright.ng."
                         </p>
                       </div>
 
-                      <button
-                        type="button"
-                        disabled={sendingReminderType !== null}
-                        onClick={() => handleSendReminder('CARD_DOWNLOAD_REMINDER')}
-                        className="self-start sm:self-center px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-slate-950 font-bold text-xs rounded-lg transition-all shadow-xs flex items-center gap-1.5"
-                      >
-                        {sendingReminderType === 'CARD_DOWNLOAD_REMINDER' ? (
-                          <>
-                            <div className="w-3.5 h-3.5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
-                            <span>Sending...</span>
-                          </>
-                        ) : (
-                          <>
-                            <SafeIcon icon={FiSend} className="w-3.5 h-3.5" />
-                            <span>Send Card Reminder</span>
-                          </>
-                        )}
-                      </button>
+                      {/* Optional Custom Note for Story */}
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                          Add Optional Custom Note (e.g. specific focus theme or message):
+                        </label>
+                        <input
+                          type="text"
+                          value={customStoryNote}
+                          onChange={(e) => setCustomStoryNote(e.target.value)}
+                          placeholder="e.g. This month's focus is on community accountability and integrity..."
+                          className="w-full px-3 py-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+                        />
+                      </div>
                     </div>
 
-                    <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg text-xs text-gray-600 dark:text-gray-300 space-y-1.5 border border-gray-100 dark:border-gray-800">
-                      <p className="font-semibold text-gray-700 dark:text-gray-200">Email Message Summary:</p>
-                      <p className="italic">
-                        "Hi {selectedLead.full_name}, Showcase your commitment! As a {TIERS[selectedLead.tier || 'tier_1']?.label || 'Tier 1'} member, your official virtual Advocacy Card is ready for you to access and download... You can save it to your phone or print it out to carry with you. Don't forget to attach your photo to make it official!"
-                      </p>
-                      <div className="pt-1 text-[11px] text-gray-500 flex items-center gap-1">
-                        <SafeIcon icon={FiCreditCard} className="w-3 h-3 text-amber-500" />
-                        <span>Includes direct link to member card: <code>doright.ng/membership-card?id={selectedLead.membership_id || selectedLead.id}</code></span>
+                    {/* 3. Annual Renewal & Engagement Check-in */}
+                    <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xs hover:border-purple-300 transition-colors space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-700 pb-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 rounded text-[10px] font-bold uppercase tracking-wider">
+                              Annual Renewal Check-in
+                            </span>
+                            {/* Live Completion Calculation */}
+                            {(() => {
+                              const submissions = selectedLead.impact_submissions || {};
+                              let count = 0;
+                              for (let m = 1; m <= 12; m++) {
+                                const k = `${selectedImpactYear || currentYear}-${String(m).padStart(2, '0')}`;
+                                if (submissions[k] === true) count++;
+                              }
+                              const pct = Math.round((count / 12) * 100);
+                              return (
+                                <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 rounded text-[10px] font-bold">
+                                  {count}/12 Stories ({pct}% Rate)
+                                </span>
+                              );
+                            })()}
+                          </div>
+                          <h4 className="text-sm font-bold text-gray-900 dark:text-white mt-1">
+                            Annual Renewal &amp; Engagement Check-in
+                          </h4>
+                          <p className="text-xs text-purple-700 dark:text-purple-400 font-medium">
+                            Subject: Your Advocacy Year in Review – Time to Renew! 🌟
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          disabled={sendingReminderType !== null}
+                          onClick={() => handleSendReminder('ANNUAL_RENEWAL_CHECKIN')}
+                          className="self-start sm:self-center px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-bold text-xs rounded-lg transition-all shadow-xs flex items-center gap-1.5"
+                        >
+                          {sendingReminderType === 'ANNUAL_RENEWAL_CHECKIN' ? (
+                            <>
+                              <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              <span>Sending...</span>
+                            </>
+                          ) : (
+                            <>
+                              <SafeIcon icon={FiSend} className="w-3.5 h-3.5" />
+                              <span>Send Renewal Check-in</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg text-xs text-gray-600 dark:text-gray-300 space-y-1.5 border border-gray-100 dark:border-gray-800">
+                        <p className="font-semibold text-gray-700 dark:text-gray-200">Email Message Summary:</p>
+                        <p className="italic">
+                          "Your membership due date is coming up in one month, and we want to celebrate everything you’ve accomplished as a Personal Advocate over the past year! Please ensure your activity log is up to date... Quick reminder: Fulfilling your core responsibilities keep your membership active automatically. If you have any questions about your activity status or moving to Tier 2, just reply to this message!"
+                        </p>
+                      </div>
+
+                      {/* Optional Custom Note for Renewal */}
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                          Add Optional Renewal Message / Note:
+                        </label>
+                        <input
+                          type="text"
+                          value={customRenewalNote}
+                          onChange={(e) => setCustomRenewalNote(e.target.value)}
+                          placeholder="e.g. Congratulations on maintaining an active record throughout your inaugural year..."
+                          className="w-full px-3 py-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-400 focus:outline-none"
+                        />
                       </div>
                     </div>
                   </div>
+                )}
 
-                  {/* 2. Monthly Impact Story Reminder */}
-                  <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xs hover:border-emerald-300 transition-colors space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-700 pb-3">
+                {/* SUITE 2: TIER 2 MOVEMENT CHAMPIONS */}
+                {reminderTierTab === 'tier_2' && (
+                  <div className="p-5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xs space-y-5">
+                    {/* Header & Badges */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-100 dark:border-gray-700">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-200 rounded text-[10px] font-bold uppercase tracking-wider">
-                            Monthly Story Reflection
+                          <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 rounded text-[10px] font-bold uppercase tracking-wider">
+                            Tier 2 Movement Champion
                           </span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
-                            WhatsApp Community Prompt
+                          <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 rounded text-[10px] font-bold">
+                            Voluntary Dues: NGN 5k (Students) | NGN 10k (Others)
                           </span>
                         </div>
-                        <h4 className="text-sm font-bold text-gray-900 dark:text-white mt-1">
-                          Monthly Impact Story Submission Reminder
+                        <h4 className="text-base font-bold text-gray-900 dark:text-white mt-1">
+                          Tier 2 Annual Renewal &amp; Engagement Cadence
                         </h4>
-                        <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
-                          Subject: Share Your Story: Living the Values this Month ✨
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Focuses on celebrating outreach impact while encouraging voluntary contributions and core engagement.
                         </p>
                       </div>
 
                       <button
                         type="button"
                         disabled={sendingReminderType !== null}
-                        onClick={() => handleSendReminder('MONTHLY_STORY_REMINDER')}
-                        className="self-start sm:self-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs rounded-lg transition-all shadow-xs flex items-center gap-1.5"
+                        onClick={() => handleSendReminder('TIER2_RENEWAL_REMINDER')}
+                        className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs rounded-lg transition-all shadow-xs flex items-center justify-center gap-1.5 self-start sm:self-center"
                       >
-                        {sendingReminderType === 'MONTHLY_STORY_REMINDER' ? (
+                        {sendingReminderType === 'TIER2_RENEWAL_REMINDER' ? (
                           <>
                             <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            <span>Sending...</span>
+                            <span>Sending Email...</span>
                           </>
                         ) : (
                           <>
                             <SafeIcon icon={FiSend} className="w-3.5 h-3.5" />
-                            <span>Send Story Reminder</span>
+                            <span>Send Tier 2 Reminder</span>
                           </>
                         )}
                       </button>
                     </div>
 
-                    <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg text-xs text-gray-600 dark:text-gray-300 space-y-1.5 border border-gray-100 dark:border-gray-800">
-                      <p className="font-semibold text-gray-700 dark:text-gray-200">Email Message Summary:</p>
-                      <p className="italic">
-                        "As a Tier 1 Personal Advocate, your daily actions pave the way for real change! We’d love to hear how you’ve been modeling our core values this past month. Please take 2 minutes to submit your monthly impact story on the community group... You can also share directly with admin on + 234 912 339 9968 or admin@doright.ng."
-                      </p>
+                    {/* Cadence Timing Selector */}
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">
+                        Select Reminder Cadence / Timing Stage:
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setTier2Stage('1_month')}
+                          className={`p-3 rounded-lg border text-left transition-all ${
+                            tier2Stage === '1_month'
+                              ? 'border-blue-500 bg-blue-50/60 dark:bg-blue-950/30 text-blue-900 dark:text-blue-200 font-bold ring-2 ring-blue-500/20'
+                              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 text-gray-700 dark:text-gray-300'
+                          }`}
+                        >
+                          <div className="text-xs font-bold">1–3 Months Before</div>
+                          <div className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Appreciation &amp; Outreach goals</div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setTier2Stage('weekly')}
+                          className={`p-3 rounded-lg border text-left transition-all ${
+                            tier2Stage === 'weekly'
+                              ? 'border-blue-500 bg-blue-50/60 dark:bg-blue-950/30 text-blue-900 dark:text-blue-200 font-bold ring-2 ring-blue-500/20'
+                              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 text-gray-700 dark:text-gray-300'
+                          }`}
+                        >
+                          <div className="text-xs font-bold">Weekly Countdown</div>
+                          <div className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Sent during final month</div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setTier2Stage('overdue')}
+                          className={`p-3 rounded-lg border text-left transition-all ${
+                            tier2Stage === 'overdue'
+                              ? 'border-red-500 bg-red-50/60 dark:bg-red-950/30 text-red-900 dark:text-red-200 font-bold ring-2 ring-red-500/20'
+                              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 text-gray-700 dark:text-gray-300'
+                          }`}
+                        >
+                          <div className="text-xs font-bold">Overdue / Review</div>
+                          <div className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Post-expiry audit check-in</div>
+                        </button>
+                      </div>
                     </div>
 
-                    {/* Optional Custom Note for Story */}
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                        Add Optional Custom Note (e.g. specific focus theme or message):
-                      </label>
-                      <input
-                        type="text"
-                        value={customStoryNote}
-                        onChange={(e) => setCustomStoryNote(e.target.value)}
-                        placeholder="e.g. This month's focus is on community accountability and integrity..."
-                        className="w-full px-3 py-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-400 focus:outline-none"
-                      />
+                    {/* Additional Configuration Fields: Renewal Date & Weeks remaining */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                          Membership Renewal Due Date:
+                        </label>
+                        <input
+                          type="text"
+                          value={tier2RenewalDate}
+                          onChange={(e) => setTier2RenewalDate(e.target.value)}
+                          placeholder="e.g. 15 October 2025"
+                          className="w-full px-3 py-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                        />
+                      </div>
+
+                      {tier2Stage === 'weekly' && (
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            Weeks Left Until Renewal:
+                          </label>
+                          <div className="flex items-center gap-2">
+                            {[3, 2, 1].map((w) => (
+                              <button
+                                key={w}
+                                type="button"
+                                onClick={() => setTier2WeeksLeft(w)}
+                                className={`flex-1 py-2 text-xs font-bold rounded-lg border transition-all ${
+                                  tier2WeeksLeft === w
+                                    ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
+                                    : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100'
+                                }`}
+                              >
+                                {w} {w === 1 ? 'Week' : 'Weeks'}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Live Preview Box */}
+                    <div className="p-4 bg-gray-50 dark:bg-gray-900/60 rounded-xl border border-gray-200 dark:border-gray-700 space-y-2">
+                      <div className="text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center justify-between">
+                        <span>Subject Preview:</span>
+                        <span className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold">Tier 2 Template</span>
+                      </div>
+                      <div className="text-xs font-bold text-gray-900 dark:text-white bg-white dark:bg-gray-800 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700">
+                        {tier2Stage === 'weekly'
+                          ? `${tier2WeeksLeft} ${Number(tier2WeeksLeft) === 1 ? 'Week' : 'Weeks'} Left: Renew Your DRAI Tier 2 Membership`
+                          : tier2Stage === 'overdue'
+                          ? `Action Needed: Your DRAI Tier 2 Renewal Status`
+                          : `Thank You for Championing the Movement: 3 Months to Renewal`}
+                      </div>
+
+                      <div className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed pt-1">
+                        {tier2Stage === 'weekly' ? (
+                          <p>
+                            "Dear {selectedLead.full_name}, This is a quick weekly update that your DRAI Tier 2 membership renewal date is {tier2WeeksLeft} {Number(tier2WeeksLeft) === 1 ? 'Week' : 'Weeks'} away on {tier2RenewalDate || 'your upcoming anniversary'}... Keep your Movement Champion status active and validate your full membership card!"
+                          </p>
+                        ) : tier2Stage === 'overdue' ? (
+                          <p>
+                            "Dear {selectedLead.full_name}, Your annual Tier 2 membership expired on {tier2RenewalDate || 'your anniversary'}. To keep your digital membership card valid and maintain your standing as a Movement Champion, please complete your renewal steps (Review Activity Rate: 30% threshold)..."
+                          </p>
+                        ) : (
+                          <p>
+                            "Dear {selectedLead.full_name}, Thank you for your active involvement as a Tier 2 Movement Champion with the Doing Right Awareness Initiative! Your outreach and engagement help drive our vision forward every day. This is a courtesy reminder that your annual membership renewal date is coming up on {tier2RenewalDate || 'your anniversary'}..."
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="pt-2 text-[11px] text-blue-600 dark:text-blue-400 flex items-center gap-1.5 border-t border-gray-200 dark:border-gray-700">
+                        <SafeIcon icon={FiExternalLink} className="w-3.5 h-3.5" />
+                        <span>Direct payment portal button embedded: <code>doright.ng/pay?purpose=membership&amp;amount=10000</code></span>
+                      </div>
                     </div>
                   </div>
+                )}
 
-                  {/* 3. Annual Renewal & Engagement Check-in */}
-                  <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xs hover:border-purple-300 transition-colors space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-700 pb-3">
+                {/* SUITE 3: TIER 3+ STRATEGIC LEADERS */}
+                {(reminderTierTab === 'tier_3' || reminderTierTab === 'tier_4' || reminderTierTab === 'tier_5') && (
+                  <div className="p-5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xs space-y-5">
+                    {/* Header & Badges */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-100 dark:border-gray-700">
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 rounded text-[10px] font-bold uppercase tracking-wider">
-                            Annual Renewal Check-in
+                            Tier 3+ Strategic Leader
                           </span>
-                          {/* Live Completion Calculation */}
-                          {(() => {
-                            const submissions = selectedLead.impact_submissions || {};
-                            let count = 0;
-                            for (let m = 1; m <= 12; m++) {
-                              const k = `${selectedImpactYear || currentYear}-${String(m).padStart(2, '0')}`;
-                              if (submissions[k] === true) count++;
-                            }
-                            const pct = Math.round((count / 12) * 100);
-                            return (
-                              <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 rounded text-[10px] font-bold">
-                                {count}/12 Stories ({pct}% Rate)
-                              </span>
-                            );
-                          })()}
+                          <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 rounded text-[10px] font-bold">
+                            Annual Dues: NGN 250,000 – NGN 300,000
+                          </span>
                         </div>
-                        <h4 className="text-sm font-bold text-gray-900 dark:text-white mt-1">
-                          Annual Renewal &amp; Engagement Check-in
+                        <h4 className="text-base font-bold text-gray-900 dark:text-white mt-1">
+                          Tier 3+ Annual Renewal &amp; Strategic Cadence
                         </h4>
-                        <p className="text-xs text-purple-700 dark:text-purple-400 font-medium">
-                          Subject: Your Advocacy Year in Review – Time to Renew! 🌟
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Aligned with the official DRAI protocol: sub-committee deliverables and 70% meeting attendance.
                         </p>
                       </div>
 
                       <button
                         type="button"
                         disabled={sendingReminderType !== null}
-                        onClick={() => handleSendReminder('ANNUAL_RENEWAL_CHECKIN')}
-                        className="self-start sm:self-center px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-bold text-xs rounded-lg transition-all shadow-xs flex items-center gap-1.5"
+                        onClick={() => handleSendReminder('TIER3_RENEWAL_REMINDER')}
+                        className="px-5 py-2.5 bg-purple-700 hover:bg-purple-800 disabled:opacity-50 text-white font-bold text-xs rounded-lg transition-all shadow-xs flex items-center justify-center gap-1.5 self-start sm:self-center"
                       >
-                        {sendingReminderType === 'ANNUAL_RENEWAL_CHECKIN' ? (
+                        {sendingReminderType === 'TIER3_RENEWAL_REMINDER' ? (
                           <>
                             <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            <span>Sending...</span>
+                            <span>Sending Email...</span>
                           </>
                         ) : (
                           <>
                             <SafeIcon icon={FiSend} className="w-3.5 h-3.5" />
-                            <span>Send Renewal Check-in</span>
+                            <span>Send Tier 3+ Reminder</span>
                           </>
                         )}
                       </button>
                     </div>
 
-                    <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg text-xs text-gray-600 dark:text-gray-300 space-y-1.5 border border-gray-100 dark:border-gray-800">
-                      <p className="font-semibold text-gray-700 dark:text-gray-200">Email Message Summary:</p>
-                      <p className="italic">
-                        "Your membership due date is coming up in one month, and we want to celebrate everything you’ve accomplished as a Personal Advocate over the past year! Please ensure your activity log is up to date... Quick reminder: Fulfilling your core responsibilities keep your membership active automatically. If you have any questions about your activity status or moving to Tier 2, just reply to this message!"
-                      </p>
+                    {/* Cadence Timing Selector */}
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">
+                        Select Cadence Milestone:
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setTier3Stage('3_months')}
+                          className={`p-2.5 rounded-lg border text-left transition-all ${
+                            tier3Stage === '3_months'
+                              ? 'border-purple-500 bg-purple-50/60 dark:bg-purple-950/30 text-purple-900 dark:text-purple-200 font-bold ring-2 ring-purple-500/20'
+                              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 text-gray-700 dark:text-gray-300'
+                          }`}
+                        >
+                          <div className="text-xs font-bold">3 Months</div>
+                          <div className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Looking ahead</div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setTier3Stage('2_months')}
+                          className={`p-2.5 rounded-lg border text-left transition-all ${
+                            tier3Stage === '2_months'
+                              ? 'border-purple-500 bg-purple-50/60 dark:bg-purple-950/30 text-purple-900 dark:text-purple-200 font-bold ring-2 ring-purple-500/20'
+                              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 text-gray-700 dark:text-gray-300'
+                          }`}
+                        >
+                          <div className="text-xs font-bold">2 Months</div>
+                          <div className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Final quarter</div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setTier3Stage('1_month')}
+                          className={`p-2.5 rounded-lg border text-left transition-all ${
+                            tier3Stage === '1_month'
+                              ? 'border-purple-500 bg-purple-50/60 dark:bg-purple-950/30 text-purple-900 dark:text-purple-200 font-bold ring-2 ring-purple-500/20'
+                              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 text-gray-700 dark:text-gray-300'
+                          }`}
+                        >
+                          <div className="text-xs font-bold">1 Month</div>
+                          <div className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Final kick-off</div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setTier3Stage('weekly')}
+                          className={`p-2.5 rounded-lg border text-left transition-all ${
+                            tier3Stage === 'weekly'
+                              ? 'border-purple-500 bg-purple-50/60 dark:bg-purple-950/30 text-purple-900 dark:text-purple-200 font-bold ring-2 ring-purple-500/20'
+                              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 text-gray-700 dark:text-gray-300'
+                          }`}
+                        >
+                          <div className="text-xs font-bold">Weekly</div>
+                          <div className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Countdown</div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setTier3Stage('overdue')}
+                          className={`p-2.5 rounded-lg border text-left transition-all col-span-2 sm:col-span-1 ${
+                            tier3Stage === 'overdue'
+                              ? 'border-red-500 bg-red-50/60 dark:bg-red-950/30 text-red-900 dark:text-red-200 font-bold ring-2 ring-red-500/20'
+                              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 text-gray-700 dark:text-gray-300'
+                          }`}
+                        >
+                          <div className="text-xs font-bold">Overdue</div>
+                          <div className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Post-expiry</div>
+                        </button>
+                      </div>
                     </div>
 
-                    {/* Optional Custom Note for Renewal */}
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                        Add Optional Renewal Message / Note:
-                      </label>
-                      <input
-                        type="text"
-                        value={customRenewalNote}
-                        onChange={(e) => setCustomRenewalNote(e.target.value)}
-                        placeholder="e.g. Congratulations on maintaining an active record throughout your inaugural year..."
-                        className="w-full px-3 py-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-400 focus:outline-none"
-                      />
+                    {/* Additional Configuration Fields: Renewal Date & Weeks remaining */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                          Membership Renewal Due Date:
+                        </label>
+                        <input
+                          type="text"
+                          value={tier3RenewalDate}
+                          onChange={(e) => setTier3RenewalDate(e.target.value)}
+                          placeholder="e.g. 15 October 2025"
+                          className="w-full px-3 py-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-400 focus:outline-none"
+                        />
+                      </div>
+
+                      {tier3Stage === 'weekly' && (
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            Weeks Left Until Renewal:
+                          </label>
+                          <div className="flex items-center gap-2">
+                            {[3, 2, 1].map((w) => (
+                              <button
+                                key={w}
+                                type="button"
+                                onClick={() => setTier3WeeksLeft(w)}
+                                className={`flex-1 py-2 text-xs font-bold rounded-lg border transition-all ${
+                                  tier3WeeksLeft === w
+                                    ? 'bg-purple-700 text-white border-purple-700 shadow-2xs'
+                                    : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100'
+                                }`}
+                              >
+                                {w} {w === 1 ? 'Week' : 'Weeks'}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Live Preview Box */}
+                    <div className="p-4 bg-gray-50 dark:bg-gray-900/60 rounded-xl border border-gray-200 dark:border-gray-700 space-y-2">
+                      <div className="text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center justify-between">
+                        <span>Subject Preview:</span>
+                        <span className="text-[11px] text-purple-600 dark:text-purple-400 font-semibold">Tier 3+ Protocol</span>
+                      </div>
+                      <div className="text-xs font-bold text-gray-900 dark:text-white bg-white dark:bg-gray-800 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700">
+                        {tier3Stage === '2_months'
+                          ? `2 Months Away: DRAI Annual Membership Renewal`
+                          : tier3Stage === '1_month'
+                          ? `1 Month Reminder: DRAI Membership Renewal Due ${tier3RenewalDate || '[Renewal Date]'}`
+                          : tier3Stage === 'weekly'
+                          ? `Urgent: ${tier3WeeksLeft} ${Number(tier3WeeksLeft) === 1 ? 'Week' : 'Weeks'} Until Your DRAI Membership Renewal`
+                          : tier3Stage === 'overdue'
+                          ? `Action Required: Your DRAI Membership is Overdue`
+                          : `Looking Ahead: Your DRAI Membership Renewal is Coming Up in 3 Months`}
+                      </div>
+
+                      <div className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed pt-1">
+                        {tier3Stage === 'overdue' ? (
+                          <p>
+                            "Dear {selectedLead.full_name}, We noticed that your annual DRAI membership expired on {tier3RenewalDate || '[Renewal Date]'} and remains unpaid. To maintain active status and retain your membership card credentials, please settle your annual dues of NGN 250,000 – NGN 300,000 at your earliest convenience..."
+                          </p>
+                        ) : tier3Stage === 'weekly' ? (
+                          <p>
+                            "Dear {selectedLead.full_name}, This is a weekly reminder that your annual DRAI membership renewal is due in {tier3WeeksLeft} {Number(tier3WeeksLeft) === 1 ? 'Week' : 'Weeks'} on {tier3RenewalDate || '[Renewal Date]'}. Amount Due: NGN 250,000 – NGN 300,000. Action Required: Complete payment to renew your membership card and maintain strategic leader standing..."
+                          </p>
+                        ) : (
+                          <p>
+                            "Dear {selectedLead.full_name}, Thank you for your leadership and dedication as a Strategic Leader with the Doing Right Awareness Initiative. This is a quick courtesy reminder that your annual DRAI membership renewal (NGN 250,000 - NGN 300,000) is scheduled for {tier3RenewalDate || '[Renewal Date]'}..."
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="pt-2 text-[11px] text-purple-600 dark:text-purple-400 flex items-center gap-1.5 border-t border-gray-200 dark:border-gray-700">
+                        <SafeIcon icon={FiExternalLink} className="w-3.5 h-3.5" />
+                        <span>Direct payment portal button embedded: <code>doright.ng/pay?purpose=membership&amp;amount=250000</code></span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             ) : (
               /* TAB 3: TIER MANAGEMENT & NOTES */

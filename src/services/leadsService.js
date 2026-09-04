@@ -281,10 +281,12 @@ export const sendTierNotificationEmail = async ({ lead, toTier, fromTier = null,
 };
 
 /**
- * Dispatches one of the three official member reminder emails:
- * - 'CARD_DOWNLOAD_REMINDER': Advocacy Card Claim / Download
- * - 'MONTHLY_STORY_REMINDER': Monthly Impact Story Reminder
- * - 'ANNUAL_RENEWAL_CHECKIN': Annual Renewal & Engagement Check-in
+ * Dispatches official member reminder emails:
+ * - 'CARD_DOWNLOAD_REMINDER': Advocacy Card Claim / Download (Tier 1)
+ * - 'MONTHLY_STORY_REMINDER': Monthly Impact Story Reminder (Tier 1)
+ * - 'ANNUAL_RENEWAL_CHECKIN': Annual Renewal & Engagement Check-in (Tier 1)
+ * - 'TIER2_RENEWAL_REMINDER': Tier 2 Movement Champions Renewal (1 Month, Weekly, Overdue)
+ * - 'TIER3_RENEWAL_REMINDER': Tier 3+ Strategic Leaders Renewal (3 Months, 2 Months, 1 Month, Weekly, Overdue)
  */
 export const sendMemberReminderEmail = async ({
   lead,
@@ -292,6 +294,10 @@ export const sendMemberReminderEmail = async ({
   customNotes = null,
   completionRate = null,
   submittedCount = null,
+  renewalDate = null,
+  reminderStage = null,
+  weeksLeft = null,
+  paymentUrl = null,
 }) => {
   if (!lead || !lead.email) {
     return { success: false, error: 'Member email is required' };
@@ -309,6 +315,10 @@ export const sendMemberReminderEmail = async ({
         completionRate,
         submittedCount,
         whatsappGroupUrl,
+        renewalDate,
+        reminderStage,
+        weeksLeft,
+        paymentUrl,
         lead: {
           id: lead.id,
           membership_id: lead.membership_id,

@@ -18,6 +18,8 @@ import {
   advocacyCardReminderEmail,
   monthlyImpactStoryReminderEmail,
   annualRenewalCheckinEmail,
+  tier2RenewalReminderEmail,
+  tier3RenewalReminderEmail,
 } from "./templates.ts";
 
 const SUB_COMMITTEES_URL = "https://doright.ng/sub-committees";
@@ -393,6 +395,136 @@ Deno.serve(async (req: Request) => {
       });
     } catch (err: any) {
       console.error("send-lead-welcome-email: error sending annual renewal checkin email", err);
+      return new Response(JSON.stringify({ error: "Failed to send email", details: err?.message }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  }
+
+  // --- Branch: Tier 2 Movement Champions Renewal Reminder ---
+  if (payload?.action === "TIER2_RENEWAL_REMINDER" || payload?.type === "TIER2_RENEWAL_REMINDER") {
+    const recipientEmail = payload.lead?.email || payload.record?.email || (payload as any).email;
+    const recipientName = payload.lead?.full_name || payload.record?.full_name || (payload as any).fullName || "Movement Champion";
+    const membershipId = payload.lead?.membership_id || payload.record?.membership_id || (payload as any).membershipId || null;
+    const renewalDate = (payload as any).renewalDate || null;
+    const reminderStage = (payload as any).reminderStage || "1_month";
+    const weeksLeft = (payload as any).weeksLeft || 3;
+    const paymentUrl = (payload as any).paymentUrl || null;
+
+    if (!recipientEmail) {
+      return new Response(JSON.stringify({ error: "Recipient email is missing" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { subject, html, text } = tier2RenewalReminderEmail({
+      fullName: recipientName,
+      membershipId,
+      renewalDate,
+      reminderStage,
+      weeksLeft,
+      paymentUrl,
+      email: recipientEmail,
+    });
+
+    try {
+      const emailRes = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: defaultFrom,
+          to: [recipientEmail],
+          subject,
+          html,
+          text,
+        }),
+      });
+
+      if (!emailRes.ok) {
+        const errText = await emailRes.text();
+        console.error("send-lead-welcome-email: failed sending tier 2 renewal reminder via Resend", errText);
+        return new Response(JSON.stringify({ error: "Failed sending email via provider", details: errText }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true, recipient: recipientEmail, action: "TIER2_RENEWAL_REMINDER", reminderStage }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (err: any) {
+      console.error("send-lead-welcome-email: error sending tier 2 renewal reminder email", err);
+      return new Response(JSON.stringify({ error: "Failed to send email", details: err?.message }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  }
+
+  // --- Branch: Tier 3 and Above Strategic Leaders Renewal Reminder ---
+  if (payload?.action === "TIER3_RENEWAL_REMINDER" || payload?.type === "TIER3_RENEWAL_REMINDER") {
+    const recipientEmail = payload.lead?.email || payload.record?.email || (payload as any).email;
+    const recipientName = payload.lead?.full_name || payload.record?.full_name || (payload as any).fullName || "Strategic Leader";
+    const membershipId = payload.lead?.membership_id || payload.record?.membership_id || (payload as any).membershipId || null;
+    const renewalDate = (payload as any).renewalDate || null;
+    const reminderStage = (payload as any).reminderStage || "3_months";
+    const weeksLeft = (payload as any).weeksLeft || 3;
+    const paymentUrl = (payload as any).paymentUrl || null;
+
+    if (!recipientEmail) {
+      return new Response(JSON.stringify({ error: "Recipient email is missing" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { subject, html, text } = tier3RenewalReminderEmail({
+      fullName: recipientName,
+      membershipId,
+      renewalDate,
+      reminderStage,
+      weeksLeft,
+      paymentUrl,
+      email: recipientEmail,
+    });
+
+    try {
+      const emailRes = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: defaultFrom,
+          to: [recipientEmail],
+          subject,
+          html,
+          text,
+        }),
+      });
+
+      if (!emailRes.ok) {
+        const errText = await emailRes.text();
+        console.error("send-lead-welcome-email: failed sending tier 3 renewal reminder via Resend", errText);
+        return new Response(JSON.stringify({ error: "Failed sending email via provider", details: errText }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true, recipient: recipientEmail, action: "TIER3_RENEWAL_REMINDER", reminderStage }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (err: any) {
+      console.error("send-lead-welcome-email: error sending tier 3 renewal reminder email", err);
       return new Response(JSON.stringify({ error: "Failed to send email", details: err?.message }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

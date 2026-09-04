@@ -1456,3 +1456,453 @@ export function annualRenewalCheckinEmail({
   return { subject, html, text };
 }
 
+export type Tier2ReminderStage = '1_month' | 'weekly' | 'overdue';
+
+export interface Tier2RenewalReminderInput {
+  fullName: string;
+  membershipId?: string | null;
+  renewalDate?: string | null;
+  reminderStage?: Tier2ReminderStage | string;
+  weeksLeft?: number | string | null;
+  paymentUrl?: string | null;
+  email?: string | null;
+}
+
+/**
+ * Tier 2 Movement Champions Renewal Reminders
+ * Voluntary Dues: NGN 5,000 (Students) | NGN 10,000 (Non-students)
+ * Outreach and engagement focused.
+ */
+export function tier2RenewalReminderEmail({
+  fullName,
+  membershipId,
+  renewalDate,
+  reminderStage = '1_month',
+  weeksLeft = 3,
+  paymentUrl,
+  email,
+}: Tier2RenewalReminderInput): ComposedEmail {
+  const name = escapeHtml(fullName.trim() || 'Movement Champion');
+  const dateFormatted = renewalDate ? escapeHtml(renewalDate) : 'your upcoming anniversary';
+  const payUrl =
+    paymentUrl ||
+    `https://doright.ng/pay?purpose=membership${email ? `&email=${encodeURIComponent(email)}` : ''}${fullName ? `&name=${encodeURIComponent(fullName.trim())}` : ''}&amount=10000`;
+
+  let subject = '';
+  let bodyHtml = '';
+  let bodyText = '';
+
+  if (reminderStage === 'weekly') {
+    const weeksText = `${weeksLeft} ${Number(weeksLeft) === 1 ? 'Week' : 'Weeks'}`;
+    subject = `${weeksText} Left: Renew Your DRAI Tier 2 Membership`;
+
+    bodyHtml = `
+      <p style="font-size: 16px; margin-top: 0; color: #0f172a;">Dear <strong>${name}</strong>,</p>
+      <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+        This is a quick weekly update that your DRAI Tier 2 membership renewal date is <strong>${weeksText}</strong> away on <strong>${dateFormatted}</strong>.
+      </p>
+
+      <div style="background-color: #f8fafc; border-left: 4px solid #005BBB; border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 20px 0;">
+        <p style="font-size: 14px; font-weight: bold; color: #0f172a; margin: 0 0 8px;">
+          Keep your Movement Champion status active and validate your full membership card!
+        </p>
+        <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #334155; line-height: 1.6;">
+          <li style="margin-bottom: 6px;"><strong>Action Required:</strong> Ensure your monthly posts and outreach tasks meet the required completion benchmark.</li>
+          <li><strong>Voluntary Dues:</strong> You can pay your voluntary due of NGN 5,000 (Students) | NGN 10,000 (Non-students).</li>
+        </ul>
+      </div>
+
+      <div style="text-align: center; margin: 24px 0;">
+        <a href="${payUrl}" style="background-color: #005BBB; color: #ffffff; font-size: 15px; font-weight: bold; padding: 13px 26px; border-radius: 8px; text-decoration: none; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          👉 Process Your Voluntary Dues Online
+        </a>
+      </div>
+
+      <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+        You can review your completion rate with the admin team or make your voluntary contribution early at any time. Thank you for amplifying our voice!
+      </p>
+    `;
+
+    bodyText =
+      `Dear ${fullName.trim()},\n\n` +
+      `This is a quick weekly update that your DRAI Tier 2 membership renewal date is ${weeksText} away on ${renewalDate || 'your upcoming anniversary'}.\n\n` +
+      `Keep your Movement Champion status active and validate your full membership card!\n` +
+      `● Action Required: Ensure your monthly posts and outreach tasks meet the required completion benchmark.\n` +
+      `● Voluntary Dues: You can pay your voluntary due of NGN 5,000 (Students) | NGN 10,000 (Non-students). Click here to process your voluntary dues 👉 ${payUrl}\n\n` +
+      `You can review your completion rate with the admin team or make your voluntary contribution early at any time. Thank you for amplifying our voice!\n\n`;
+  } else if (reminderStage === 'overdue') {
+    subject = `Action Needed: Your DRAI Tier 2 Renewal Status`;
+
+    bodyHtml = `
+      <p style="font-size: 16px; margin-top: 0; color: #0f172a;">Dear <strong>${name}</strong>,</p>
+      <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+        Your annual Tier 2 membership expired on <strong>${dateFormatted}</strong>.
+      </p>
+      <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+        To keep your digital membership card valid and maintain your standing as a Movement Champion, please complete your renewal steps:
+      </p>
+
+      <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 14px 18px; margin: 18px 0;">
+        <p style="font-size: 14px; color: #991b1b; margin: 0; line-height: 1.6;">
+          <strong>1. Review Activity Rate:</strong> If your action rate is below 30%, your profile is currently queued for an administrative check-in to assist you.
+        </p>
+      </div>
+
+      <p style="font-size: 14px; color: #334155; line-height: 1.6;">
+        You can still pay your voluntary dues of NGN 5,000 (Students) or NGN 10,000 (Others).
+      </p>
+
+      <div style="text-align: center; margin: 24px 0;">
+        <a href="${payUrl}" style="background-color: #dc2626; color: #ffffff; font-size: 15px; font-weight: bold; padding: 13px 26px; border-radius: 8px; text-decoration: none; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          👉 Process Your Voluntary Dues
+        </a>
+      </div>
+
+      <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+        Reach out to us directly at <a href="mailto:admin@doright.ng" style="color: #005BBB; font-weight: 600;">admin@doright.ng</a> with any questions.
+      </p>
+    `;
+
+    bodyText =
+      `Dear ${fullName.trim()},\n\n` +
+      `Your annual Tier 2 membership expired on ${renewalDate || 'your anniversary'}.\n` +
+      `To keep your digital membership card valid and maintain your standing as a Movement Champion, please complete your renewal steps:\n\n` +
+      `1. Review Activity Rate: If your action rate is below 30%, your profile is currently queued for an administrative check-in to assist you.\n\n` +
+      `You can still pay your voluntary dues of NGN 5,000 (Students) or NGN 10,000 (Others). Click here to process your voluntary dues 👉 ${payUrl}\n\n` +
+      `Reach out to us directly at admin@doright.ng with any questions.\n\n`;
+  } else {
+    // 1 Month / 3 Months Reminder (Default)
+    subject = `Thank You for Championing the Movement: 3 Months to Renewal`;
+
+    bodyHtml = `
+      <p style="font-size: 16px; margin-top: 0; color: #0f172a;">Dear <strong>${name}</strong>,</p>
+      <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+        Thank you for your active involvement as a Tier 2 Movement Champion with the Doing Right Awareness Initiative! Your outreach and engagement help drive our vision forward every day.
+      </p>
+      <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+        This is a courtesy reminder that your annual membership renewal date is coming up on <strong>${dateFormatted}</strong>. Below is a summary of the actions for you take ahead of your renewal date.
+      </p>
+
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 18px; margin: 20px 0;">
+        <h4 style="font-size: 14px; color: #0f172a; margin: 0 0 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
+          Tier 2 Summary:
+        </h4>
+        <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #334155; line-height: 1.65;">
+          <li style="margin-bottom: 8px;">
+            <strong>Engagement Goals:</strong> Fulfill your core responsibilities (including publishing at least 2 monthly digital posts and attending quarterly outreach)
+          </li>
+          <li>
+            <strong>Voluntary Dues:</strong> NGN 5,000 (Students) | NGN 10,000 (Non-students).
+          </li>
+        </ul>
+      </div>
+
+      <div style="text-align: center; margin: 24px 0;">
+        <a href="${payUrl}" style="background-color: #005BBB; color: #ffffff; font-size: 15px; font-weight: bold; padding: 13px 26px; border-radius: 8px; text-decoration: none; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          👉 Process Your Voluntary Dues Online
+        </a>
+      </div>
+
+      <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+        You can review your completion rate with the admin team or make your voluntary contribution early at any time. Thank you for amplifying our voice!
+      </p>
+    `;
+
+    bodyText =
+      `Dear ${fullName.trim()},\n\n` +
+      `Thank you for your active involvement as a Tier 2 Movement Champion with the Doing Right Awareness Initiative! Your outreach and engagement help drive our vision forward every day.\n` +
+      `This is a courtesy reminder that your annual membership renewal date is coming up on ${renewalDate || 'your upcoming anniversary'}. Below is a summary of the actions for you take ahead of your renewal date.\n\n` +
+      `Tier 2 Summary:\n` +
+      `● Engagement Goals: Fulfill your core responsibilities (including publishing at least 2 monthly digital posts and attending quarterly outreach)\n` +
+      `● Voluntary Dues: NGN 5,000 (Students) | NGN 10,000 (Non-students). Click here to process your voluntary dues 👉 ${payUrl}\n\n` +
+      `You can review your completion rate with the admin team or make your voluntary contribution early at any time. Thank you for amplifying our voice!\n\n`;
+  }
+
+  const html = wrapHtml(`
+    ${bodyHtml}
+    <div style="border-top: 1px solid #e2e8f0; padding-top: 18px; margin-top: 26px; font-size: 14px; color: #475569;">
+      <p style="margin: 0 0 4px;">Kind regards,</p>
+      <p style="margin: 0; font-weight: bold; color: #0f172a; font-size: 15px;">DRAI Admin Team</p>
+      <p style="margin: 2px 0 0; color: #005BBB;">
+        <a href="mailto:admin@doright.ng" style="color: #005BBB; text-decoration: none;">admin@doright.ng</a> | <a href="https://doright.ng" style="color: #005BBB; text-decoration: none;">www.doright.ng</a>
+      </p>
+    </div>
+  `);
+
+  const text =
+    `Subject: ${subject}\n\n` +
+    bodyText +
+    `Kind regards,\n` +
+    `DRAI Admin Team\n` +
+    `admin@doright.ng | www.doright.ng`;
+
+  return { subject, html, text };
+}
+
+export type Tier3ReminderStage = '3_months' | '2_months' | '1_month' | 'weekly' | 'overdue';
+
+export interface Tier3RenewalReminderInput {
+  fullName: string;
+  membershipId?: string | null;
+  renewalDate?: string | null;
+  reminderStage?: Tier3ReminderStage | string;
+  weeksLeft?: number | string | null;
+  paymentUrl?: string | null;
+  email?: string | null;
+}
+
+/**
+ * Tier 3 and Above Strategic Leaders Renewal Reminders
+ * Annual Dues: NGN 250,000 – NGN 300,000
+ * Sub-committees & 70% meeting attendance focused.
+ */
+export function tier3RenewalReminderEmail({
+  fullName,
+  membershipId,
+  renewalDate,
+  reminderStage = '3_months',
+  weeksLeft = 3,
+  paymentUrl,
+  email,
+}: Tier3RenewalReminderInput): ComposedEmail {
+  const name = escapeHtml(fullName.trim() || 'Strategic Leader');
+  const dateFormatted = renewalDate ? escapeHtml(renewalDate) : 'your upcoming anniversary';
+  const payUrl =
+    paymentUrl ||
+    `https://doright.ng/pay?purpose=membership${email ? `&email=${encodeURIComponent(email)}` : ''}${fullName ? `&name=${encodeURIComponent(fullName.trim())}` : ''}&amount=250000`;
+
+  let subject = '';
+  let bodyHtml = '';
+  let bodyText = '';
+
+  if (reminderStage === '2_months') {
+    subject = `2 Months Away: DRAI Annual Membership Renewal`;
+
+    bodyHtml = `
+      <p style="font-size: 16px; margin-top: 0; color: #0f172a;">Dear <strong>${name}</strong>,</p>
+      <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+        As we approach the final quarter of your current membership cycle, we want to express our appreciation for your active participation in our functional sub-committees.
+      </p>
+      <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+        Your annual membership renewal will be due on <strong>${dateFormatted}</strong>.
+      </p>
+
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 18px; margin: 20px 0;">
+        <h4 style="font-size: 14px; color: #0f172a; margin: 0 0 10px; font-weight: bold; text-transform: uppercase;">Renewal Details:</h4>
+        <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #334155; line-height: 1.65;">
+          <li style="margin-bottom: 8px;">
+            <strong>Annual Dues:</strong> Process your membership dues (NGN 250,000 – NGN 300,000).
+          </li>
+          <li>
+            <strong>Requirements:</strong> Fulfill your core responsibilities in your sub-committees (including participating in functional activities and maintaining a 70% attendance rate)
+          </li>
+        </ul>
+      </div>
+
+      <div style="text-align: center; margin: 24px 0;">
+        <a href="${payUrl}" style="background-color: #0D0E16; color: #F59E0B; font-size: 15px; font-weight: bold; padding: 13px 26px; border-radius: 8px; text-decoration: none; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
+          👉 Click Here to Process Your Payment Online
+        </a>
+      </div>
+
+      <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+        Please let us know if you have any questions or require an updated invoice ahead of time.
+      </p>
+    `;
+
+    bodyText =
+      `Dear ${fullName.trim()},\n\n` +
+      `As we approach the final quarter of your current membership cycle, we want to express our appreciation for your active participation in our functional sub-committees.\n\n` +
+      `Your annual membership renewal will be due on ${renewalDate || 'your renewal date'}.\n\n` +
+      `Renewal Details:\n` +
+      `• Annual Dues: Process your membership dues (NGN 250,000 – NGN 300,000). Click here to process your payment 👉 ${payUrl}\n` +
+      `• Requirements: Fulfill your core responsibilities in your sub-committees (including participating in functional activities and maintaining a 70% attendance rate)\n\n` +
+      `Please let us know if you have any questions or require an updated invoice ahead of time.\n\n`;
+  } else if (reminderStage === '1_month') {
+    subject = `1 Month Reminder: DRAI Membership Renewal Due ${renewalDate ? renewalDate : '[Renewal Date]'}`;
+
+    bodyHtml = `
+      <p style="font-size: 16px; margin-top: 0; color: #0f172a;">Dear <strong>${name}</strong>,</p>
+      <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+        Your annual DRAI membership is due for renewal in exactly one month on <strong>${dateFormatted}</strong>.
+      </p>
+      <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+        To ensure uninterrupted full membership status and validity of your membership card, kindly complete the below actions:
+      </p>
+
+      <div style="background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 16px 18px; margin: 20px 0;">
+        <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #92400e; line-height: 1.65;">
+          <li style="margin-bottom: 8px;">
+            <strong>Requirements:</strong> Fulfill your core responsibilities in your sub-committees (including participating in functional activities and maintaining a 70% attendance rate)
+          </li>
+          <li>
+            <strong>Annual Dues:</strong> Process your membership dues NGN 250,000 – NGN 300,000.
+          </li>
+        </ul>
+      </div>
+
+      <div style="text-align: center; margin: 24px 0;">
+        <a href="${payUrl}" style="background-color: #0D0E16; color: #F59E0B; font-size: 15px; font-weight: bold; padding: 13px 26px; border-radius: 8px; text-decoration: none; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
+          👉 Click Here to Process Your Payment Online
+        </a>
+      </div>
+
+      <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+        Please let us know if you have any questions or require an updated invoice ahead of time.
+      </p>
+    `;
+
+    bodyText =
+      `Dear ${fullName.trim()},\n\n` +
+      `Your annual DRAI membership is due for renewal in exactly one month on ${renewalDate || '[Renewal Date]'}.\n` +
+      `To ensure uninterrupted full membership status and validity of your membership card, kindly complete the below actions:\n\n` +
+      `• Requirements: Fulfill your core responsibilities in your sub-committees (including participating in functional activities and maintaining a 70% attendance rate)\n` +
+      `• Annual Dues: Process your membership dues NGN 250,000 – NGN 300,000. Click here to process your payment 👉 ${payUrl}\n\n` +
+      `Please let us know if you have any questions or require an updated invoice ahead of time.\n\n`;
+  } else if (reminderStage === 'weekly') {
+    const weeksText = `${weeksLeft} ${Number(weeksLeft) === 1 ? 'Week' : 'Weeks'}`;
+    subject = `Urgent: ${weeksText} Until Your DRAI Membership Renewal`;
+
+    bodyHtml = `
+      <p style="font-size: 16px; margin-top: 0; color: #0f172a;">Dear <strong>${name}</strong>,</p>
+      <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+        This is a weekly reminder that your annual DRAI membership renewal is due in <strong>${weeksText}</strong> on <strong>${dateFormatted}</strong>.
+      </p>
+
+      <div style="background-color: #fff1f2; border-left: 4px solid #e11d48; border-radius: 0 8px 8px 0; padding: 16px 18px; margin: 20px 0;">
+        <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #9f1239; line-height: 1.65;">
+          <li style="margin-bottom: 8px;">
+            <strong>Amount Due:</strong> Process your membership dues NGN 250,000 – NGN 300,000.
+          </li>
+          <li>
+            <strong>Action Required:</strong> Complete payment to renew your membership card and maintain strategic leader standing.
+          </li>
+        </ul>
+      </div>
+
+      <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+        If you have already made this payment, please disregard this notice. Otherwise, kindly click here to process your payment:
+      </p>
+
+      <div style="text-align: center; margin: 24px 0;">
+        <a href="${payUrl}" style="background-color: #e11d48; color: #ffffff; font-size: 15px; font-weight: bold; padding: 13px 26px; border-radius: 8px; text-decoration: none; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
+          👉 Process Your Annual Renewal Payment
+        </a>
+      </div>
+
+      <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+        Please let us know if you have any questions or require an updated invoice ahead of time.
+      </p>
+    `;
+
+    bodyText =
+      `Dear ${fullName.trim()},\n\n` +
+      `This is a weekly reminder that your annual DRAI membership renewal is due in ${weeksText} on ${renewalDate || '[Renewal Date]'}.\n` +
+      `• Amount Due: Process your membership dues NGN 250,000 – NGN 300,000.\n` +
+      `• Action Required: Complete payment to renew your membership card and maintain strategic leader standing.\n\n` +
+      `If you have already made this payment, please disregard this notice. Otherwise, kindly click here to process your payment 👉 ${payUrl}\n\n` +
+      `Please let us know if you have any questions or require an updated invoice ahead of time.\n\n`;
+  } else if (reminderStage === 'overdue') {
+    subject = `Action Required: Your DRAI Membership is Overdue`;
+
+    bodyHtml = `
+      <p style="font-size: 16px; margin-top: 0; color: #0f172a;">Dear <strong>${name}</strong>,</p>
+      <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+        We noticed that your annual DRAI membership expired on <strong>${dateFormatted}</strong> and remains unpaid.
+      </p>
+      <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+        To maintain active status and retain your membership card credentials, please settle your annual dues of <strong>NGN 250,000 – NGN 300,000</strong> at your earliest convenience.
+      </p>
+
+      <div style="text-align: center; margin: 26px 0;">
+        <a href="${payUrl}" style="background-color: #b91c1c; color: #ffffff; font-size: 15px; font-weight: bold; padding: 13px 26px; border-radius: 8px; text-decoration: none; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
+          👉 Click Here to Complete Your Payment
+        </a>
+      </div>
+
+      <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+        Please reach out directly to us at <a href="mailto:admin@doright.ng" style="color: #005BBB; font-weight: 600;">admin@doright.ng</a> or use the link above to complete your payment.
+      </p>
+      <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+        Please let us know if you have any questions or require an updated invoice to process the payment.
+      </p>
+    `;
+
+    bodyText =
+      `Dear ${fullName.trim()},\n\n` +
+      `We noticed that your annual DRAI membership expired on ${renewalDate || '[Renewal Date]'} and remains unpaid.\n` +
+      `To maintain active status and retain your membership card credentials, please settle your annual dues of NGN 250,000 – NGN 300,000 at your earliest convenience.\n\n` +
+      `Please reach out directly to us at admin@doright.ng or use the link below to complete your payment: 👉 ${payUrl}\n\n` +
+      `Please let us know if you have any questions or require an updated invoice to process the payment.\n\n`;
+  } else {
+    // 3 Months Before Renewal (Default)
+    subject = `Looking Ahead: Your DRAI Membership Renewal is Coming Up in 3 Months`;
+
+    bodyHtml = `
+      <p style="font-size: 16px; margin-top: 0; color: #0f172a;">Dear <strong>${name}</strong>,</p>
+      <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+        Thank you for your leadership and dedication as a Strategic Leader with the Doing Right Awareness Initiative.
+      </p>
+      <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+        This is a quick courtesy reminder that your annual DRAI membership renewal (NGN 250,000 - NGN 300,000) is scheduled for <strong>${dateFormatted}</strong>.
+      </p>
+      <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+        In addition to the payment, automatic renewal requires fulfilling your core responsibilities listed below:
+      </p>
+
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 18px; margin: 20px 0;">
+        <h4 style="font-size: 14px; color: #0f172a; margin: 0 0 10px; font-weight: bold; text-transform: uppercase;">Tier 3 Summary:</h4>
+        <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #334155; line-height: 1.65;">
+          <li style="margin-bottom: 8px;">
+            Actively participate in functional sub-committees delivering on your assigned monthly tasks.
+          </li>
+          <li>
+            Maintain a 70% attendance rate for sub-committee meetings and strategic sessions.
+          </li>
+        </ul>
+      </div>
+
+      <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+        You can complete your renewal early payment or review your engagement status with the admin team at any time. Thank you for driving our mission forward.
+      </p>
+
+      <div style="text-align: center; margin: 24px 0;">
+        <a href="${payUrl}" style="background-color: #0D0E16; color: #F59E0B; font-size: 15px; font-weight: bold; padding: 13px 26px; border-radius: 8px; text-decoration: none; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
+          👉 Click Here to Process Your Payment Online
+        </a>
+      </div>
+    `;
+
+    bodyText =
+      `Dear ${fullName.trim()},\n\n` +
+      `Thank you for your leadership and dedication as a Strategic Leader with the Doing Right Awareness Initiative.\n\n` +
+      `This is a quick courtesy reminder that your annual DRAI membership renewal (NGN 250,000 - NGN 300,000) is scheduled for ${renewalDate || '[Renewal Date]'}.\n\n` +
+      `In addition to the payment, automatic renewal requires fulfilling your core responsibilities listed below:\n\n` +
+      `Tier 3 Summary:\n` +
+      `● Actively participate in functional sub-committees delivering on your assigned monthly tasks.\n` +
+      `● Maintain a 70% attendance rate for sub-committee meetings and strategic sessions\n\n` +
+      `You can complete your renewal early payment or review your engagement status with the admin team at any time. Thank you for driving our mission forward. Click here to process your payment 👉 ${payUrl}\n\n`;
+  }
+
+  const html = wrapHtml(`
+    ${bodyHtml}
+    <div style="border-top: 1px solid #e2e8f0; padding-top: 18px; margin-top: 26px; font-size: 14px; color: #475569;">
+      <p style="margin: 0 0 4px;">Kind regards,</p>
+      <p style="margin: 0; font-weight: bold; color: #0f172a; font-size: 15px;">DRAI Admin Team</p>
+      <p style="margin: 2px 0 0; color: #005BBB;">
+        <a href="mailto:admin@doright.ng" style="color: #005BBB; text-decoration: none;">admin@doright.ng</a> | <a href="https://doright.ng" style="color: #005BBB; text-decoration: none;">www.doright.ng</a>
+      </p>
+    </div>
+  `);
+
+  const text =
+    `Subject: ${subject}\n\n` +
+    bodyText +
+    `Kind regards,\n` +
+    `DRAI Admin Team\n` +
+    `admin@doright.ng | www.doright.ng`;
+
+  return { subject, html, text };
+}
+
+
