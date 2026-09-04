@@ -241,7 +241,12 @@ export const initializePaystackPayment = async ({
                 record: paymentRecord,
                 email: email.trim(),
                 fullName: customerName,
+                phone: phone ? phone.trim() : null,
+                organization: organization ? organization.trim() : null,
+                purpose,
                 amount: Number(amount),
+                channel: 'paystack',
+                reference: paymentRecord.reference,
               },
             }).catch((err) => console.warn('Payment acknowledgement email trigger warning:', err));
           } catch (e) {
@@ -354,5 +359,28 @@ export const submitBankTransferNotification = async ({
   };
 
   await recordPaymentToDatabase(record);
+
+  // Trigger automated notification email to info@doright.ng and acknowledgement to contributor
+  try {
+    supabase.functions.invoke('send-lead-welcome-email', {
+      body: {
+        action: 'PAYMENT_ACKNOWLEDGEMENT',
+        record,
+        email: email.trim(),
+        fullName: customerName,
+        phone: phone.trim(),
+        organization: organization.trim(),
+        purpose,
+        amount: Number(amount),
+        channel: 'bank_transfer',
+        bankUsed,
+        notes,
+        reference,
+      },
+    }).catch((err) => console.warn('Transfer notification email trigger warning:', err));
+  } catch (e) {
+    // Non-blocking
+  }
+
   return record;
 };

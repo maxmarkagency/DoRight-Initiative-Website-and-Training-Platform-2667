@@ -354,6 +354,26 @@ const SubCommittees = () => {
         });
       }
 
+      // Dispatch notification to info@doright.ng
+      try {
+        supabase.functions.invoke('send-lead-welcome-email', {
+          body: {
+            type: 'INSERT',
+            source: 'sub_committee_page',
+            record: {
+              full_name: formData.fullName.trim(),
+              email: cleanEmail,
+              phone: formData.phone.trim() || null,
+              sub_committee_id: selectedCommittee.id,
+              source: 'sub_committee_page',
+              admin_notes: noteEntry.trim(),
+            },
+          },
+        }).catch((e) => console.warn('Sub-committee email notification notice:', e));
+      } catch (fnErr) {
+        // Non-blocking
+      }
+
       setIsJoined(true);
     } catch (err) {
       console.warn('Sub-committee selection notice:', err);

@@ -46,7 +46,7 @@ const Contact = () => {
     if (contactError) setContactError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setContactError('');
 
@@ -71,10 +71,53 @@ const Contact = () => {
     }
 
     setIsSending(true);
-    setTimeout(() => {
+
+    try {
+      const trimmedName = formData.name.trim();
+      const trimmedEmail = formData.email.trim().toLowerCase();
+      const trimmedSubject = formData.subject.trim();
+      const trimmedMessage = formData.message.trim();
+
+      const leadPayload = {
+        full_name: trimmedName,
+        email: trimmedEmail,
+        source: 'contact_page',
+        status: 'new',
+        admin_notes: `Subject: ${trimmedSubject}\nMessage: ${trimmedMessage}`,
+        created_at: new Date().toISOString(),
+      };
+
+      // 1. Record lead to database
+      try {
+        await supabase.from('leads').insert(leadPayload);
+      } catch (dbErr) {
+        console.warn('Could not insert contact lead to database:', dbErr);
+      }
+
+      // 2. Dispatch instant notification to info@doright.ng and user auto-reply
+      try {
+        await supabase.functions.invoke('send-lead-welcome-email', {
+          body: {
+            type: 'INSERT',
+            source: 'contact_page',
+            record: {
+              ...leadPayload,
+              subject: trimmedSubject,
+              message: trimmedMessage,
+            },
+          },
+        });
+      } catch (fnErr) {
+        console.warn('send-lead-welcome-email contact trigger warning:', fnErr);
+      }
+
       setIsSending(false);
       setIsSubmitted(true);
-    }, 600);
+    } catch (err) {
+      console.error('Error submitting contact message:', err);
+      setIsSending(false);
+      setContactError('An unexpected error occurred. Please try sending again or write directly to info@doright.ng.');
+    }
   };
 
   const handleResetForm = () => {

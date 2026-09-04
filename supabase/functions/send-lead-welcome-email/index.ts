@@ -7,6 +7,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
   adminNotificationEmail,
+  adminPaymentNotificationEmail,
+  contactFormAcknowledgementEmail,
   referralWelcomeEmail,
   websiteWelcomeEmail,
   tierTransitionEmail,
@@ -204,11 +206,28 @@ Deno.serve(async (req: Request) => {
     }
   }
 
+  // Target administrative email recipients - info@doright.ng is always included
+  const adminRecipients = Array.from(
+    new Set([
+      "info@doright.ng",
+      ...(Deno.env.get("ADMIN_EMAIL") ? [Deno.env.get("ADMIN_EMAIL")!.trim()] : []),
+      ...(Deno.env.get("ENQUIRIES_EMAIL") ? [Deno.env.get("ENQUIRIES_EMAIL")!.trim()] : []),
+    ])
+  ).filter(Boolean);
+
   // --- Branch 2: Payment Contribution Acknowledgement ---
   if (payload?.action === "PAYMENT_ACKNOWLEDGEMENT" || payload?.type === "PAYMENT_ACKNOWLEDGEMENT") {
     const recipientEmail = payload.record?.email || (payload as any).email;
-    const recipientName = payload.record?.full_name || payload.record?.customer_name || (payload as any).fullName || "Supporter";
+    const recipientName = payload.record?.customer_name || payload.record?.full_name || (payload as any).fullName || "Supporter";
     const amount = payload.record?.amount || (payload as any).amount;
+    const phone = payload.record?.phone || (payload as any).phone || null;
+    const organization = payload.record?.organization || (payload as any).organization || null;
+    const purpose = payload.record?.purpose || (payload as any).purpose || "Civic Contribution";
+    const channel = payload.record?.channel || (payload as any).channel || "paystack";
+    const status = payload.record?.status || (payload as any).status || "successful";
+    const reference = payload.record?.reference || (payload as any).reference || null;
+    const bankUsed = payload.record?.metadata?.bank_used || (payload as any).bankUsed || null;
+    const notes = payload.record?.notes || (payload as any).notes || null;
 
     if (!recipientEmail) {
       return new Response(JSON.stringify({ error: "Recipient email is missing" }), {
@@ -217,33 +236,71 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const { subject, html, text } = donorContributionAcknowledgementEmail({
+    const userReceipt = donorContributionAcknowledgementEmail({
       fullName: recipientName,
       amount,
     });
 
-    try {
-      const emailRes = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${resendApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: defaultFrom,
-          to: [recipientEmail],
-          subject,
-          html,
-          text,
-        }),
-      });
+    const adminPayment = adminPaymentNotificationEmail({
+      customerName: recipientName,
+      email: recipientEmail,
+      phone,
+      organization,
+      purpose,
+      amount,
+      channel,
+      status,
+      reference,
+      bankUsed,
+      notes,
+    });
 
-      if (!emailRes.ok) {
-        const errText = await emailRes.text();
-        console.error("send-lead-welcome-email: failed sending payment receipt via Resend", errText);
+    try {
+      const emailPromises = [
+        // 1. Send receipt/acknowledgement to contributor
+        fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${resendApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: defaultFrom,
+            to: [recipientEmail],
+            subject: userReceipt.subject,
+            html: userReceipt.html,
+            text: userReceipt.text,
+          }),
+        }),
+        // 2. Send instant notification to info@doright.ng
+        fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${resendApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: defaultFrom,
+            to: adminRecipients,
+            subject: adminPayment.subject,
+            html: adminPayment.html,
+            text: adminPayment.text,
+          }),
+        }),
+      ];
+
+      const [userRes, adminRes] = await Promise.all(emailPromises);
+
+      if (!userRes.ok) {
+        const errText = await userRes.text();
+        console.error("send-lead-welcome-email: failed sending payment receipt to user via Resend", errText);
+      }
+      if (!adminRes.ok) {
+        const errText = await adminRes.text();
+        console.error("send-lead-welcome-email: failed sending payment notice to info@doright.ng via Resend", errText);
       }
 
-      return new Response(JSON.stringify({ success: true, recipient: recipientEmail }), {
+      return new Response(JSON.stringify({ success: true, recipient: recipientEmail, adminRecipients }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -301,12 +358,21 @@ Deno.serve(async (req: Request) => {
     whatsappGroupUrl,
   };
 
-  // Determine user interest
+  // Determine user interest and details
   const interestMatch = lead.admin_notes?.match(/Interest:\s*([^\n\r]+)/i);
   const detectedInterest = ((lead as any).interest || (interestMatch ? interestMatch[1].trim() : '')).toLowerCase();
+  const orgMatch = lead.admin_notes?.match(/Organization:\s*([^\n\r]+)/i);
+  const detectedOrganization = (lead as any).organization || (orgMatch ? orgMatch[1].trim() : null);
+  const subjectMatch = lead.admin_notes?.match(/Subject:\s*([^\n\r]+)/i);
+  const detectedSubject = (lead as any).subject || (subjectMatch ? subjectMatch[1].trim() : null);
 
   let composed: { subject: string; html: string; text: string };
-  if (detectedInterest.includes('donat') || detectedInterest === 'donating') {
+  if (lead.source === "contact_page" || lead.source === "contact_form") {
+    composed = contactFormAcknowledgementEmail({
+      fullName: lead.full_name,
+      subject: detectedSubject,
+    });
+  } else if (detectedInterest.includes('donat') || detectedInterest === 'donating') {
     composed = donorInquiryEmail({
       fullName: lead.full_name,
       paymentPortalUrl: "https://doright.ng/pay?purpose=donation",
@@ -314,7 +380,7 @@ Deno.serve(async (req: Request) => {
   } else if (detectedInterest.includes('partner') || detectedInterest.includes('sponsor')) {
     composed = partnershipInquiryEmail({
       fullName: lead.full_name,
-      organizationName: (lead as any).organization || null,
+      organizationName: detectedOrganization,
     });
   } else if (lead.source === "referral") {
     composed = referralWelcomeEmail(templateInput);
@@ -324,7 +390,6 @@ Deno.serve(async (req: Request) => {
 
   const { subject, html, text } = composed;
 
-  const adminEmailRecipient = Deno.env.get("ENQUIRIES_EMAIL") || "enquires@doright.ng";
   const adminEmail = adminNotificationEmail({
     fullName: lead.full_name,
     email: lead.email,
@@ -334,6 +399,9 @@ Deno.serve(async (req: Request) => {
     source: lead.source,
     referredBy: lead.referred_by,
     adminNotes: lead.admin_notes ?? null,
+    interest: detectedInterest,
+    organization: detectedOrganization,
+    subject: detectedSubject,
   });
 
   const sendPromises = [
@@ -359,7 +427,7 @@ Deno.serve(async (req: Request) => {
       },
       body: JSON.stringify({
         from: defaultFrom,
-        to: [adminEmailRecipient],
+        to: adminRecipients,
         subject: adminEmail.subject,
         html: adminEmail.html,
         text: adminEmail.text,
@@ -379,7 +447,7 @@ Deno.serve(async (req: Request) => {
 
     if (!adminRes.ok) {
       adminError = await adminRes.text();
-      console.error(`send-lead-welcome-email: failed to send admin notification to ${adminEmailRecipient}:`, adminError);
+      console.error(`send-lead-welcome-email: failed to send admin notification to info@doright.ng:`, adminError);
     }
 
     return new Response(
@@ -390,6 +458,7 @@ Deno.serve(async (req: Request) => {
         welcome_error: welcomeError,
         admin_status: adminRes.status,
         admin_error: adminError,
+        admin_recipients: adminRecipients,
       }),
       {
         status: welcomeError ? 500 : 200,

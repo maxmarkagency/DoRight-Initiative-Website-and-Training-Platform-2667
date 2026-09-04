@@ -212,11 +212,14 @@ export interface AdminNotificationInput {
   membershipId?: string | null;
   subCommitteeName: string | null;
   source: string;
-  referredBy: string | null;
+  referredBy?: string | null;
   adminNotes: string | null;
+  interest?: string | null;
+  organization?: string | null;
+  subject?: string | null;
 }
 
-/** Admin Notification Email — sent to enquires@doright.ng for every new join submission. */
+/** Admin Notification Email — sent to info@doright.ng for every member signup, partnership, donation inquiry, or contact form submission. */
 export function adminNotificationEmail({
   fullName,
   email,
@@ -226,30 +229,75 @@ export function adminNotificationEmail({
   source,
   referredBy,
   adminNotes,
+  interest,
+  organization,
+  subject: customSubject,
 }: AdminNotificationInput): ComposedEmail {
-  const name = escapeHtml(fullName);
-  const userEmail = escapeHtml(email);
+  const name = escapeHtml(fullName || "Supporter");
+  const userEmail = escapeHtml(email || "Not provided");
   const userPhone = escapeHtml(phone || "Not provided");
   const memId = membershipId ? escapeHtml(membershipId) : "Assigned automatically";
   const subCommittee = escapeHtml(subCommitteeName || "None selected");
   const src = escapeHtml(source);
   const referrer = referredBy ? escapeHtml(referredBy) : null;
   const notes = adminNotes ? escapeHtml(adminNotes) : null;
+  const org = organization ? escapeHtml(organization) : null;
+
+  const interestLower = (interest || "").toLowerCase();
+  const notesLower = (adminNotes || "").toLowerCase();
+  const srcLower = (source || "").toLowerCase();
+
+  let categoryTitle = "New Member Registration (Tier 1: Personal Advocate)";
+  let categoryBadge = "Tier 1: Personal Advocate";
+  let categoryIntro = "A new member has registered on the <strong>DoRight Initiative</strong> platform:";
+  let emailSubject = `[New Member Registration] ${fullName} (${memId}) - DoRight Initiative`;
+
+  if (interestLower.includes("partner") || notesLower.includes("partner") || interestLower.includes("sponsor")) {
+    categoryTitle = "New Strategic Partnership Inquiry";
+    categoryBadge = "Partnership / Collaboration";
+    categoryIntro = "A new partnership / collaboration inquiry has been submitted on the <strong>DoRight Initiative</strong> platform:";
+    emailSubject = `[New Partnership Inquiry] ${fullName}${org ? ` (${org})` : ""} - DoRight Initiative`;
+  } else if (interestLower.includes("donat") || notesLower.includes("donat")) {
+    categoryTitle = "New Civic Donation Inquiry";
+    categoryBadge = "Donation / Supporter";
+    categoryIntro = "A new donation inquiry / supporter has registered on the <strong>DoRight Initiative</strong> platform:";
+    emailSubject = `[New Donation Inquiry] ${fullName} - DoRight Initiative`;
+  } else if (srcLower.includes("contact") || interestLower.includes("contact")) {
+    categoryTitle = "New Website Contact Inquiry";
+    categoryBadge = "Contact Form Message";
+    categoryIntro = "A new message has been received through the <strong>DoRight Initiative</strong> contact form:";
+    emailSubject = `[Website Contact Inquiry] ${fullName}${customSubject ? `: ${customSubject}` : ""} - DoRight Initiative`;
+  } else if (srcLower.includes("sub_committee") || subCommitteeName) {
+    categoryTitle = `Sub-Committee Registration (${subCommittee})`;
+    categoryBadge = `Sub-Committee: ${subCommittee}`;
+    categoryIntro = `A member has joined a specialized sub-committee on the <strong>DoRight Initiative</strong> platform:`;
+    emailSubject = `[Sub-Committee Joined] ${fullName} - ${subCommittee} - DoRight Initiative`;
+  }
 
   return {
-    subject: `New Member Registration: ${fullName} (${memId})`,
+    subject: emailSubject,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
         <div style="background-color: #0D0E16; color: #ffffff; padding: 18px 24px;">
-          <h2 style="margin: 0; font-size: 18px; font-weight: bold; color: #F59E0B;">New Member Registration (Tier 1: Personal Advocate)</h2>
+          <h2 style="margin: 0; font-size: 18px; font-weight: bold; color: #F59E0B;">${categoryTitle}</h2>
+          <div style="font-size: 12px; color: #cbd5e1; margin-top: 4px;">Doing Right Awareness Initiative (Do-Right)</div>
         </div>
         <div style="padding: 24px; background-color: #ffffff;">
-          <p style="margin-top: 0; font-size: 15px;">A new member has registered on the <strong>DoRight Initiative</strong> platform:</p>
+          <p style="margin-top: 0; font-size: 15px;">${categoryIntro}</p>
           
           <table style="width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px;">
             <tr style="border-bottom: 1px solid #f0f0f0;">
               <td style="padding: 10px 0; font-weight: bold; color: #4a5568; width: 150px;">Full Name:</td>
-              <td style="padding: 10px 0; color: #1a202c;">${name}</td>
+              <td style="padding: 10px 0; color: #1a202c; font-weight: 600;">${name}</td>
+            </tr>
+            ${org ? `
+            <tr style="border-bottom: 1px solid #f0f0f0;">
+              <td style="padding: 10px 0; font-weight: bold; color: #4a5568;">Organization:</td>
+              <td style="padding: 10px 0; color: #1a202c;">${org}</td>
+            </tr>` : ''}
+            <tr style="border-bottom: 1px solid #f0f0f0;">
+              <td style="padding: 10px 0; font-weight: bold; color: #4a5568;">Classification / Tier:</td>
+              <td style="padding: 10px 0; color: #1a202c; font-weight: bold;">${categoryBadge}</td>
             </tr>
             <tr style="border-bottom: 1px solid #f0f0f0;">
               <td style="padding: 10px 0; font-weight: bold; color: #4a5568;">Membership ID:</td>
@@ -263,10 +311,11 @@ export function adminNotificationEmail({
               <td style="padding: 10px 0; font-weight: bold; color: #4a5568;">Phone Number:</td>
               <td style="padding: 10px 0; color: #1a202c;">${userPhone}</td>
             </tr>
+            ${subCommitteeName ? `
             <tr style="border-bottom: 1px solid #f0f0f0;">
-              <td style="padding: 10px 0; font-weight: bold; color: #4a5568;">Initial Tier:</td>
-              <td style="padding: 10px 0; color: #1a202c; font-weight: bold;">Tier 1: Personal Advocate</td>
-            </tr>
+              <td style="padding: 10px 0; font-weight: bold; color: #4a5568;">Sub-Committee:</td>
+              <td style="padding: 10px 0; color: #1a202c; font-weight: bold; color: #047857;">${subCommittee}</td>
+            </tr>` : ''}
             <tr style="border-bottom: 1px solid #f0f0f0;">
               <td style="padding: 10px 0; font-weight: bold; color: #4a5568;">Submission Source:</td>
               <td style="padding: 10px 0; color: #1a202c;">${src}</td>
@@ -280,26 +329,221 @@ export function adminNotificationEmail({
 
           ${notes ? `
           <div style="margin-top: 20px; padding: 14px 16px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
-            <div style="font-weight: bold; color: #4a5568; margin-bottom: 6px; font-size: 13px; text-transform: uppercase;">Interest & Details:</div>
+            <div style="font-weight: bold; color: #4a5568; margin-bottom: 6px; font-size: 13px; text-transform: uppercase;">Submission Details &amp; Message:</div>
             <div style="white-space: pre-wrap; color: #2d3748; font-size: 14px; line-height: 1.6;">${notes}</div>
           </div>` : ''}
 
           <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #edf2f7; font-size: 12px; color: #a0aec0; text-align: center;">
-            DoRight Awareness Initiative • Automatic Onboarding System
+            DoRight Awareness Initiative • System Notification • Sent to info@doright.ng
           </div>
         </div>
       </div>
     `,
     text:
-      `New Member Registration: ${fullName}\n\n` +
+      `${emailSubject}\n\n` +
       `Full Name: ${fullName}\n` +
+      (organization ? `Organization: ${organization}\n` : "") +
+      `Category: ${categoryBadge}\n` +
       `Membership ID: ${memId}\n` +
       `Email: ${email}\n` +
       `Phone: ${phone || "Not provided"}\n` +
       `Source: ${source}\n` +
+      (subCommitteeName ? `Sub-Committee: ${subCommitteeName}\n` : "") +
       (referredBy ? `Referred By: ${referredBy}\n` : "") +
-      (adminNotes ? `\nInterest & Details:\n${adminNotes}\n` : ""),
+      (adminNotes ? `\nSubmission Details & Message:\n${adminNotes}\n` : ""),
   };
+}
+
+export interface AdminPaymentNotificationInput {
+  customerName: string;
+  email: string;
+  phone?: string | null;
+  organization?: string | null;
+  purpose?: string | null;
+  amount: number | string;
+  currency?: string | null;
+  channel?: string | null;
+  status?: string | null;
+  reference?: string | null;
+  bankUsed?: string | null;
+  notes?: string | null;
+}
+
+/** Admin Payment / Donation Notification Email — sent to info@doright.ng for online Paystack donations and bank transfers. */
+export function adminPaymentNotificationEmail({
+  customerName,
+  email,
+  phone,
+  organization,
+  purpose,
+  amount,
+  currency = "NGN",
+  channel = "paystack",
+  status = "successful",
+  reference,
+  bankUsed,
+  notes,
+}: AdminPaymentNotificationInput): ComposedEmail {
+  const name = escapeHtml(customerName || "Supporter");
+  const userEmail = escapeHtml(email || "Not provided");
+  const userPhone = escapeHtml(phone || "Not provided");
+  const org = organization ? escapeHtml(organization) : null;
+  const purp = escapeHtml(purpose || "Civic Contribution");
+  const formattedAmount = Number(amount || 0).toLocaleString("en-NG");
+  const isTransfer = channel === "bank_transfer";
+  const chan = isTransfer ? "Direct Bank Transfer" : "Paystack Online Payment";
+  const stat = status === "pending_verification" ? "Pending Verification" : "Successful";
+  const ref = reference ? escapeHtml(reference) : "N/A";
+  const bank = bankUsed ? escapeHtml(bankUsed) : null;
+  const userNotes = notes ? escapeHtml(notes) : null;
+
+  const subject = `[${isTransfer ? "Bank Transfer Notice" : "Payment Received"}: ₦${formattedAmount}] ${customerName} (${purp}) - DoRight Initiative`;
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+      <div style="background-color: #0D0E16; color: #ffffff; padding: 18px 24px;">
+        <h2 style="margin: 0; font-size: 18px; font-weight: bold; color: #F59E0B;">
+          ${isTransfer ? "Direct Bank Transfer Notice" : "Online Payment Received"}
+        </h2>
+        <div style="font-size: 13px; color: #cbd5e1; margin-top: 4px;">
+          ${purp} • ₦${formattedAmount} ${currency}
+        </div>
+      </div>
+      <div style="padding: 24px; background-color: #ffffff;">
+        <p style="margin-top: 0; font-size: 15px;">
+          A new ${isTransfer ? "bank transfer notice" : "payment contribution"} has been submitted on the <strong>DoRight Initiative</strong> platform:
+        </p>
+
+        <table style="width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px;">
+          <tr style="border-bottom: 1px solid #f0f0f0;">
+            <td style="padding: 10px 0; font-weight: bold; color: #4a5568; width: 160px;">Contributor / Name:</td>
+            <td style="padding: 10px 0; color: #1a202c; font-weight: bold;">${name}</td>
+          </tr>
+          ${org ? `
+          <tr style="border-bottom: 1px solid #f0f0f0;">
+            <td style="padding: 10px 0; font-weight: bold; color: #4a5568;">Organization:</td>
+            <td style="padding: 10px 0; color: #1a202c;">${org}</td>
+          </tr>` : ""}
+          <tr style="border-bottom: 1px solid #f0f0f0;">
+            <td style="padding: 10px 0; font-weight: bold; color: #4a5568;">Amount:</td>
+            <td style="padding: 10px 0; font-size: 16px; font-weight: bold; color: #047857;">₦${formattedAmount} (${currency})</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #f0f0f0;">
+            <td style="padding: 10px 0; font-weight: bold; color: #4a5568;">Purpose:</td>
+            <td style="padding: 10px 0; color: #1a202c; font-weight: 600;">${purp}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #f0f0f0;">
+            <td style="padding: 10px 0; font-weight: bold; color: #4a5568;">Email Address:</td>
+            <td style="padding: 10px 0; color: #1a202c;"><a href="mailto:${userEmail}" style="color: #005BBB; text-decoration: none;">${userEmail}</a></td>
+          </tr>
+          <tr style="border-bottom: 1px solid #f0f0f0;">
+            <td style="padding: 10px 0; font-weight: bold; color: #4a5568;">Phone Number:</td>
+            <td style="padding: 10px 0; color: #1a202c;">${userPhone}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #f0f0f0;">
+            <td style="padding: 10px 0; font-weight: bold; color: #4a5568;">Payment Channel:</td>
+            <td style="padding: 10px 0; color: #1a202c;">${chan}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #f0f0f0;">
+            <td style="padding: 10px 0; font-weight: bold; color: #4a5568;">Status:</td>
+            <td style="padding: 10px 0; font-weight: bold; color: ${status === "successful" ? "#047857" : "#D97706"};">${stat}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #f0f0f0;">
+            <td style="padding: 10px 0; font-weight: bold; color: #4a5568;">Reference / Narration:</td>
+            <td style="padding: 10px 0; color: #1a202c; font-family: monospace; font-weight: bold;">${ref}</td>
+          </tr>
+          ${bank ? `
+          <tr style="border-bottom: 1px solid #f0f0f0;">
+            <td style="padding: 10px 0; font-weight: bold; color: #4a5568;">Bank Transferred From:</td>
+            <td style="padding: 10px 0; color: #1a202c;">${bank}</td>
+          </tr>` : ""}
+        </table>
+
+        ${userNotes ? `
+        <div style="margin-top: 20px; padding: 14px 16px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
+          <div style="font-weight: bold; color: #4a5568; margin-bottom: 6px; font-size: 13px; text-transform: uppercase;">Contributor Notes:</div>
+          <div style="white-space: pre-wrap; color: #2d3748; font-size: 14px; line-height: 1.6;">${userNotes}</div>
+        </div>` : ""}
+
+        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #edf2f7; font-size: 12px; color: #a0aec0; text-align: center;">
+          DoRight Awareness Initiative • Financial &amp; Payment Monitoring System • Sent to info@doright.ng
+        </div>
+      </div>
+    </div>
+  `;
+
+  const text =
+    `${subject}\n\n` +
+    `Contributor: ${customerName}\n` +
+    (organization ? `Organization: ${organization}\n` : "") +
+    `Amount: ₦${formattedAmount} (${currency})\n` +
+    `Purpose: ${purpose}\n` +
+    `Email: ${email}\n` +
+    `Phone: ${phone || "Not provided"}\n` +
+    `Channel: ${chan}\n` +
+    `Status: ${stat}\n` +
+    `Reference: ${ref}\n` +
+    (bankUsed ? `Bank: ${bankUsed}\n` : "") +
+    (notes ? `\nNotes:\n${notes}\n` : "");
+
+  return { subject, html, text };
+}
+
+/** Contact Form Acknowledgement Email sent to visitor. */
+export function contactFormAcknowledgementEmail({
+  fullName,
+  subject,
+}: { fullName: string; subject?: string | null }): ComposedEmail {
+  const name = escapeHtml(fullName.trim());
+  const userSubject = subject ? escapeHtml(subject) : "your inquiry";
+
+  const emailSubject = `Thank you for contacting DoRight Initiative: ${subject || 'We received your message'}`;
+
+  const html = wrapHtml(`
+    <p style="font-size: 16px; margin-top: 0; color: #0f172a;">Dear <strong>${name}</strong>,</p>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      Thank you for reaching out to the <strong>Doing Right Awareness Initiative (Do-Right)</strong> regarding <em>"${userSubject}"</em>.
+    </p>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      We have received your message and our team is reviewing your inquiry. We strive to respond to all inquiries within 24 to 48 hours.
+    </p>
+
+    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 20px; margin: 20px 0;">
+      <h3 style="font-size: 14px; font-weight: bold; color: #0f172a; margin: 0 0 8px;">Direct Contact Details:</h3>
+      <p style="margin: 0; font-size: 13px; color: #475569; line-height: 1.6;">
+        • Email: <a href="mailto:info@doright.ng" style="color: #005BBB; font-weight: 600;">info@doright.ng</a><br>
+        • WhatsApp / Phone: +234 912 339 9968<br>
+        • Address: 28b, Olaminuyun street, Parkview, Ikoyi, Lagos, Nigeria
+      </p>
+    </div>
+
+    <p style="font-size: 15px; color: #334155; line-height: 1.65;">
+      Thank you for your commitment to fostering a culture of uprightness and integrity across Nigeria.
+    </p>
+
+    <div style="border-top: 1px solid #e2e8f0; padding-top: 18px; margin-top: 24px; font-size: 14px; color: #475569;">
+      <p style="margin: 0 0 4px;">Warm regards,</p>
+      <p style="margin: 0; font-weight: bold; color: #0f172a; font-size: 15px;">The DoRight Team</p>
+      <p style="margin: 2px 0 0; color: #005BBB; font-weight: 600;">Doing Right Awareness Initiative (DRAI)</p>
+    </div>
+  `);
+
+  const text =
+    `Subject: ${emailSubject}\n\n` +
+    `Dear ${fullName.trim()},\n\n` +
+    `Thank you for reaching out to the Doing Right Awareness Initiative (Do-Right) regarding "${subject || 'your inquiry'}".\n\n` +
+    `We have received your message and our team is reviewing your inquiry. We strive to respond to all inquiries within 24 to 48 hours.\n\n` +
+    `Direct Contact Details:\n` +
+    `- Email: info@doright.ng\n` +
+    `- Phone: +234 912 339 9968\n` +
+    `- Address: 28b, Olaminuyun street, Parkview, Ikoyi, Lagos, Nigeria\n\n` +
+    `Warm regards,\n` +
+    `The DoRight Team\n` +
+    `Doing Right Awareness Initiative (DRAI)`;
+
+  return { subject: emailSubject, html, text };
 }
 
 export interface TierTransitionInput {

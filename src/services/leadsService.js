@@ -182,7 +182,10 @@ export const submitLead = async ({ fullName, email, phone, interest, message, su
       body: {
         type: 'INSERT',
         table: 'leads',
-        record: localLead
+        record: {
+          ...localLead,
+          interest
+        }
       }
     }).catch((err) => console.warn('Welcome email trigger warning:', err));
   } catch (e) {
