@@ -114,6 +114,84 @@ export const checkLeadDuplicate = async ({ email, phone }) => {
   }
 };
 
+/**
+ * Confirms if a member is registered in Tier 3 (Strategic Leader) before granting access to sub-committees.
+ */
+export const verifyTier3Member = async ({ membershipId, email }) => {
+  try {
+    const { data, error } = await supabase.functions.invoke('submit-lead', {
+      body: {
+        action: 'verify_tier3',
+        membershipId: membershipId ? membershipId.trim() : null,
+        email: email ? email.trim().toLowerCase() : null
+      }
+    });
+
+    if (error) {
+      let errBody = null;
+      if (error.context && typeof error.context.json === 'function') {
+        try {
+          errBody = await error.context.json();
+        } catch (e) {}
+      }
+      return {
+        eligible: false,
+        error: errBody?.error || 'VERIFICATION_FAILED',
+        currentTier: errBody?.currentTier || null,
+        currentTierLabel: errBody?.currentTierLabel || null,
+        member: errBody?.member || null,
+        message: errBody?.message || error.message || 'Unable to verify membership tier.'
+      };
+    }
+
+    return data || { eligible: false, message: 'No response from verification server.' };
+  } catch (err) {
+    return {
+      eligible: false,
+      error: 'VERIFICATION_ERROR',
+      message: err.message || 'Failed to connect to verification server.'
+    };
+  }
+};
+
+/**
+ * Verifies Tier 3 standing and updates the member's sub_committee_id.
+ */
+export const joinSubCommittee = async ({ membershipId, email, fullName, phone, subCommitteeId, subCommitteeName }) => {
+  try {
+    const { data, error } = await supabase.functions.invoke('submit-lead', {
+      body: {
+        action: 'join_subcommittee',
+        membershipId: membershipId ? membershipId.trim() : null,
+        email: email ? email.trim().toLowerCase() : null,
+        fullName: fullName ? fullName.trim() : null,
+        phone: phone ? phone.trim() : null,
+        subCommitteeId,
+        subCommitteeName
+      }
+    });
+
+    if (error) {
+      let errBody = null;
+      if (error.context && typeof error.context.json === 'function') {
+        try {
+          errBody = await error.context.json();
+        } catch (e) {}
+      }
+      const customErr = new Error(errBody?.message || error.message || 'Unable to join sub-committee.');
+      customErr.code = errBody?.error || 'JOIN_FAILED';
+      customErr.currentTier = errBody?.currentTier || null;
+      customErr.currentTierLabel = errBody?.currentTierLabel || null;
+      customErr.member = errBody?.member || null;
+      throw customErr;
+    }
+
+    return data;
+  } catch (err) {
+    throw err;
+  }
+};
+
 export const submitLead = async ({ fullName, email, phone, interest, message, subCommitteeId = null, photoFile }) => {
   let photoPreview = null;
   let photoBase64 = null;

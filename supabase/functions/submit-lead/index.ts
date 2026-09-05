@@ -44,9 +44,11 @@ Deno.serve(async (req) => {
     let fullName = "";
     let email = "";
     let phone: string | null = null;
+    let membershipId: string | null = null;
     let interest: string | null = null;
     let message: string | null = null;
     let subCommitteeId: string | null = null;
+    let subCommitteeName: string | null = null;
     let photoBuffer: Uint8Array | null = null;
     let photoExt = "jpg";
     let photoMime = "image/jpeg";
@@ -57,9 +59,11 @@ Deno.serve(async (req) => {
       fullName = formData.get("fullName")?.toString() || "";
       email = formData.get("email")?.toString() || "";
       phone = formData.get("phone")?.toString() || null;
+      membershipId = formData.get("membershipId")?.toString() || null;
       interest = formData.get("interest")?.toString() || null;
       message = formData.get("message")?.toString() || null;
       subCommitteeId = formData.get("subCommitteeId")?.toString() || null;
+      subCommitteeName = formData.get("subCommitteeName")?.toString() || null;
 
       const file = formData.get("photo");
       if (file instanceof File) {
@@ -73,9 +77,11 @@ Deno.serve(async (req) => {
       fullName = body.fullName || "";
       email = body.email || "";
       phone = body.phone || null;
+      membershipId = body.membershipId || null;
       interest = body.interest || null;
       message = body.message || null;
       subCommitteeId = body.subCommitteeId || null;
+      subCommitteeName = body.subCommitteeName || null;
 
       if (body.photoBase64) {
         const base64Data = body.photoBase64.replace(/^data:image\/\w+;base64,/, "");
@@ -91,11 +97,12 @@ Deno.serve(async (req) => {
 
     const cleanEmail = email.trim().toLowerCase();
     const cleanPhone = phone ? phone.trim() : null;
+    const cleanMembershipId = (membershipId || "").trim().toUpperCase();
     const extractDigits = (val: string | null) => (val ? val.replace(/\D/g, "") : "");
     const inputPhoneDigits = extractDigits(cleanPhone);
     const inputPhoneSuffix = inputPhoneDigits.length >= 10 ? inputPhoneDigits.slice(-10) : inputPhoneDigits;
 
-    // Support pre-flight duplicate check action
+    // Action 1: Pre-flight duplicate registration check
     if (action === "check_duplicate") {
       if (cleanEmail) {
         const { data: existingEmail } = await supabase
@@ -147,6 +154,233 @@ Deno.serve(async (req) => {
         JSON.stringify({ isDuplicate: false }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Action 2: Verify Tier 3 Status & Join Sub-Committee (Exclusively for Tier 3 Strategic Leaders)
+    if (action === "verify_tier3" || action === "join_subcommittee") {
+      if (!cleanMembershipId && !cleanEmail) {
+        return new Response(
+          JSON.stringify({
+            eligible: false,
+            error: "MISSING_CREDENTIALS",
+            message: "Membership ID and Email address are required to verify sub-committee eligibility."
+          }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Query lead using service role (bypasses RLS)
+      let query = supabase
+        .from("leads")
+        .select("id, full_name, email, phone, membership_id, tier, sub_committee_id, admin_notes");
+
+      if (cleanMembershipId && cleanEmail) {
+        query = query.or(`membership_id.ilike.${cleanMembershipId},email.ilike.${cleanEmail}`);
+      } else if (cleanMembershipId) {
+        query = query.ilike("membership_id", cleanMembershipId);
+      } else {
+        query = query.ilike("email", cleanEmail);
+      }
+
+      const { data: matchedLeads, error: queryErr } = await query.limit(5);
+
+      if (queryErr) {
+        console.error("submit-lead: verify_tier3 query error", queryErr);
+        return new Response(
+          JSON.stringify({ eligible: false, error: "QUERY_FAILED", message: "Failed to verify membership status. Please try again." }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Exact match check (both membershipId AND email)
+      let member = matchedLeads?.find(
+        (l: any) =>
+          l.membership_id?.trim().toUpperCase() === cleanMembershipId &&
+          l.email?.trim().toLowerCase() === cleanEmail
+      );
+
+      if (!member && matchedLeads && matchedLeads.length > 0) {
+        const matchById = matchedLeads.find((l: any) => l.membership_id?.trim().toUpperCase() === cleanMembershipId);
+        const matchByEmail = matchedLeads.find((l: any) => l.email?.trim().toLowerCase() === cleanEmail);
+
+        if (cleanMembershipId && matchById && !matchByEmail) {
+          return new Response(
+            JSON.stringify({
+              eligible: false,
+              error: "CREDENTIAL_MISMATCH",
+              message: "The entered Email address does not match this Membership ID. Please check your credentials."
+            }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        if (matchById) member = matchById;
+        else if (matchByEmail) member = matchByEmail;
+      }
+
+      if (!member) {
+        return new Response(
+          JSON.stringify({
+            eligible: false,
+            error: "MEMBER_NOT_FOUND",
+            message: "No active DRAI membership found matching this Membership ID and Email. Sub-committees are exclusively reserved for verified Tier 3 Strategic Leaders."
+          }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Check Tier: Sub-committees are ONLY for Tier 3 members
+      const normalizedTier = (member.tier || "").toLowerCase().trim();
+      const isTier3 = normalizedTier === "tier_3" || normalizedTier === "tier_3_strategic_leader" || normalizedTier.includes("tier_3");
+
+      if (!isTier3) {
+        const tierLabels: Record<string, string> = {
+          tier_1: "Tier 1 (Personal Advocate)",
+          tier_2: "Tier 2 (Movement Champion)",
+        };
+        const currentTierLabel = tierLabels[normalizedTier] || `Tier ${normalizedTier.replace('tier_', '') || '1'}`;
+
+        return new Response(
+          JSON.stringify({
+            eligible: false,
+            error: "NOT_TIER_3",
+            currentTier: normalizedTier,
+            currentTierLabel,
+            member: {
+              fullName: member.full_name,
+              membershipId: member.membership_id,
+              tier: member.tier
+            },
+            message: `Access Restricted: Sub-committees are exclusively for Tier 3 (Strategic Leaders). Your record indicates you are currently in ${currentTierLabel}. Sub-committees are not for everyone. To advance to Tier 3, please complete your tier requirements or contact admin@doright.ng.`
+          }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Action: verify_tier3 only
+      if (action === "verify_tier3") {
+        return new Response(
+          JSON.stringify({
+            eligible: true,
+            member: {
+              id: member.id,
+              fullName: member.full_name,
+              email: member.email,
+              phone: member.phone,
+              membershipId: member.membership_id,
+              tier: member.tier,
+              subCommitteeId: member.sub_committee_id
+            },
+            message: "Eligibility confirmed! You are a verified Tier 3 Strategic Leader."
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Action: join_subcommittee
+      if (action === "join_subcommittee") {
+        if (!subCommitteeId) {
+          return new Response(
+            JSON.stringify({ error: "MISSING_COMMITTEE", message: "A sub-committee must be selected." }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Safely resolve subCommitteeId to valid UUID if it is a slug
+        let resolvedSubCommitteeUuid: string | null = null;
+        const isUuid = (val: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(val);
+
+        if (isUuid(subCommitteeId)) {
+          resolvedSubCommitteeUuid = subCommitteeId;
+        } else {
+          try {
+            const { data: dbCommittees } = await supabase
+              .from("sub_committees")
+              .select("id, name");
+
+            if (dbCommittees && dbCommittees.length > 0) {
+              const query = (subCommitteeName || subCommitteeId || "").toLowerCase();
+              const match = dbCommittees.find((c: any) => {
+                const cName = c.name.toLowerCase();
+                return (
+                  cName === query ||
+                  cName.includes(query) ||
+                  query.includes(cName) ||
+                  (query.includes("secretariat") && cName.includes("secretariat")) ||
+                  (query.includes("finance") && cName.includes("fundraising")) ||
+                  (query.includes("fundrais") && cName.includes("fundrais")) ||
+                  (query.includes("communicat") && cName.includes("communicat")) ||
+                  (query.includes("strategy") && cName.includes("strategy")) ||
+                  (query.includes("community") && cName.includes("community"))
+                );
+              });
+              if (match) {
+                resolvedSubCommitteeUuid = match.id;
+              }
+            }
+          } catch (resErr) {
+            console.warn("Could not resolve committee UUID:", resErr);
+          }
+        }
+
+        const noteEntry = `\n[Sub-Committee Joined: ${subCommitteeName || subCommitteeId} on ${new Date().toLocaleDateString('en-GB')}]`;
+        const updatedNotes = member.admin_notes ? `${member.admin_notes}${noteEntry}` : noteEntry.trim();
+
+        const updatePayload: Record<string, any> = {
+          admin_notes: updatedNotes,
+          updated_at: new Date().toISOString()
+        };
+        if (resolvedSubCommitteeUuid) {
+          updatePayload.sub_committee_id = resolvedSubCommitteeUuid;
+        }
+
+        const { data: updatedLead, error: updateErr } = await supabase
+          .from("leads")
+          .update(updatePayload)
+          .eq("id", member.id)
+          .select()
+          .single();
+
+        if (updateErr) {
+          console.error("submit-lead: join_subcommittee update error", updateErr);
+          return new Response(
+            JSON.stringify({ error: "UPDATE_FAILED", message: "Failed to update sub-committee record. Please try again." }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Trigger welcome/notification email to info@doright.ng and member
+        try {
+          await fetch(`${supabaseUrl}/functions/v1/send-lead-welcome-email`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${serviceRoleKey}`,
+            },
+            body: JSON.stringify({
+              type: "INSERT",
+              source: "sub_committee_page",
+              record: {
+                ...updatedLead,
+                sub_committee_id: subCommitteeId,
+                sub_committee_name: subCommitteeName,
+                source: "sub_committee_page"
+              },
+            }),
+          });
+        } catch (emailErr) {
+          console.warn("submit-lead: sub_committee notification email error", emailErr);
+        }
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            lead: updatedLead,
+            message: `Successfully joined ${subCommitteeName || 'the sub-committee'}!`
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     if (!fullName || !email) {
@@ -238,13 +472,31 @@ Deno.serve(async (req) => {
     if (message) adminNotesLines.push(`Message: ${message}`);
     const adminNotes = adminNotesLines.length > 0 ? adminNotesLines.join("\n") : null;
 
-    // 3. Insert Lead Record
+    // 3. Resolve subCommitteeId UUID if present
+    let insertSubCommitteeUuid: string | null = null;
+    const isUuid = (val: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(val);
+    if (subCommitteeId && isUuid(subCommitteeId)) {
+      insertSubCommitteeUuid = subCommitteeId;
+    } else if (subCommitteeId || subCommitteeName) {
+      try {
+        const { data: dbCommittees } = await supabase.from("sub_committees").select("id, name");
+        if (dbCommittees && dbCommittees.length > 0) {
+          const query = (subCommitteeName || subCommitteeId || "").toLowerCase();
+          const match = dbCommittees.find((c: any) => {
+            const cName = c.name.toLowerCase();
+            return cName === query || cName.includes(query) || query.includes(cName);
+          });
+          if (match) insertSubCommitteeUuid = match.id;
+        }
+      } catch (e) {}
+    }
+
     const leadInsertPayload: Record<string, any> = {
       full_name: fullName.trim(),
       email: cleanEmail,
       phone: cleanPhone,
       photo_url: photoFilePath,
-      sub_committee_id: subCommitteeId || null,
+      sub_committee_id: insertSubCommitteeUuid || null,
       source: "website",
       tier: "tier_1",
       tier_1_at: now,

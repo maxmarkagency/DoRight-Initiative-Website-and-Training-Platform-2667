@@ -6,6 +6,7 @@ import * as FiIcons from 'react-icons/fi';
 import { FaWhatsapp } from 'react-icons/fa';
 import supabase from '../lib/supabase';
 import useSeo from '../hooks/useSeo';
+import { joinSubCommittee } from '../services/leadsService';
 
 const {
   FiUsers,
@@ -25,7 +26,9 @@ const {
   FiShield,
   FiExternalLink,
   FiAlertCircle,
-  FiLoader
+  FiLoader,
+  FiLock,
+  FiAward
 } = FiIcons;
 
 export const SUB_COMMITTEES_DATA = [
@@ -266,6 +269,8 @@ const SubCommittees = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isJoined, setIsJoined] = useState(false);
   const [joinError, setJoinError] = useState('');
+  const [restrictionData, setRestrictionData] = useState(null);
+  const [verifiedMember, setVerifiedMember] = useState(null);
   const [customWhatsAppLinks, setCustomWhatsAppLinks] = useState({});
 
   // Auto-open modal if specified in URL
@@ -294,91 +299,78 @@ const SubCommittees = () => {
     setSelectedCommittee(committee);
     setIsJoined(false);
     setJoinError('');
+    setRestrictionData(null);
   };
 
   const closeJoinModal = () => {
     setSelectedCommittee(null);
     setIsJoined(false);
     setJoinError('');
+    setRestrictionData(null);
   };
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (joinError) setJoinError('');
+    if (restrictionData) setRestrictionData(null);
   };
 
   const handleJoinSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.fullName.trim() || formData.fullName.trim().length < 2) {
-      setJoinError('Please enter your full name.');
+    setJoinError('');
+    setRestrictionData(null);
+
+    const cleanMembershipId = formData.membershipId.trim().toUpperCase();
+    const cleanEmail = formData.email.trim().toLowerCase();
+    const cleanFullName = formData.fullName.trim();
+
+    if (!cleanMembershipId) {
+      setJoinError('Please enter your official DRAI Membership ID (e.g. DRAI-2026-1234).');
       return;
     }
-    if (!formData.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
-      setJoinError('Please provide a valid email address so we can register your sub-committee record.');
+
+    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setJoinError('Please provide your valid registered email address.');
+      return;
+    }
+
+    if (!cleanFullName || cleanFullName.length < 2) {
+      setJoinError('Please enter your full name as registered on your membership.');
       return;
     }
 
     setIsSubmitting(true);
-    setJoinError('');
 
     try {
-      // Find existing member or record choice
-      const cleanEmail = formData.email.trim().toLowerCase();
-      const committeeName = selectedCommittee.name;
+      const result = await joinSubCommittee({
+        membershipId: cleanMembershipId,
+        email: cleanEmail,
+        fullName: cleanFullName,
+        phone: formData.phone.trim() || null,
+        subCommitteeId: selectedCommittee.id,
+        subCommitteeName: selectedCommittee.name
+      });
 
-      const { data: existingLead } = await supabase
-        .from('leads')
-        .select('id, admin_notes')
-        .eq('email', cleanEmail)
-        .maybeSingle();
-
-      const noteEntry = `\n[Sub-Committee Joined: ${committeeName} on ${new Date().toLocaleDateString('en-GB')}]`;
-
-      if (existingLead?.id) {
-        await supabase
-          .from('leads')
-          .update({
-            admin_notes: existingLead.admin_notes ? `${existingLead.admin_notes}${noteEntry}` : noteEntry.trim(),
-            sub_committee_id: selectedCommittee.id
-          })
-          .eq('id', existingLead.id);
-      } else {
-        await supabase.from('leads').insert({
-          full_name: formData.fullName.trim(),
-          email: cleanEmail,
-          phone: formData.phone.trim() || null,
-          tier: 'tier_3',
-          source: 'sub_committee_page',
-          sub_committee_id: selectedCommittee.id,
-          admin_notes: noteEntry.trim()
-        });
-      }
-
-      // Dispatch notification to info@doright.ng
-      try {
-        supabase.functions.invoke('send-lead-welcome-email', {
-          body: {
-            type: 'INSERT',
-            source: 'sub_committee_page',
-            record: {
-              full_name: formData.fullName.trim(),
-              email: cleanEmail,
-              phone: formData.phone.trim() || null,
-              sub_committee_id: selectedCommittee.id,
-              source: 'sub_committee_page',
-              admin_notes: noteEntry.trim(),
-            },
-          },
-        }).catch((e) => console.warn('Sub-committee email notification notice:', e));
-      } catch (fnErr) {
-        // Non-blocking
-      }
-
+      setVerifiedMember(result?.lead || {
+        full_name: cleanFullName,
+        membership_id: cleanMembershipId,
+        email: cleanEmail
+      });
       setIsJoined(true);
     } catch (err) {
-      console.warn('Sub-committee selection notice:', err);
-      // Proceed gracefully to ensure member always receives WhatsApp access and instructions
-      setIsJoined(true);
+      console.warn('Sub-committee verification notice:', err);
+      if (err.code === 'NOT_TIER_3') {
+        setRestrictionData({
+          error: 'NOT_TIER_3',
+          currentTier: err.currentTier,
+          currentTierLabel: err.currentTierLabel || 'Tier 1 / Tier 2',
+          message: err.message || 'Access Restricted: Sub-committees are exclusively reserved for Tier 3 (Strategic Leaders).'
+        });
+      } else if (err.code === 'MEMBER_NOT_FOUND' || err.code === 'CREDENTIAL_MISMATCH') {
+        setJoinError(err.message || 'No active membership record was found matching this Membership ID and Email. Sub-committees are exclusively for verified Tier 3 Strategic Leaders.');
+      } else {
+        setJoinError(err.message || 'An error occurred while validating your membership standing. Please try again or contact admin@doright.ng.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -594,14 +586,101 @@ const SubCommittees = () => {
 
               {/* Modal Content */}
               <div className="p-6 sm:p-8 space-y-6">
-                {!isJoined ? (
+                {restrictionData ? (
+                  /* Access Restricted Screen (Tier 1 / Tier 2 Intercept) */
+                  <div className="space-y-6">
+                    <div className="p-5 sm:p-6 bg-red-950/40 border border-red-800/80 rounded-2xl space-y-4">
+                      <div className="w-12 h-12 bg-red-500/20 text-red-400 rounded-full flex items-center justify-center shadow-inner">
+                        <SafeIcon icon={FiLock} className="w-6 h-6" />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <div className="text-xs font-bold uppercase tracking-wider text-red-400">
+                          Access Restricted • Tier 3 Only
+                        </div>
+                        <h4 className="text-base sm:text-lg font-bold text-white leading-snug">
+                          Sub-Committees are Reserved for Tier 3 Strategic Leaders
+                        </h4>
+                        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                          {restrictionData.message}
+                        </p>
+                      </div>
+
+                      <div className="p-4 bg-slate-950/80 border border-slate-800 rounded-xl space-y-2 text-xs text-slate-300">
+                        <div className="font-semibold text-slate-200 flex items-center justify-between">
+                          <span>Your Verified Status:</span>
+                          <span className="text-amber-400 font-bold bg-amber-500/10 px-2.5 py-0.5 rounded-md border border-amber-500/30">
+                            {restrictionData.currentTierLabel || 'Tier 1 / Tier 2'}
+                          </span>
+                        </div>
+                        <p className="leading-relaxed text-slate-400 pt-1">
+                          Sub-committees are specialized operational teams that drive national strategy, requiring 70% meeting involvement. They are not open to Tier 1 Advocates or Tier 2 Champions.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <a
+                        href={`mailto:admin@doright.ng?subject=Tier%203%20Advancement%20Request%20-%20${encodeURIComponent(formData.membershipId || formData.email)}&body=Dear%20DRAI%20Admin%2C%0A%0AI%20am%20interested%20in%20advancing%20to%20Tier%203%20(Strategic%20Leader)%20in%20order%20to%20serve%20in%20the%20${encodeURIComponent(selectedCommittee.name)}.%0A%0AMy%20Membership%20ID%3A%20${encodeURIComponent(formData.membershipId)}%0AName%3A%20${encodeURIComponent(formData.fullName)}%0AEmail%3A%20${encodeURIComponent(formData.email)}`}
+                        className="w-full py-3.5 px-6 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-xl text-sm transition-all shadow-lg active:scale-95 inline-flex items-center justify-center gap-2"
+                      >
+                        <SafeIcon icon={FiMail} className="w-4 h-4" />
+                        <span>Email Admin to Request Tier 3 Advancement</span>
+                      </a>
+
+                      <a
+                        href="https://wa.me/2349123399968?text=Hello%20DRAI%20Admin%2C%20I%20would%20like%20to%20inquire%20about%20advancing%20my%20membership%20to%20Tier%203%20to%20join%20a%20sub-committee."
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-3 px-4 bg-[#25D366]/20 hover:bg-[#25D366]/30 border border-[#25D366]/40 text-[#25D366] font-semibold rounded-xl text-xs transition-colors inline-flex items-center justify-center gap-2"
+                      >
+                        <SafeIcon icon={FaWhatsapp} className="w-4 h-4" />
+                        <span>Chat with Admin on WhatsApp (+234 912 339 9968)</span>
+                      </a>
+
+                      <button
+                        type="button"
+                        onClick={() => setRestrictionData(null)}
+                        className="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-xs transition-colors"
+                      >
+                        Re-enter Details with Another Membership ID
+                      </button>
+                    </div>
+                  </div>
+                ) : !isJoined ? (
                   /* Form State */
                   <form onSubmit={handleJoinSubmit} className="space-y-4 sm:space-y-5" noValidate>
-                    <p className="text-sm text-slate-300 leading-relaxed">
-                      Confirm your details below to activate your role in the{' '}
-                      <strong className="text-white">{selectedCommittee.name}</strong> and join the official WhatsApp working group.
-                    </p>
+                    {/* Tier 3 Exclusivity Notice Banner */}
+                    <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-2.5 text-xs text-amber-300 leading-relaxed">
+                      <SafeIcon icon={FiShield} className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <strong className="text-amber-400">Tier 3 Exclusivity Notice:</strong> Sub-committees are exclusively for verified Tier 3 Strategic Leaders. Enter your Membership ID below to verify your standing.
+                      </div>
+                    </div>
 
+                    {/* Membership ID */}
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                        Membership ID <span className="text-red-400">*</span>
+                      </label>
+                      <div className="relative">
+                        <SafeIcon icon={FiAward} className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-400" />
+                        <input
+                          type="text"
+                          name="membershipId"
+                          required
+                          value={formData.membershipId}
+                          onChange={handleInputChange}
+                          placeholder="e.g. DRAI-2026-1234"
+                          className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-slate-800 border border-slate-700 rounded-xl text-white uppercase placeholder:normal-case placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent text-sm font-mono tracking-wide"
+                        />
+                      </div>
+                      <span className="text-[11px] text-slate-400 mt-1 block">
+                        Found on your virtual Advocacy Card or onboarding confirmation email.
+                      </span>
+                    </div>
+
+                    {/* Full Name */}
                     <div>
                       <label className="block text-xs font-semibold text-slate-300 mb-1.5">
                         Full Name <span className="text-red-400">*</span>
@@ -621,9 +700,10 @@ const SubCommittees = () => {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Registered Email */}
                       <div>
                         <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                          Email Address <span className="text-red-400">*</span>
+                          Registered Email <span className="text-red-400">*</span>
                         </label>
                         <div className="relative">
                           <SafeIcon icon={FiMail} className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -639,9 +719,10 @@ const SubCommittees = () => {
                         </div>
                       </div>
 
+                      {/* WhatsApp Phone */}
                       <div>
                         <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                          Phone Number <span className="text-slate-400 font-normal">(WhatsApp)</span>
+                          WhatsApp Phone Number
                         </label>
                         <div className="relative">
                           <SafeIcon icon={FiPhone} className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -658,7 +739,7 @@ const SubCommittees = () => {
                     </div>
 
                     {joinError && (
-                      <div className="p-3 bg-red-950/60 border border-red-800 rounded-xl text-red-300 text-xs flex items-start gap-2">
+                      <div className="p-3 bg-red-950/60 border border-red-800 rounded-xl text-red-300 text-xs flex items-start gap-2 leading-relaxed">
                         <SafeIcon icon={FiAlertCircle} className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
                         <span>{joinError}</span>
                       </div>
@@ -673,11 +754,11 @@ const SubCommittees = () => {
                         {isSubmitting ? (
                           <>
                             <SafeIcon icon={FiLoader} className="w-4 h-4 animate-spin" />
-                            <span>Confirming Selection...</span>
+                            <span>Verifying Tier 3 Standing...</span>
                           </>
                         ) : (
                           <>
-                            <span>Confirm &amp; Join {selectedCommittee.shortName}</span>
+                            <span>Verify &amp; Join {selectedCommittee.shortName}</span>
                             <SafeIcon icon={FiArrowRight} className="w-4 h-4 stroke-[2.5]" />
                           </>
                         )}
@@ -688,16 +769,22 @@ const SubCommittees = () => {
                   /* Confirmation & Welcome Screen (Exact Text from Directive) */
                   <div className="space-y-6">
                     <div className="p-5 sm:p-6 bg-emerald-950/40 border border-emerald-800/80 rounded-2xl space-y-4">
-                      <div className="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center shadow-inner">
-                        <SafeIcon icon={FiCheckCircle} className="w-7 h-7" />
+                      <div className="flex items-center justify-between">
+                        <div className="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center shadow-inner">
+                          <SafeIcon icon={FiCheckCircle} className="w-7 h-7" />
+                        </div>
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-bold uppercase tracking-wider">
+                          <SafeIcon icon={FiShield} className="w-3.5 h-3.5" />
+                          <span>Tier 3 Strategic Leader • {verifiedMember?.membership_id || formData.membershipId}</span>
+                        </div>
                       </div>
 
                       <div className="space-y-2">
                         <h4 className="text-base sm:text-lg font-bold text-white leading-snug">
-                          Thank you for stepping up to serve in the {selectedCommittee.name}!
+                          Welcome, {verifiedMember?.full_name || formData.fullName}! Thank you for stepping up to serve in the {selectedCommittee.name}!
                         </h4>
                         <p className="text-xs sm:text-sm text-emerald-200/90 leading-relaxed">
-                          As a sub-committee member, your contribution is vital to driving our operational goals and delivering strategic impact.
+                          Your role as a Tier 3 Strategic Leader is vital to driving our operational goals and delivering national impact.
                         </p>
                       </div>
 
