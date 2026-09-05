@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import { FaHandshake, FaWhatsapp } from 'react-icons/fa6';
-import { submitLead } from '../services/leadsService';
+import { submitLead, checkLeadDuplicate } from '../services/leadsService';
 import MemberCard from '../components/MemberCard';
 import supabase from '../lib/supabase';
 import useSeo from '../hooks/useSeo';
@@ -48,6 +48,7 @@ const Join = () => {
   const [submittedLead, setSubmittedLead] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [duplicateWarning, setDuplicateWarning] = useState({ field: null, message: '' });
   const [siteSettings, setSiteSettings] = useState({});
   const waysSectionRef = useRef(null);
 
@@ -98,6 +99,7 @@ const Join = () => {
     setIsSubmitted(false);
     setSubmitError('');
     setPhotoError('');
+    setDuplicateWarning({ field: null, message: '' });
     setIsModalOpen(true);
   };
 
@@ -109,11 +111,55 @@ const Join = () => {
       setPhotoFile(null);
       setPhotoPreview(null);
       setIsSubmitted(false);
+      setDuplicateWarning({ field: null, message: '' });
     }
   };
 
   const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (duplicateWarning.field === name) {
+      setDuplicateWarning({ field: null, message: '' });
+    }
+    if (submitError) {
+      setSubmitError('');
+    }
+  };
+
+  const handleEmailBlur = async () => {
+    const cleanEmail = formData.email.trim().toLowerCase();
+    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) return;
+    try {
+      const res = await checkLeadDuplicate({ email: cleanEmail });
+      if (res?.isDuplicate && res?.duplicateField === 'email') {
+        setDuplicateWarning({
+          field: 'email',
+          message: res.message || 'An advocate with this email address is already registered. Each member can only join once.'
+        });
+      } else if (duplicateWarning.field === 'email') {
+        setDuplicateWarning({ field: null, message: '' });
+      }
+    } catch (e) {
+      // Non-blocking
+    }
+  };
+
+  const handlePhoneBlur = async () => {
+    const cleanPhone = formData.phone.trim();
+    if (!cleanPhone || cleanPhone.replace(/\D/g, '').length < 8) return;
+    try {
+      const res = await checkLeadDuplicate({ phone: cleanPhone });
+      if (res?.isDuplicate && res?.duplicateField === 'phone') {
+        setDuplicateWarning({
+          field: 'phone',
+          message: res.message || 'An advocate with this phone number is already registered. Each member can only join once.'
+        });
+      } else if (duplicateWarning.field === 'phone') {
+        setDuplicateWarning({ field: null, message: '' });
+      }
+    } catch (e) {
+      // Non-blocking
+    }
   };
 
   const handlePhotoChange = (e) => {
@@ -147,8 +193,20 @@ const Join = () => {
   const getFriendlySubmitError = (error) => {
     if (!error) return 'Unable to submit your application right now. Please check your internet connection and try again.';
     const msg = typeof error === 'string' ? error : error?.message || '';
-    if (msg.includes('duplicate') || msg.includes('unique') || msg.includes('already exists') || msg.includes('23505')) {
-      return 'An advocate with this email address is already registered. If you are already a member or need support, please contact info@doright.ng.';
+    const code = error?.code || '';
+
+    if (
+      code === 'DUPLICATE_REGISTRATION' ||
+      msg.includes('DUPLICATE_REGISTRATION') ||
+      msg.includes('already registered') ||
+      msg.includes('duplicate') ||
+      msg.includes('already exists') ||
+      msg.includes('23505')
+    ) {
+      if (msg.includes('phone') || error?.duplicateField === 'phone') {
+        return 'An advocate with this phone number is already registered. Each member can only join once. If you need assistance or want to access your membership card, please contact admin@doright.ng.';
+      }
+      return 'An advocate with this email address is already registered. Each member can only join once. If you need assistance or want to access your membership card, please contact admin@doright.ng.';
     }
     if (msg.includes('network') || msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('network error')) {
       return 'Could not reach the server. Please check your internet connection and try again.';
@@ -156,7 +214,7 @@ const Join = () => {
     if (msg.includes('email') || msg.includes('format')) {
       return 'Please double-check your email address to ensure it is entered correctly.';
     }
-    return 'We were unable to process your application right now. Please try again in a few moments or email us at info@doright.ng.';
+    return msg || 'We were unable to process your application right now. Please try again in a few moments or email us at admin@doright.ng.';
   };
 
   const handleSubmit = async (e) => {
@@ -169,6 +227,11 @@ const Join = () => {
 
     if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
       setSubmitError('Please provide a valid email address so we can send your digital membership card.');
+      return;
+    }
+
+    if (duplicateWarning.field && duplicateWarning.message) {
+      setSubmitError(duplicateWarning.message);
       return;
     }
 
@@ -676,34 +739,66 @@ const Join = () => {
                     {/* Email & Phone Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
                       <div>
-                        <label htmlFor="modal-email" className="block text-xs sm:text-sm font-semibold text-neutral-800 mb-1 sm:mb-1.5">
-                          Email Address <span className="text-red-500">*</span>
-                        </label>
+                        <div className="flex items-center justify-between mb-1 sm:mb-1.5">
+                          <label htmlFor="modal-email" className="block text-xs sm:text-sm font-semibold text-neutral-800">
+                            Email Address <span className="text-red-500">*</span>
+                          </label>
+                          {duplicateWarning.field === 'email' && (
+                            <span className="text-[11px] text-amber-700 font-medium">Already registered</span>
+                          )}
+                        </div>
                         <input
                           type="email"
                           id="modal-email"
                           name="email"
                           value={formData.email}
                           onChange={handleInputChange}
+                          onBlur={handleEmailBlur}
                           required
                           placeholder="amina@example.com"
-                          className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl text-neutral-900 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-neutral-400 transition-all"
+                          className={`w-full px-3.5 py-2.5 sm:px-4 sm:py-3 border rounded-xl text-neutral-900 text-base sm:text-sm focus:outline-none focus:ring-2 placeholder:text-neutral-400 transition-all ${
+                            duplicateWarning.field === 'email'
+                              ? 'border-amber-400 focus:border-amber-500 focus:ring-amber-200/50 bg-amber-50/20'
+                              : 'border-neutral-300 focus:ring-primary/20 focus:border-primary'
+                          }`}
                         />
+                        {duplicateWarning.field === 'email' && (
+                          <p className="text-xs text-amber-700 mt-1 flex items-center gap-1">
+                            <SafeIcon icon={FiAlertCircle} className="w-3.5 h-3.5 flex-shrink-0" />
+                            <span>This email is already registered. Each person can only join once.</span>
+                          </p>
+                        )}
                       </div>
                       <div>
-                        <label htmlFor="modal-phone" className="block text-xs sm:text-sm font-semibold text-neutral-800 mb-1 sm:mb-1.5">
-                          Phone Number <span className="text-red-500">*</span>
-                        </label>
+                        <div className="flex items-center justify-between mb-1 sm:mb-1.5">
+                          <label htmlFor="modal-phone" className="block text-xs sm:text-sm font-semibold text-neutral-800">
+                            Phone Number <span className="text-red-500">*</span>
+                          </label>
+                          {duplicateWarning.field === 'phone' && (
+                            <span className="text-[11px] text-amber-700 font-medium">Already registered</span>
+                          )}
+                        </div>
                         <input
                           type="tel"
                           id="modal-phone"
                           name="phone"
                           value={formData.phone}
                           onChange={handleInputChange}
+                          onBlur={handlePhoneBlur}
                           required
                           placeholder="+234 912 339 9968"
-                          className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl text-neutral-900 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-neutral-400 transition-all"
+                          className={`w-full px-3.5 py-2.5 sm:px-4 sm:py-3 border rounded-xl text-neutral-900 text-base sm:text-sm focus:outline-none focus:ring-2 placeholder:text-neutral-400 transition-all ${
+                            duplicateWarning.field === 'phone'
+                              ? 'border-amber-400 focus:border-amber-500 focus:ring-amber-200/50 bg-amber-50/20'
+                              : 'border-neutral-300 focus:ring-primary/20 focus:border-primary'
+                          }`}
                         />
+                        {duplicateWarning.field === 'phone' && (
+                          <p className="text-xs text-amber-700 mt-1 flex items-center gap-1">
+                            <SafeIcon icon={FiAlertCircle} className="w-3.5 h-3.5 flex-shrink-0" />
+                            <span>This phone is already registered. Each person can only join once.</span>
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -767,11 +862,44 @@ const Join = () => {
                       {photoError && <p className="text-red-600 text-xs sm:text-sm mt-1.5">{photoError}</p>}
                     </div>
 
-                    {/* Submission Error */}
+                    {/* Submission Error & Duplicate Notice */}
                     {submitError && (
-                      <div className="flex items-start bg-red-50 border border-red-200 rounded-xl p-3 sm:p-3.5">
-                        <SafeIcon icon={FiAlertCircle} className="w-5 h-5 text-red-600 mr-2.5 mt-0.5 flex-shrink-0" />
-                        <p className="text-red-700 text-xs sm:text-sm">{submitError}</p>
+                      <div className={`flex items-start rounded-xl p-3.5 sm:p-4 border ${
+                        submitError.includes('already registered') || submitError.includes('Each member can only join once')
+                          ? 'bg-amber-50/90 border-amber-300 text-amber-900'
+                          : 'bg-red-50 border-red-200 text-red-700'
+                      }`}>
+                        <SafeIcon
+                          icon={FiAlertCircle}
+                          className={`w-5 h-5 mr-2.5 mt-0.5 flex-shrink-0 ${
+                            submitError.includes('already registered') || submitError.includes('Each member can only join once')
+                              ? 'text-amber-600'
+                              : 'text-red-600'
+                          }`}
+                        />
+                        <div className="text-xs sm:text-sm leading-relaxed space-y-2">
+                          <p className="font-medium">{submitError}</p>
+                          {(submitError.includes('already registered') || submitError.includes('Each member can only join once')) && (
+                            <div className="flex flex-wrap items-center gap-2 pt-1">
+                              <a
+                                href="mailto:admin@doright.ng?subject=DRAI%20Membership%20Card%20Support"
+                                className="inline-flex items-center gap-1.5 font-semibold text-primary hover:underline bg-white px-2.5 py-1 rounded-lg border border-neutral-200 shadow-sm"
+                              >
+                                <SafeIcon icon={FiMail} className="w-3.5 h-3.5" />
+                                <span>Email Support (admin@doright.ng)</span>
+                              </a>
+                              <a
+                                href="https://chat.whatsapp.com/CuwrXFIM8Ry2DZUImaHIxn?s=cl&p=i&ilr=4&amv=1"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 font-semibold text-emerald-700 hover:underline bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 shadow-sm"
+                              >
+                                <SafeIcon icon={FaWhatsapp} className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>Tier 1 Community</span>
+                              </a>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
 

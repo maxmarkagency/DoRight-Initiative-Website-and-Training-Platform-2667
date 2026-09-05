@@ -40,6 +40,7 @@ Deno.serve(async (req) => {
 
     // Parse formData or JSON payload
     const contentType = req.headers.get("content-type") || "";
+    let action = "";
     let fullName = "";
     let email = "";
     let phone: string | null = null;
@@ -52,6 +53,7 @@ Deno.serve(async (req) => {
 
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
+      action = formData.get("action")?.toString() || "";
       fullName = formData.get("fullName")?.toString() || "";
       email = formData.get("email")?.toString() || "";
       phone = formData.get("phone")?.toString() || null;
@@ -67,6 +69,7 @@ Deno.serve(async (req) => {
       }
     } else {
       const body = await req.json();
+      action = body.action || "";
       fullName = body.fullName || "";
       email = body.email || "";
       phone = body.phone || null;
@@ -86,11 +89,121 @@ Deno.serve(async (req) => {
       }
     }
 
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPhone = phone ? phone.trim() : null;
+    const extractDigits = (val: string | null) => (val ? val.replace(/\D/g, "") : "");
+    const inputPhoneDigits = extractDigits(cleanPhone);
+    const inputPhoneSuffix = inputPhoneDigits.length >= 10 ? inputPhoneDigits.slice(-10) : inputPhoneDigits;
+
+    // Support pre-flight duplicate check action
+    if (action === "check_duplicate") {
+      if (cleanEmail) {
+        const { data: existingEmail } = await supabase
+          .from("leads")
+          .select("id, email, full_name")
+          .ilike("email", cleanEmail)
+          .limit(1);
+
+        if (existingEmail && existingEmail.length > 0) {
+          return new Response(
+            JSON.stringify({
+              isDuplicate: true,
+              duplicateField: "email",
+              message: "An advocate with this email address is already registered. Each member can only join once."
+            }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+
+      if (inputPhoneDigits && inputPhoneDigits.length >= 7) {
+        const { data: leadsWithPhone } = await supabase
+          .from("leads")
+          .select("id, phone")
+          .not("phone", "is", null);
+
+        const dup = leadsWithPhone?.find((item: any) => {
+          if (!item.phone) return false;
+          const stored = extractDigits(item.phone);
+          if (stored.length >= 10 && inputPhoneDigits.length >= 10) {
+            return stored.slice(-10) === inputPhoneSuffix;
+          }
+          return stored.length >= 7 && stored === inputPhoneDigits;
+        });
+
+        if (dup) {
+          return new Response(
+            JSON.stringify({
+              isDuplicate: true,
+              duplicateField: "phone",
+              message: "An advocate with this phone number is already registered. Each member can only join once."
+            }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ isDuplicate: false }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (!fullName || !email) {
       return new Response(
         JSON.stringify({ error: "Full name and email are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Check 1: Duplicate Email Verification
+    const { data: existingByEmail, error: emailCheckErr } = await supabase
+      .from("leads")
+      .select("id, email, full_name, phone, membership_id")
+      .ilike("email", cleanEmail)
+      .limit(1);
+
+    if (existingByEmail && existingByEmail.length > 0) {
+      console.warn("submit-lead: duplicate registration rejected by email", cleanEmail);
+      return new Response(
+        JSON.stringify({
+          error: "DUPLICATE_REGISTRATION",
+          duplicateField: "email",
+          message: "An advocate with this email address is already registered. Each member can only join once. If you need assistance or want to access your membership card, please contact admin@doright.ng."
+        }),
+        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Check 2: Duplicate Phone Verification
+    if (inputPhoneDigits && inputPhoneDigits.length >= 7) {
+      const { data: leadsWithPhone, error: phoneCheckErr } = await supabase
+        .from("leads")
+        .select("id, email, full_name, phone, membership_id")
+        .not("phone", "is", null);
+
+      if (leadsWithPhone && leadsWithPhone.length > 0) {
+        const duplicateLead = leadsWithPhone.find((item: any) => {
+          if (!item.phone) return false;
+          const stored = extractDigits(item.phone);
+          if (stored.length >= 10 && inputPhoneDigits.length >= 10) {
+            return stored.slice(-10) === inputPhoneSuffix;
+          }
+          return stored.length >= 7 && stored === inputPhoneDigits;
+        });
+
+        if (duplicateLead) {
+          console.warn("submit-lead: duplicate registration rejected by phone", cleanPhone);
+          return new Response(
+            JSON.stringify({
+              error: "DUPLICATE_REGISTRATION",
+              duplicateField: "phone",
+              message: "An advocate with this phone number is already registered. Each member can only join once. If you need assistance or want to access your membership card, please contact admin@doright.ng."
+            }),
+            { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
     }
 
     // 1. Upload photo with Service Role
@@ -128,8 +241,8 @@ Deno.serve(async (req) => {
     // 3. Insert Lead Record
     const leadInsertPayload: Record<string, any> = {
       full_name: fullName.trim(),
-      email: email.trim().toLowerCase(),
-      phone: phone?.trim() || null,
+      email: cleanEmail,
+      phone: cleanPhone,
       photo_url: photoFilePath,
       sub_committee_id: subCommitteeId || null,
       source: "website",

@@ -85,6 +85,35 @@ const fileToBase64 = (file) =>
     reader.onerror = (error) => reject(error);
   });
 
+export const checkLeadDuplicate = async ({ email, phone }) => {
+  try {
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
+    const cleanPhone = phone ? phone.trim() : '';
+
+    if (!cleanEmail && !cleanPhone) {
+      return { isDuplicate: false };
+    }
+
+    const { data, error } = await supabase.functions.invoke('submit-lead', {
+      body: {
+        action: 'check_duplicate',
+        email: cleanEmail,
+        phone: cleanPhone
+      }
+    });
+
+    if (error) {
+      console.warn('checkLeadDuplicate error:', error);
+      return { isDuplicate: false };
+    }
+
+    return data || { isDuplicate: false };
+  } catch (err) {
+    console.warn('checkLeadDuplicate invocation failed:', err);
+    return { isDuplicate: false };
+  }
+};
+
 export const submitLead = async ({ fullName, email, phone, interest, message, subCommitteeId = null, photoFile }) => {
   let photoPreview = null;
   let photoBase64 = null;
@@ -110,7 +139,7 @@ export const submitLead = async ({ fullName, email, phone, interest, message, su
   const now = new Date().toISOString();
   const fallbackMembershipId = `DRAI-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-  // 1. Primary path: Use submit-lead Edge Function (service role bypasses RLS and saves photo)
+  // 1. Primary path: Use submit-lead Edge Function (service role bypasses RLS, enforces duplicate limits, and saves photo)
   try {
     const { data: funcData, error: funcError } = await supabase.functions.invoke('submit-lead', {
       body: {
@@ -132,10 +161,39 @@ export const submitLead = async ({ fullName, email, phone, interest, message, su
         photo_preview: photoPreview || funcData.lead.photo_public_url || null
       };
     }
+
     if (funcError) {
-      console.warn('submit-lead function returned error, using resilient fallback:', funcError);
+      // Check if the edge function rejected due to duplicate registration
+      let errBody = null;
+      if (funcError.context && typeof funcError.context.json === 'function') {
+        try {
+          errBody = await funcError.context.json();
+        } catch (e) {
+          // ignore parsing error
+        }
+      }
+
+      if (
+        errBody?.error === 'DUPLICATE_REGISTRATION' ||
+        funcError.message?.includes('DUPLICATE_REGISTRATION') ||
+        errBody?.duplicateField
+      ) {
+        const duplicateField = errBody?.duplicateField || (errBody?.message?.includes('phone') ? 'phone' : 'email');
+        const dupError = new Error(
+          errBody?.message ||
+          `An advocate with this ${duplicateField === 'phone' ? 'phone number' : 'email address'} is already registered. Each member can only join once. If you need assistance or want to access your membership card, please contact admin@doright.ng.`
+        );
+        dupError.code = 'DUPLICATE_REGISTRATION';
+        dupError.duplicateField = duplicateField;
+        throw dupError; // NEVER proceed to fallback insert on duplicate!
+      }
+
+      console.warn('submit-lead function returned non-duplicate error, evaluating fallback:', funcError);
     }
   } catch (funcErr) {
+    if (funcErr.code === 'DUPLICATE_REGISTRATION' || funcErr.message?.includes('already registered')) {
+      throw funcErr; // Re-throw immediately to Join form UI!
+    }
     console.warn('submit-lead function invocation error, using resilient fallback:', funcErr);
   }
 
@@ -159,6 +217,16 @@ export const submitLead = async ({ fullName, email, phone, interest, message, su
     .insert(localLead);
 
   if (insertError) {
+    if (
+      insertError.code === '23505' ||
+      insertError.message?.includes('duplicate') ||
+      insertError.message?.includes('unique')
+    ) {
+      const dupError = new Error('An advocate with this email address or phone number is already registered. Each member can only join once.');
+      dupError.code = 'DUPLICATE_REGISTRATION';
+      throw dupError;
+    }
+
     const { error: retryError } = await supabase
       .from('leads')
       .insert({
@@ -173,7 +241,18 @@ export const submitLead = async ({ fullName, email, phone, interest, message, su
         admin_notes: buildAdminNotes(interest, message)
       });
 
-    if (retryError) throw retryError;
+    if (retryError) {
+      if (
+        retryError.code === '23505' ||
+        retryError.message?.includes('duplicate') ||
+        retryError.message?.includes('unique')
+      ) {
+        const dupError = new Error('An advocate with this email address or phone number is already registered. Each member can only join once.');
+        dupError.code = 'DUPLICATE_REGISTRATION';
+        throw dupError;
+      }
+      throw retryError;
+    }
   }
 
   // Trigger welcome email asynchronously
