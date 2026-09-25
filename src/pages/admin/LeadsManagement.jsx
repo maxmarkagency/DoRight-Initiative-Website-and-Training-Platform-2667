@@ -257,6 +257,7 @@ const LeadsManagement = () => {
       tier_1: leads.filter((l) => (l.tier || 'tier_1') === 'tier_1').length,
       tier_2: leads.filter((l) => l.tier === 'tier_2').length,
       tier_3: leads.filter((l) => l.tier === 'tier_3').length,
+      tier_4: leads.filter((l) => l.tier === 'tier_4').length,
       submittedCurrentMonth: leads.filter((l) => l.impact_submissions?.[currentMonthKey] === true).length
     };
   }, [leads, currentMonthKey]);
@@ -594,12 +595,14 @@ const LeadsManagement = () => {
       setReferralError('');
 
       const now = new Date().toISOString();
+      const isTier4 = referralForm.tier === 'tier_4';
       const { error } = await supabase.from('leads').insert({
         full_name: referralForm.fullName.trim(),
         email: referralForm.email.trim().toLowerCase(),
         phone: referralForm.phone.trim() || null,
         tier: referralForm.tier || 'tier_1',
         tier_1_at: now,
+        ...(isTier4 ? { tier_4_at: now, status: 'active' } : {}),
         referred_by: referralForm.referredBy.trim() || null,
         source: 'referral',
         impact_submissions: {},
@@ -712,7 +715,7 @@ const LeadsManagement = () => {
       </AnimatePresence>
 
       {/* Tier & Monthly Impact Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
         {/* All Members */}
         <div
           onClick={() => setSelectedTierTab('all')}
@@ -792,7 +795,28 @@ const LeadsManagement = () => {
             </div>
           </div>
           <div className="text-xl font-bold text-gray-900 dark:text-white mt-2">{counts.tier_3}</div>
-          <div className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-0.5">Strategic &amp; committee leaders</div>
+          <div className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-0.5">Strategic &amp; committee</div>
+        </div>
+
+        {/* Tier 4 */}
+        <div
+          onClick={() => setSelectedTierTab('tier_4')}
+          className={`cursor-pointer rounded-xl p-4 border transition-all ${
+            selectedTierTab === 'tier_4'
+              ? 'bg-amber-50/60 dark:bg-amber-950/40 border-amber-500 ring-2 ring-amber-500/20 shadow-md'
+              : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-amber-200'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+              Tier 4: Foundational
+            </span>
+            <div className="w-7 h-7 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center text-amber-600 dark:text-amber-400">
+              <SafeIcon icon={FiAward} className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="text-xl font-bold text-gray-900 dark:text-white mt-2">{counts.tier_4 || 0}</div>
+          <div className="text-[11px] text-amber-700 dark:text-amber-400 mt-0.5">Foundational leaders</div>
         </div>
 
         {/* Monthly Impact Story Tracker Card */}
@@ -871,6 +895,17 @@ const LeadsManagement = () => {
                 }`}
               >
                 Tier 3 ({counts.tier_3})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedTierTab('tier_4')}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                  selectedTierTab === 'tier_4'
+                    ? 'bg-amber-600 text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900'
+                }`}
+              >
+                Tier 4 ({counts.tier_4 || 0})
               </button>
             </div>
 
@@ -1501,14 +1536,31 @@ const LeadsManagement = () => {
                     type="button"
                     onClick={() => setReminderTierTab('tier_3')}
                     className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 ${
-                      reminderTierTab === 'tier_3' || reminderTierTab === 'tier_4' || reminderTierTab === 'tier_5'
+                      reminderTierTab === 'tier_3'
                         ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-xs'
                         : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                     }`}
                   >
-                    <span>Tier 3+: Strategic Leaders &amp; Council</span>
-                    {(selectedLead.tier === 'tier_3' || selectedLead.tier === 'tier_4' || selectedLead.tier === 'tier_5') && (
+                    <span>Tier 3: Strategic Leaders</span>
+                    {selectedLead.tier === 'tier_3' && (
                       <span className="px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 text-[10px] rounded">
+                        Current
+                      </span>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setReminderTierTab('tier_4')}
+                    className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 ${
+                      reminderTierTab === 'tier_4'
+                        ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-xs'
+                        : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                    }`}
+                  >
+                    <span>Tier 4: Foundational Leaders</span>
+                    {selectedLead.tier === 'tier_4' && (
+                      <span className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 text-[10px] rounded">
                         Current
                       </span>
                     )}
@@ -2071,6 +2123,67 @@ const LeadsManagement = () => {
                     </div>
                   </div>
                 )}
+
+                {/* SUITE 4: TIER 4 FOUNDATIONAL LEADERS */}
+                {reminderTierTab === 'tier_4' && (
+                  <div className="grid grid-cols-1 gap-5">
+                    {/* Welcome to Board Onboarding Email */}
+                    <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xs hover:border-amber-400 transition-colors space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-700 pb-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 rounded text-[10px] font-bold uppercase tracking-wider">
+                              Board Onboarding
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              Governance Tier 4
+                            </span>
+                          </div>
+                          <h4 className="text-sm font-bold text-gray-900 dark:text-white mt-1">
+                            Welcome to the Board – Foundational Leader Onboarding
+                          </h4>
+                          <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
+                            Subject: Welcome to the Board – Tier 4 Foundational Leader Onboarding
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const cardUrl = `https://doright.ng/membership-card?id=${encodeURIComponent(selectedLead.membership_id || selectedLead.id)}`;
+                              const payUrl = `https://doright.ng/pay?purpose=registration&tier=tier_4&amount=250000`;
+                              const body = `Subject: Welcome to the Board – Tier 4 Foundational Leader Onboarding\n\nDear ${selectedLead.full_name},\n\nWe are honored to formally welcome you as a Tier 4 Foundational Leader.\n\nTier 4 is a restricted, non-transition governance tier reserved for trustee-appointed leaders, governance directors, and founding advisors. In this role as a Visionary Director, you will play a critical part in guiding the long-term vision, strategy, and sustainability of the DRAI movement.\n\nYour Core Responsibilities\nAs a Tier 4 Foundational Leader, your governance and operational scope includes:\n• High-Level Governance & Policy Direction: Define, guide, and maintain overall policy governance, scaling strategy, and organizational direction.\n• Financial Stewardship & Oversight: Provide financial oversight and maintain long-term financial health to support DRAI programs and outreach.\n• Advisory & Executive Leadership: Serve on the Advisory Council and the Keystone Executive Board to drive strategic decision-making.\n• Sustaining Movement Values: Ensure organizational alignment and integrity across all advocacy tiers and initiatives.\n\nNext Steps\n• Annual Membership Dues: Annual dues for Tier 3 and Tier 4 members are set between NGN 250,000 – NGN 300,000. Monthly payment reminders will begin during the final quarter of your membership cycle. Please click here to access the different ways you can renew your annual dues. 👉 ${payUrl}\n• Digital Membership Card: You can download your official DRAI Membership Card directly to your device and print a physical copy at your convenience. 👉 ${cardUrl}\n\nIf you have any questions or require additional materials as you step into your governance role, please reach out to me on admin@doright.ng or +234 802 329 8260.\n\nThank you for your dedicated leadership and commitment to driving sustainable impact.\n\nKind regards,\nToyin Olayemi\nDoing Right Awareness Initiative (DRAI)\nwww.doright.ng`;
+                              navigator.clipboard.writeText(body);
+                              setReminderToast({ type: 'success', message: 'Tier 4 Board Onboarding email template copied to clipboard!' });
+                              setTimeout(() => setReminderToast(null), 4000);
+                            }}
+                            className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-lg transition-all shadow-xs flex items-center gap-1.5"
+                          >
+                            <SafeIcon icon={FiCopy} className="w-3.5 h-3.5" />
+                            <span>Copy Template</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg text-xs text-gray-700 dark:text-gray-300 space-y-2 border border-gray-100 dark:border-gray-800 leading-relaxed font-sans">
+                        <p className="font-bold text-gray-900 dark:text-white">Dear {selectedLead.full_name},</p>
+                        <p>We are honored to formally welcome you as a Tier 4 Foundational Leader.</p>
+                        <p>Tier 4 is a restricted, non-transition governance tier reserved for trustee-appointed leaders, governance directors, and founding advisors. In this role as a Visionary Director, you will play a critical part in guiding the long-term vision, strategy, and sustainability of the DRAI movement.</p>
+                        <div className="pl-3 border-l-2 border-amber-500 space-y-1 text-gray-600 dark:text-gray-400">
+                          <p><strong>• High-Level Governance &amp; Policy Direction:</strong> Define, guide, and maintain overall policy governance, scaling strategy, and organizational direction.</p>
+                          <p><strong>• Financial Stewardship &amp; Oversight:</strong> Provide financial oversight and maintain long-term financial health to support DRAI programs and outreach.</p>
+                          <p><strong>• Advisory &amp; Executive Leadership:</strong> Serve on the Advisory Council and the Keystone Executive Board to drive strategic decision-making.</p>
+                          <p><strong>• Sustaining Movement Values:</strong> Ensure organizational alignment and integrity across all advocacy tiers and initiatives.</p>
+                        </div>
+                        <div className="pt-2 border-t border-gray-200 dark:border-gray-700 space-y-1">
+                          <p><strong>Annual Dues:</strong> NGN 250,000 – NGN 300,000 (Payment Portal: <code>doright.ng/pay?purpose=registration&amp;tier=tier_4</code>)</p>
+                          <p><strong>Membership Card Link:</strong> <code>doright.ng/membership-card?id={selectedLead.membership_id || selectedLead.id}</code></p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               /* TAB 3: TIER MANAGEMENT & NOTES */
@@ -2334,6 +2447,7 @@ const LeadsManagement = () => {
                 <option value="tier_1">Tier 1: Personal Advocate</option>
                 <option value="tier_2">Tier 2: Movement Champion</option>
                 <option value="tier_3">Tier 3: Strategic Leader</option>
+                <option value="tier_4">Tier 4: Foundational Leader</option>
               </select>
             </div>
           </div>

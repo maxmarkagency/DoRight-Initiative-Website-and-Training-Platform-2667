@@ -33,10 +33,21 @@ export const TIERS = {
     progression: 'Core leadership driving nationwide transformation.',
     badgeClass: 'bg-emerald-100 text-emerald-800 border border-emerald-200',
     color: '#047857',
+  },
+  tier_4: {
+    key: 'tier_4',
+    label: 'Tier 4',
+    name: 'Tier 4 (Foundational Leader)',
+    description: 'Restricted, non-transition governance tier for trustee-appointed leaders, governance directors, and founding advisors.',
+    focus: 'High-Level Governance, Policy Direction, Financial Stewardship & Advisory Leadership.',
+    action: 'Serve on the Advisory Council and Keystone Executive Board.',
+    progression: 'Restricted Governance Lifetime Appointment.',
+    badgeClass: 'bg-amber-100 text-amber-900 border border-amber-300',
+    color: '#B45309',
   }
 };
 
-export const TIER_KEYS = ['tier_1', 'tier_2', 'tier_3'];
+export const TIER_KEYS = ['tier_1', 'tier_2', 'tier_3', 'tier_4'];
 
 export const getActiveSubCommittees = async () => {
   try {
@@ -192,7 +203,7 @@ export const joinSubCommittee = async ({ membershipId, email, fullName, phone, s
   }
 };
 
-export const submitLead = async ({ fullName, email, phone, interest, message, subCommitteeId = null, photoFile }) => {
+export const submitLead = async ({ fullName, email, phone, interest, message, subCommitteeId = null, photoFile, tier = 'tier_1', source = 'website', additionalNotes = '' }) => {
   let photoPreview = null;
   let photoBase64 = null;
   let photoExt = 'jpg';
@@ -229,7 +240,9 @@ export const submitLead = async ({ fullName, email, phone, interest, message, su
         subCommitteeId: subCommitteeId || null,
         photoBase64,
         photoExt,
-        photoMime
+        photoMime,
+        tier,
+        source
       }
     });
 
@@ -276,17 +289,23 @@ export const submitLead = async ({ fullName, email, phone, interest, message, su
   }
 
   // 2. Resilient fallback path: Direct insert without .select() (prevents 401 unauthenticated select crash)
+  const isTier4 = tier === 'tier_4';
+  const effectiveAdminNotes = additionalNotes
+    ? `${buildAdminNotes(interest, message)}\n${additionalNotes}`
+    : buildAdminNotes(interest, message);
+
   const localLead = {
     full_name: fullName,
     email,
     phone: phone || null,
     sub_committee_id: subCommitteeId || null,
-    source: 'website',
-    tier: 'tier_1',
+    source,
+    tier,
     tier_1_at: now,
+    ...(isTier4 ? { tier_4_at: now } : {}),
     membership_id: fallbackMembershipId,
-    status: 'new',
-    admin_notes: buildAdminNotes(interest, message),
+    status: isTier4 ? 'active' : 'new',
+    admin_notes: effectiveAdminNotes,
     created_at: now
   };
 
@@ -305,19 +324,22 @@ export const submitLead = async ({ fullName, email, phone, interest, message, su
       throw dupError;
     }
 
+    const retryPayload = {
+      full_name: fullName,
+      email,
+      phone: phone || null,
+      sub_committee_id: subCommitteeId || null,
+      source,
+      tier,
+      tier_1_at: now,
+      ...(isTier4 ? { tier_4_at: now } : {}),
+      status: isTier4 ? 'active' : 'new',
+      admin_notes: effectiveAdminNotes
+    };
+
     const { error: retryError } = await supabase
       .from('leads')
-      .insert({
-        full_name: fullName,
-        email,
-        phone: phone || null,
-        sub_committee_id: subCommitteeId || null,
-        source: 'website',
-        tier: 'tier_1',
-        tier_1_at: now,
-        status: 'new',
-        admin_notes: buildAdminNotes(interest, message)
-      });
+      .insert(retryPayload);
 
     if (retryError) {
       if (
@@ -353,6 +375,37 @@ export const submitLead = async ({ fullName, email, phone, interest, message, su
     ...localLead,
     photo_preview: photoPreview
   };
+};
+
+/**
+ * Dedicated submission handler for Tier 4 Foundational Leaders
+ */
+export const submitFoundationLead = async ({
+  fullName,
+  email,
+  phone,
+  governanceRole,
+  organization,
+  vision,
+  photoFile
+}) => {
+  const notes = [
+    governanceRole ? `Governance Role: ${governanceRole}` : null,
+    organization ? `Organization/Affiliation: ${organization}` : null,
+    vision ? `Vision / Statement: ${vision}` : null,
+  ].filter(Boolean).join('\n');
+
+  return submitLead({
+    fullName,
+    email,
+    phone,
+    interest: governanceRole || 'Foundational Governance',
+    message: vision || 'Foundational Leader Registration',
+    tier: 'tier_4',
+    source: 'foundation_portal',
+    additionalNotes: notes,
+    photoFile
+  });
 };
 
 export const DEFAULT_TIER_WHATSAPP_LINKS = {

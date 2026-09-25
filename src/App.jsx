@@ -31,6 +31,7 @@ import PodcastEpisode from './pages/PodcastEpisode';
 import MembershipCardPage from './pages/MembershipCardPage';
 import VerifyMemberPage from './pages/VerifyMemberPage';
 import PaymentPage from './pages/PaymentPage';
+import FoundationMemberForm from './pages/FoundationMemberForm';
 
 import AdminLayout from './components/admin/AdminLayout';
 import StudentLayout from './components/student/StudentLayout';
@@ -93,6 +94,9 @@ function AppContent() {
           <Route path="/media/podcast/:slug" element={<PodcastEpisode />} />
           <Route path="/membership-card" element={<MembershipCardPage />} />
           <Route path="/verify-member" element={<VerifyMemberPage />} />
+          <Route path="/foundation-member" element={<FoundationMemberForm />} />
+          <Route path="/foundation-leader" element={<Navigate to="/foundation-member" replace />} />
+          <Route path="/join/foundation" element={<Navigate to="/foundation-member" replace />} />
           <Route path="/pay" element={<PaymentPage />} />
           <Route path="/payments" element={<Navigate to="/pay" replace />} />
           <Route path="/donate" element={<PaymentPage />} />

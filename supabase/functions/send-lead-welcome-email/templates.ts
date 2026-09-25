@@ -1905,4 +1905,128 @@ export function tier3RenewalReminderEmail({
   return { subject, html, text };
 }
 
+/**
+ * Official Tier 4 Foundational Leader Welcome Email
+ */
+export function foundationLeaderWelcomeEmail({
+  fullName,
+  membershipId,
+  membershipCardUrl,
+}: {
+  fullName: string;
+  membershipId?: string | null;
+  membershipCardUrl?: string;
+}): ComposedEmail {
+  const name = escapeHtml(fullName.trim());
+  const cardUrl = membershipCardUrl || `https://doright.ng/membership-card?id=${encodeURIComponent(membershipId || '')}`;
+  const payUrl = `https://doright.ng/pay?purpose=registration&tier=tier_4&amount=250000`;
+
+  const subject = "Welcome to the Board – Tier 4 Foundational Leader Onboarding";
+
+  const bodyHtml = `
+    <div style="font-size: 15px; color: #1e293b; line-height: 1.65;">
+      <p style="margin: 0 0 16px;">Dear <strong>${name}</strong>,</p>
+      
+      <p style="margin: 0 0 16px;">
+        We are honored to formally welcome you as a <strong>Tier 4 Foundational Leader</strong>.
+      </p>
+
+      <p style="margin: 0 0 20px;">
+        Tier 4 is a restricted, non-transition governance tier reserved for trustee-appointed leaders, governance directors, and founding advisors. In this role as a Visionary Director, you will play a critical part in guiding the long-term vision, strategy, and sustainability of the DRAI movement.
+      </p>
+
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; margin: 24px 0;">
+        <h3 style="font-size: 15px; color: #0f172a; margin: 0 0 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
+          Your Core Responsibilities
+        </h3>
+        <p style="font-size: 13px; color: #64748b; margin: 0 0 12px;">
+          As a Tier 4 Foundational Leader, your governance and operational scope includes:
+        </p>
+        <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #334155; line-height: 1.7;">
+          <li style="margin-bottom: 8px;">
+            <strong>High-Level Governance &amp; Policy Direction:</strong> Define, guide, and maintain overall policy governance, scaling strategy, and organizational direction.
+          </li>
+          <li style="margin-bottom: 8px;">
+            <strong>Financial Stewardship &amp; Oversight:</strong> Provide financial oversight and maintain long-term financial health to support DRAI programs and outreach.
+          </li>
+          <li style="margin-bottom: 8px;">
+            <strong>Advisory &amp; Executive Leadership:</strong> Serve on the Advisory Council and the Keystone Executive Board to drive strategic decision-making.
+          </li>
+          <li>
+            <strong>Sustaining Movement Values:</strong> Ensure organizational alignment and integrity across all advocacy tiers and initiatives.
+          </li>
+        </ul>
+      </div>
+
+      <div style="margin: 24px 0;">
+        <h3 style="font-size: 15px; color: #0f172a; margin: 0 0 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
+          Next Steps
+        </h3>
+        
+        <div style="margin-bottom: 16px;">
+          <p style="margin: 0 0 8px; font-size: 14px; color: #334155;">
+            <strong>Annual Membership Dues:</strong> Annual dues for Tier 3 and Tier 4 members are set between <strong>NGN 250,000 – NGN 300,000</strong>. Monthly payment reminders will begin during the final quarter of your membership cycle. Please click below to access the different ways you can renew your annual dues:
+          </p>
+          <a href="${payUrl}" style="background-color: #0D0E16; color: #F59E0B; font-size: 14px; font-weight: bold; padding: 10px 20px; border-radius: 6px; text-decoration: none; display: inline-block; margin-top: 6px;">
+            👉 Access Payment Portal
+          </a>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <p style="margin: 0 0 8px; font-size: 14px; color: #334155;">
+            <strong>Digital Membership Card:</strong> You can download your official DRAI Membership Card directly to your device and print a physical copy at your convenience:
+          </p>
+          <a href="${cardUrl}" style="background-color: #F59E0B; color: #0D0E16; font-size: 14px; font-weight: bold; padding: 10px 20px; border-radius: 6px; text-decoration: none; display: inline-block; margin-top: 6px;">
+            👉 Download &amp; Print Membership Card
+          </a>
+        </div>
+      </div>
+
+      <p style="font-size: 14px; color: #475569; margin: 24px 0 16px;">
+        If you have any questions or require additional materials as you step into your governance role, please reach out to me on <a href="mailto:admin@doright.ng" style="color: #005BBB;">admin@doright.ng</a> or <a href="tel:+2348023298260" style="color: #005BBB;">+234 802 329 8260</a>.
+      </p>
+
+      <p style="font-size: 14px; color: #475569; margin: 0 0 20px;">
+        Thank you for your dedicated leadership and commitment to driving sustainable impact.
+      </p>
+    </div>
+  `;
+
+  const html = wrapHtml(`
+    ${bodyHtml}
+    <div style="border-top: 1px solid #e2e8f0; padding-top: 18px; margin-top: 26px; font-size: 14px; color: #475569;">
+      <p style="margin: 0 0 4px;">Kind regards,</p>
+      <p style="margin: 0; font-weight: bold; color: #0f172a; font-size: 15px;">Toyin Olayemi</p>
+      <p style="margin: 2px 0 0; color: #475569;">Doing Right Awareness Initiative (DRAI)</p>
+      <p style="margin: 2px 0 0; color: #005BBB;">
+        <a href="https://www.doright.ng" style="color: #005BBB; text-decoration: none;">www.doright.ng</a>
+      </p>
+    </div>
+  `);
+
+  const text =
+    `Subject: ${subject}\n\n` +
+    `Dear ${fullName.trim()},\n\n` +
+    `We are honored to formally welcome you as a Tier 4 Foundational Leader.\n\n` +
+    `Tier 4 is a restricted, non-transition governance tier reserved for trustee-appointed leaders, governance directors, and founding advisors. In this role as a Visionary Director, you will play a critical part in guiding the long-term vision, strategy, and sustainability of the DRAI movement.\n\n` +
+    `Your Core Responsibilities\n` +
+    `As a Tier 4 Foundational Leader, your governance and operational scope includes:\n` +
+    `• High-Level Governance & Policy Direction: Define, guide, and maintain overall policy governance, scaling strategy, and organizational direction.\n` +
+    `• Financial Stewardship & Oversight: Provide financial oversight and maintain long-term financial health to support DRAI programs and outreach.\n` +
+    `• Advisory & Executive Leadership: Serve on the Advisory Council and the Keystone Executive Board to drive strategic decision-making.\n` +
+    `• Sustaining Movement Values: Ensure organizational alignment and integrity across all advocacy tiers and initiatives.\n\n` +
+    `Next Steps\n` +
+    `• Annual Membership Dues: Annual dues for Tier 3 and Tier 4 members are set between NGN 250,000 – NGN 300,000. Monthly payment reminders will begin during the final quarter of your membership cycle. Please click here to access the different ways you can renew your annual dues. 👉 ${payUrl}\n` +
+    `• Digital Membership Card: You can download your official DRAI Membership Card directly to your device and print a physical copy at your convenience. 👉 ${cardUrl}\n\n` +
+    `If you have any questions or require additional materials as you step into your governance role, please reach out to me on admin@doright.ng or +234 802 329 8260\n\n` +
+    `Thank you for your dedicated leadership and commitment to driving sustainable impact.\n\n` +
+    `Kind regards,\n` +
+    `Toyin Olayemi\n` +
+    `Doing Right Awareness Initiative (DRAI)\n` +
+    `www.doright.ng\n`;
+
+  return { subject, html, text };
+}
+
+
 

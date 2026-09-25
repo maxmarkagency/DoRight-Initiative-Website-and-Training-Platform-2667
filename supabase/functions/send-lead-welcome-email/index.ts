@@ -20,6 +20,7 @@ import {
   annualRenewalCheckinEmail,
   tier2RenewalReminderEmail,
   tier3RenewalReminderEmail,
+  foundationLeaderWelcomeEmail,
 } from "./templates.ts";
 
 const SUB_COMMITTEES_URL = "https://doright.ng/sub-committees";
@@ -693,7 +694,13 @@ Deno.serve(async (req: Request) => {
   const detectedSubject = (lead as any).subject || (subjectMatch ? subjectMatch[1].trim() : null);
 
   let composed: { subject: string; html: string; text: string };
-  if (lead.source === "contact_page" || lead.source === "contact_form") {
+  if (lead.tier === "tier_4" || lead.source === "foundation_portal") {
+    composed = foundationLeaderWelcomeEmail({
+      fullName: lead.full_name,
+      membershipId: lead.membership_id,
+      membershipCardUrl,
+    });
+  } else if (lead.source === "contact_page" || lead.source === "contact_form") {
     composed = contactFormAcknowledgementEmail({
       fullName: lead.full_name,
       subject: detectedSubject,

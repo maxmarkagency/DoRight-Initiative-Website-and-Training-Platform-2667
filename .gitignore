@@ -27,6 +27,7 @@ dist-ssr
 # Local tool caches
 .impeccable/
 .gstack/
+.kilo/
 
 # Local-only AI assistant instructions (kept on disk, never tracked)
 CLAUDE.md

@@ -49,6 +49,8 @@ Deno.serve(async (req) => {
     let message: string | null = null;
     let subCommitteeId: string | null = null;
     let subCommitteeName: string | null = null;
+    let requestedTier = "tier_1";
+    let requestedSource = "website";
     let photoBuffer: Uint8Array | null = null;
     let photoExt = "jpg";
     let photoMime = "image/jpeg";
@@ -64,6 +66,8 @@ Deno.serve(async (req) => {
       message = formData.get("message")?.toString() || null;
       subCommitteeId = formData.get("subCommitteeId")?.toString() || null;
       subCommitteeName = formData.get("subCommitteeName")?.toString() || null;
+      requestedTier = formData.get("tier")?.toString() || "tier_1";
+      requestedSource = formData.get("source")?.toString() || "website";
 
       const file = formData.get("photo");
       if (file instanceof File) {
@@ -82,6 +86,8 @@ Deno.serve(async (req) => {
       message = body.message || null;
       subCommitteeId = body.subCommitteeId || null;
       subCommitteeName = body.subCommitteeName || null;
+      requestedTier = body.tier || "tier_1";
+      requestedSource = body.source || "website";
 
       if (body.photoBase64) {
         const base64Data = body.photoBase64.replace(/^data:image\/\w+;base64,/, "");
@@ -491,17 +497,18 @@ Deno.serve(async (req) => {
       } catch (e) {}
     }
 
+    const isTier4 = requestedTier === "tier_4";
     const leadInsertPayload: Record<string, any> = {
       full_name: fullName.trim(),
       email: cleanEmail,
       phone: cleanPhone,
       photo_url: photoFilePath,
       sub_committee_id: insertSubCommitteeUuid || null,
-      source: "website",
-      tier: "tier_1",
+      source: requestedSource,
+      tier: requestedTier,
       tier_1_at: now,
+      ...(isTier4 ? { tier_4_at: now, status: "active" } : { status: "new" }),
       membership_id: fallbackMembershipId,
-      status: "new",
       admin_notes: adminNotes,
     };
 

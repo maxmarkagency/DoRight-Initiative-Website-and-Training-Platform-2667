@@ -594,7 +594,7 @@ const MemberCard = ({
                 {/* Tier Pill */}
                 <div className="inline-flex min-w-0">
                   <span className={`px-1.5 py-0.5 text-[6.5px] xs:text-[8px] sm:text-[10px] font-bold rounded-full truncate max-w-full ${tierConfig.badgeClass}`}>
-                    {tierConfig.label}
+                    {currentTierKey === 'tier_4' ? 'Tier 4: Foundational Leader' : tierConfig.label}
                   </span>
                 </div>
               </div>
