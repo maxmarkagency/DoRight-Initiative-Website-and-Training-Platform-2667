@@ -1965,7 +1965,7 @@ export function foundationLeaderWelcomeEmail({
         
         <div style="margin-bottom: 16px;">
           <p style="margin: 0 0 8px; font-size: 14px; color: #334155;">
-            <strong>Annual Membership Dues:</strong> If you have not already done so, please make your payment. Membership dues for Tier 3 and Tier 4 members are set between <strong>NGN 250,000 - NGN 300,000</strong>. If you wish to pay more than the set amount, please feel free to do so. Payment reminders will begin during the final quarter of your current membership cycle. Please click below to access the different ways you can renew your annual dues:
+            <strong>Pay your annual Membership Dues:</strong> If you have not already done so, please make your payment. Membership dues for Tier 3 and Tier 4 members are set between <strong>NGN 250,000 - NGN 300,000</strong>. If you wish to pay more than the set amount, please feel free to do so. Payment reminders will begin during the final quarter of your current membership cycle. Please click here to access the different ways you can renew your annual dues:
           </p>
           <a href="${payUrl}" style="background-color: #0D0E16; color: #F59E0B; font-size: 14px; font-weight: bold; padding: 10px 20px; border-radius: 6px; text-decoration: none; display: inline-block; margin-top: 6px;">
             👉 Access Payment Portal
@@ -1974,16 +1974,16 @@ export function foundationLeaderWelcomeEmail({
 
         <div style="margin-bottom: 16px;">
           <p style="margin: 0 0 8px; font-size: 14px; color: #334155;">
-            <strong>Digital Membership Card:</strong> You can download your official DRAI Membership Card directly to your device and print a physical copy at your convenience:
+            <strong>Digital Membership Card:</strong> You can download your official DRAI Membership Card directly to your device and print a physical copy at your convenience. Click below to view your official card and access download &amp; print instructions:
           </p>
           <a href="${cardUrl}" style="background-color: #F59E0B; color: #0D0E16; font-size: 14px; font-weight: bold; padding: 10px 20px; border-radius: 6px; text-decoration: none; display: inline-block; margin-top: 6px;">
-            👉 Download &amp; Print Membership Card
+            👉 View &amp; Download Membership Card
           </a>
         </div>
       </div>
 
       <p style="font-size: 14px; color: #475569; margin: 24px 0 16px;">
-        If you have any questions or require additional materials as you step into your governance role, please reach out to me on <a href="mailto:admin@doright.ng" style="color: #005BBB;">admin@doright.ng</a> or <a href="tel:+2348023298260" style="color: #005BBB;">+234 802 329 8260</a>.
+        If you have any questions or require additional materials as you step into your governance role, please reach out to me on <a href="mailto:admin@doright.ng" style="color: #005BBB;">admin@doright.ng</a> or <a href="tel:+2348023298260" style="color: #005BBB;">+234 802 329 8260</a>
       </p>
 
       <p style="font-size: 14px; color: #475569; margin: 0 0 20px;">
@@ -2016,8 +2016,8 @@ export function foundationLeaderWelcomeEmail({
     `• Advisory & Executive Leadership: Serve on the Advisory Council and the Keystone Executive Board to drive strategic decision-making.\n` +
     `• Sustaining Movement Values: Ensure organizational alignment and integrity across all advocacy tiers and initiatives.\n\n` +
     `Next Steps\n` +
-    `• Annual Membership Dues: If you have not already done so, please make your payment. Membership dues for Tier 3 and Tier 4 members are set between NGN 250,000 - NGN 300,000. If you wish to pay more than the set amount, please feel free to do so. Payment reminders will begin during the final quarter of your current membership cycle. Please click here to access the different ways you can renew your annual dues. 👉 ${payUrl}\n` +
-    `• Digital Membership Card: You can download your official DRAI Membership Card directly to your device and print a physical copy at your convenience. 👉 ${cardUrl}\n\n` +
+    `Pay your annual Membership Dues: If you have not already done so, please make your payment. Membership dues for Tier 3 and Tier 4 members are set between NGN 250,000 - NGN 300,000. If you wish to pay more than the set amount, please feel free to do so. Payment reminders will begin during the final quarter of your current membership cycle. Please click here to access the different ways you can renew your annual dues. 👉 ${payUrl}\n` +
+    `Digital Membership Card: You can download your official DRAI Membership Card directly to your device and print a physical copy at your convenience. 👉 ${cardUrl}\n\n` +
     `If you have any questions or require additional materials as you step into your governance role, please reach out to me on admin@doright.ng or +234 802 329 8260\n\n` +
     `Thank you for your dedicated leadership and commitment to driving sustainable impact.\n\n` +
     `Kind regards,\n` +

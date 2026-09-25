@@ -269,7 +269,7 @@ const FoundationMemberForm = () => {
                   <div className="p-4 bg-slate-950/70 border border-amber-500/30 rounded-xl space-y-2">
                     <div className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
                       <SafeIcon icon={FiCreditCard} className="w-4 h-4" />
-                      Annual Membership Dues
+                      Pay your Annual Membership Dues
                     </div>
                     <p className="text-xs text-slate-300 leading-relaxed">
                       If you have not already done so, please make your payment. Membership dues for Tier 3 and Tier 4 members are set between <strong>NGN 250,000 - NGN 300,000</strong>. If you wish to pay more than the set amount, please feel free to do so. Payment reminders will begin during the final quarter of your current membership cycle.
