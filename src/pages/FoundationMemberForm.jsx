@@ -26,15 +26,6 @@ const {
   FiChevronRight
 } = FiIcons;
 
-const GOVERNANCE_ROLES = [
-  'Visionary Director',
-  'Trustee-Appointed Leader',
-  'Governance Director',
-  'Founding Advisor',
-  'Keystone Executive Board Member',
-  'Advisory Council Member',
-];
-
 const MAX_PHOTO_SIZE = 5 * 1024 * 1024; // 5MB
 
 const FoundationMemberForm = () => {
@@ -47,9 +38,6 @@ const FoundationMemberForm = () => {
     fullName: '',
     email: '',
     phone: '',
-    governanceRole: 'Visionary Director',
-    customRole: '',
-    organization: '',
     vision: '',
   });
 
@@ -167,16 +155,10 @@ const FoundationMemberForm = () => {
     setSubmitError('');
 
     try {
-      const chosenRole = formData.governanceRole === 'Other' && formData.customRole.trim()
-        ? formData.customRole.trim()
-        : formData.governanceRole;
-
       const created = await submitFoundationLead({
         fullName: formData.fullName.trim(),
         email: formData.email.trim().toLowerCase(),
         phone: formData.phone.trim(),
-        governanceRole: chosenRole,
-        organization: formData.organization.trim() || null,
         vision: formData.vision.trim() || null,
         photoFile
       });
@@ -399,8 +381,8 @@ const FoundationMemberForm = () => {
                   </div>
                 )}
 
-                {/* Form Fields Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {/* Form Fields */}
+                <div className="space-y-4">
                   {/* Full Name */}
                   <div className="space-y-1.5">
                     <label className="block text-xs font-semibold text-slate-300">
@@ -420,100 +402,53 @@ const FoundationMemberForm = () => {
                     </div>
                   </div>
 
-                  {/* Email Address */}
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-slate-300">
-                      Email Address * <span className="text-[11px] text-slate-500">(For Official Correspondence)</span>
-                    </label>
-                    <div className="relative">
-                      <SafeIcon icon={FiMail} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        onBlur={handleEmailBlur}
-                        required
-                        placeholder="folake@example.com"
-                        className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                      />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Email Address */}
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-slate-300">
+                        Email Address * <span className="text-[11px] text-slate-500">(For Official Correspondence)</span>
+                      </label>
+                      <div className="relative">
+                        <SafeIcon icon={FiMail} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                        <input
+                          type="email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          onBlur={handleEmailBlur}
+                          required
+                          placeholder="folake@example.com"
+                          className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                        />
+                      </div>
+                      {duplicateWarning.field === 'email' && (
+                        <p className="text-[11px] text-amber-400 font-medium">{duplicateWarning.message}</p>
+                      )}
                     </div>
-                    {duplicateWarning.field === 'email' && (
-                      <p className="text-[11px] text-amber-400 font-medium">{duplicateWarning.message}</p>
-                    )}
-                  </div>
 
-                  {/* Phone Number */}
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-slate-300">
-                      Phone Number * <span className="text-[11px] text-slate-500">(WhatsApp / Direct Line)</span>
-                    </label>
-                    <div className="relative">
-                      <SafeIcon icon={FiPhone} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        onBlur={handlePhoneBlur}
-                        required
-                        placeholder="+234 802 329 8260"
-                        className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                      />
+                    {/* Phone Number */}
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-slate-300">
+                        Phone Number * <span className="text-[11px] text-slate-500">(WhatsApp / Direct Line)</span>
+                      </label>
+                      <div className="relative">
+                        <SafeIcon icon={FiPhone} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                        <input
+                          type="tel"
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                          onBlur={handlePhoneBlur}
+                          required
+                          placeholder="+234 802 329 8260"
+                          className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                        />
+                      </div>
+                      {duplicateWarning.field === 'phone' && (
+                        <p className="text-[11px] text-amber-400 font-medium">{duplicateWarning.message}</p>
+                      )}
                     </div>
-                    {duplicateWarning.field === 'phone' && (
-                      <p className="text-[11px] text-amber-400 font-medium">{duplicateWarning.message}</p>
-                    )}
                   </div>
-
-                  {/* Governance Role */}
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-slate-300">
-                      Governance Capacity / Role
-                    </label>
-                    <select
-                      name="governanceRole"
-                      value={formData.governanceRole}
-                      onChange={handleInputChange}
-                      className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                    >
-                      {GOVERNANCE_ROLES.map((role) => (
-                        <option key={role} value={role}>{role}</option>
-                      ))}
-                      <option value="Other">Other (Specify below)</option>
-                    </select>
-                  </div>
-                </div>
-
-                {formData.governanceRole === 'Other' && (
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-slate-300">
-                      Specify Governance Role / Appointment Title
-                    </label>
-                    <input
-                      type="text"
-                      name="customRole"
-                      value={formData.customRole}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Honorary Trustee / Strategic Advisor"
-                      className="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                    />
-                  </div>
-                )}
-
-                {/* Organization / Affiliation */}
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-slate-300">
-                    Primary Organization or Institutional Affiliation <span className="text-[11px] text-slate-500">(Optional)</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="organization"
-                    value={formData.organization}
-                    onChange={handleInputChange}
-                    placeholder="e.g. Apex Chambers / Global Integrity Council"
-                    className="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                  />
                 </div>
 
                 {/* PHOTO UPLOAD SECTION */}
