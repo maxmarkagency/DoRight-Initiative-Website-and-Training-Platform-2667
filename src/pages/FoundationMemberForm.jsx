@@ -272,7 +272,7 @@ const FoundationMemberForm = () => {
                       Annual Membership Dues
                     </div>
                     <p className="text-xs text-slate-300 leading-relaxed">
-                      Annual dues for Tier 3 and Tier 4 members are set between <strong>NGN 250,000 – NGN 300,000</strong>. Monthly payment reminders will begin during the final quarter of your membership cycle.
+                      If you have not already done so, please make your payment. Membership dues for Tier 3 and Tier 4 members are set between <strong>NGN 250,000 - NGN 300,000</strong>. If you wish to pay more than the set amount, please feel free to do so. Payment reminders will begin during the final quarter of your current membership cycle.
                     </p>
                     <div className="pt-2">
                       <Link
