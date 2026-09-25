@@ -576,6 +576,8 @@ export const updateLeadTier = async ({
     updates.tier_2_at = now;
   } else if (newTier === 'tier_3' && !lead.tier_3_at) {
     updates.tier_3_at = now;
+  } else if (newTier === 'tier_4' && !lead.tier_4_at) {
+    updates.tier_4_at = now;
   }
 
   const { error: dbError } = await supabase

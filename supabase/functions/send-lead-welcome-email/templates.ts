@@ -893,6 +893,14 @@ export function tierTransitionEmail(input: TierTransitionInput): ComposedEmail {
   if (input.toTier === 'tier_2') {
     return tier2AdvancementEmail(input);
   }
+  if (input.toTier === 'tier_4') {
+    return foundationLeaderWelcomeEmail({
+      fullName: input.fullName,
+      membershipId: input.membershipId,
+      membershipCardUrl: input.membershipCardUrl,
+      customNotes: input.customNotes,
+    });
+  }
   return tier3AdvancementEmail(input);
 }
 
@@ -1912,10 +1920,12 @@ export function foundationLeaderWelcomeEmail({
   fullName,
   membershipId,
   membershipCardUrl,
+  customNotes,
 }: {
   fullName: string;
   membershipId?: string | null;
   membershipCardUrl?: string;
+  customNotes?: string | null;
 }): ComposedEmail {
   const name = escapeHtml(fullName.trim());
   const cardUrl = membershipCardUrl || `https://doright.ng/membership-card?id=${encodeURIComponent(membershipId || '')}`;
@@ -1982,6 +1992,17 @@ export function foundationLeaderWelcomeEmail({
         </div>
       </div>
 
+      ${customNotes ? `
+        <div style="background-color: #fffbeb; border-left: 4px solid #F59E0B; border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 20px 0;">
+          <div style="font-size: 13px; font-weight: bold; color: #92400e; margin-bottom: 4px;">
+            Message from Leadership:
+          </div>
+          <p style="font-size: 14px; color: #78350f; margin: 0; line-height: 1.6;">
+            ${escapeHtml(customNotes)}
+          </p>
+        </div>
+      ` : ''}
+
       <p style="font-size: 14px; color: #475569; margin: 24px 0 16px;">
         If you have any questions or require additional materials as you step into your governance role, please reach out to me on <a href="mailto:admin@doright.ng" style="color: #005BBB;">admin@doright.ng</a> or <a href="tel:+2348023298260" style="color: #005BBB;">+234 802 329 8260</a>
       </p>
@@ -2018,6 +2039,7 @@ export function foundationLeaderWelcomeEmail({
     `Next Steps\n` +
     `Pay your annual Membership Dues: If you have not already done so, please make your payment. Membership dues for Tier 3 and Tier 4 members are set between NGN 250,000 - NGN 300,000. If you wish to pay more than the set amount, please feel free to do so. Payment reminders will begin during the final quarter of your current membership cycle. Please click here to access the different ways you can renew your annual dues. 👉 ${payUrl}\n` +
     `Digital Membership Card: You can download your official DRAI Membership Card directly to your device and print a physical copy at your convenience. 👉 ${cardUrl}\n\n` +
+    (customNotes ? `Message from Leadership:\n${customNotes}\n\n` : '') +
     `If you have any questions or require additional materials as you step into your governance role, please reach out to me on admin@doright.ng or +234 802 329 8260\n\n` +
     `Thank you for your dedicated leadership and commitment to driving sustainable impact.\n\n` +
     `Kind regards,\n` +
