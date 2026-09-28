@@ -520,16 +520,46 @@ Deno.serve(async (req) => {
       .single();
 
     if (insertError) {
-      console.warn("submit-lead: retry without membership_id fallback", insertError);
+      console.warn("submit-lead: initial insert failed, evaluating retry/fallback", insertError);
+
+      // If constraint check violation (23514) on source or status, fallback to universally allowed values
+      if (
+        insertError.code === "23514" ||
+        insertError.message?.includes("check constraint") ||
+        insertError.message?.includes("leads_source_check") ||
+        insertError.message?.includes("leads_status_check")
+      ) {
+        leadInsertPayload.source = "website";
+        leadInsertPayload.status = "new";
+        leadInsertPayload.admin_notes = `[System Record: Source submitted as '${requestedSource}', Tier: '${requestedTier}']\n${adminNotes || ""}`;
+      }
+
       delete leadInsertPayload.membership_id;
+
       const { data: retryData, error: retryErr } = await supabase
         .from("leads")
         .insert(leadInsertPayload)
         .select()
         .single();
 
-      if (retryErr) throw retryErr;
-      insertedLead = retryData;
+      if (retryErr) {
+        // Final fallback: try minimal insert with guaranteed schema compatibility
+        if (retryErr.code === "23514") {
+          leadInsertPayload.source = "website";
+          leadInsertPayload.status = "new";
+          const { data: finalData, error: finalErr } = await supabase
+            .from("leads")
+            .insert(leadInsertPayload)
+            .select()
+            .single();
+          if (finalErr) throw finalErr;
+          insertedLead = finalData;
+        } else {
+          throw retryErr;
+        }
+      } else {
+        insertedLead = retryData;
+      }
     } else {
       insertedLead = data;
     }

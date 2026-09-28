@@ -324,17 +324,32 @@ export const submitLead = async ({ fullName, email, phone, interest, message, su
       throw dupError;
     }
 
+    // Check if failure is due to database check constraint (source/status) or anon RLS policy
+    const isConstraintOrRLSError =
+      insertError.code === '23514' ||
+      insertError.code === '42501' ||
+      insertError.message?.includes('check constraint') ||
+      insertError.message?.includes('leads_source_check') ||
+      insertError.message?.includes('leads_status_check') ||
+      insertError.message?.includes('row-level security');
+
+    const safeSource = isConstraintOrRLSError ? 'website' : source;
+    const safeStatus = isConstraintOrRLSError ? 'new' : (isTier4 ? 'active' : 'new');
+    const safeAdminNotes = isConstraintOrRLSError
+      ? `[System Record: Source '${source}' | Tier '${tier}']\n${effectiveAdminNotes || ''}`
+      : effectiveAdminNotes;
+
     const retryPayload = {
       full_name: fullName,
       email,
       phone: phone || null,
       sub_committee_id: subCommitteeId || null,
-      source,
+      source: safeSource,
       tier,
       tier_1_at: now,
       ...(isTier4 ? { tier_4_at: now } : {}),
-      status: isTier4 ? 'active' : 'new',
-      admin_notes: effectiveAdminNotes
+      status: safeStatus,
+      admin_notes: safeAdminNotes
     };
 
     const { error: retryError } = await supabase
@@ -351,7 +366,24 @@ export const submitLead = async ({ fullName, email, phone, interest, message, su
         dupError.code = 'DUPLICATE_REGISTRATION';
         throw dupError;
       }
-      throw retryError;
+
+      // If still failing, attempt the absolute minimal canonical payload
+      if (retryError.code === '23514' || retryError.code === '42501' || retryError.message?.includes('check constraint')) {
+        const { error: finalError } = await supabase
+          .from('leads')
+          .insert({
+            full_name: fullName,
+            email,
+            phone: phone || null,
+            source: 'website',
+            status: 'new',
+            tier: 'tier_1',
+            admin_notes: `[Tier 4 Application | Original Source: ${source}]\n${effectiveAdminNotes || ''}`
+          });
+        if (finalError) throw finalError;
+      } else {
+        throw retryError;
+      }
     }
   }
 
