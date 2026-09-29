@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
-import { generateQRCodeSVG } from '../utils/qrCode';
+import { generateQRCodeSVG, generateQRMatrix } from '../utils/qrCode';
 import { TIERS } from '../services/leadsService';
 
 const { FiUser, FiCheck, FiDownload, FiShare2, FiPrinter, FiCheckCircle } = FiIcons;
@@ -47,8 +47,8 @@ const MemberCard = ({
   const tierConfig = TIERS[currentTierKey] || TIERS.tier_1;
   const isTier1 = currentTierKey === 'tier_1';
 
-  const issueDate = formatDateDDMMYYYY(lead?.tier_1_at || lead?.created_at);
-  const expiryDate = getExpiryDateDDMMYYYY(lead?.tier_1_at || lead?.created_at);
+  const issueDate = formatDateDDMMYYYY(lead?.tier_4_at || lead?.tier_1_at || lead?.created_at);
+  const expiryDate = getExpiryDateDDMMYYYY(lead?.tier_4_at || lead?.tier_1_at || lead?.created_at);
 
   const verificationUrl = `https://doright.ng/verify-member?id=${encodeURIComponent(membershipId)}`;
   const qrCodeDataUri = generateQRCodeSVG(verificationUrl, 160);
@@ -92,6 +92,65 @@ const MemberCard = ({
     ctx.fillText('PHOTO', x + w / 2, y + h - 14);
     ctx.textAlign = 'start';
   }
+
+  // Safe image loader: skips crossOrigin on blob: & data: URLs, adds 4s timeout so it never hangs
+  const loadPhoto = (url) =>
+    new Promise((resolve, reject) => {
+      if (!url) {
+        reject(new Error('No photo URL provided'));
+        return;
+      }
+      const img = new Image();
+      // Only set crossOrigin for remote http/https URLs. Never for blob: or data: URLs,
+      // as setting crossOrigin on blob:/data: causes browser CORS errors.
+      if (typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'))) {
+        img.crossOrigin = 'anonymous';
+      }
+      const timer = setTimeout(() => {
+        reject(new Error('Photo load timed out'));
+      }, 4000);
+
+      img.onload = () => {
+        clearTimeout(timer);
+        resolve(img);
+      };
+      img.onerror = (e) => {
+        clearTimeout(timer);
+        reject(e || new Error('Photo failed to load'));
+      };
+      img.src = url;
+    });
+
+  // Synchronous, non-tainting QR Code generator onto canvas
+  const drawQRCode = (ctx, x, y, size) => {
+    ctx.fillStyle = '#FFFFFF';
+    roundRect(ctx, x, y, size, size, 8);
+    ctx.fill();
+
+    try {
+      const matrix = generateQRMatrix(verificationUrl);
+      const matrixSize = matrix.length;
+      const padding = 6;
+      const innerSize = size - padding * 2;
+      const cellSize = innerSize / matrixSize;
+
+      ctx.fillStyle = '#0F172A';
+      for (let r = 0; r < matrixSize; r++) {
+        for (let c = 0; c < matrixSize; c++) {
+          if (matrix[r][c]) {
+            ctx.fillRect(
+              x + padding + c * cellSize,
+              y + padding + r * cellSize,
+              Math.ceil(cellSize),
+              Math.ceil(cellSize)
+            );
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('QR code direct canvas draw error:', err);
+    }
+  };
 
   // High-Resolution Canvas Exporter for Image/PDF
   const exportToCanvas = async (scale = 3) => {
@@ -154,13 +213,7 @@ const MemberCard = ({
 
       if (photoUrl) {
         try {
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-          await new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = reject;
-            img.src = photoUrl;
-          });
+          const img = await loadPhoto(photoUrl);
           ctx.save();
           roundRect(ctx, photoX + 2, photoY + 2, photoW - 4, photoH - 4, 10);
           ctx.clip();
@@ -206,24 +259,11 @@ const MemberCard = ({
       const qrY = 130;
       const qrSize = 92;
 
-      ctx.fillStyle = '#FFFFFF';
-      roundRect(ctx, qrX, qrY, qrSize, qrSize, 6);
-      ctx.fill();
+      drawQRCode(ctx, qrX, qrY, qrSize);
       ctx.strokeStyle = '#0F172A';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.5;
+      roundRect(ctx, qrX, qrY, qrSize, qrSize, 6);
       ctx.stroke();
-
-      try {
-        const qrImg = new Image();
-        await new Promise((resolve, reject) => {
-          qrImg.onload = resolve;
-          qrImg.onerror = reject;
-          qrImg.src = qrCodeDataUri;
-        });
-        ctx.drawImage(qrImg, qrX + 4, qrY + 4, qrSize - 8, qrSize - 8);
-      } catch (e) {
-        console.warn('QR canvas render error', e);
-      }
 
       // 7. Bottom Dates Row
       ctx.fillStyle = '#0F172A';
@@ -306,12 +346,7 @@ const MemberCard = ({
 
       if (photoUrl) {
         try {
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-          await new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = reject;
-          });
+          const img = await loadPhoto(photoUrl);
           ctx.save();
           roundRect(ctx, photoX + 2, photoY + 2, photoW - 4, photoH - 4, 10);
           ctx.clip();
@@ -361,28 +396,20 @@ const MemberCard = ({
       // Tier badge subtext
       ctx.fillStyle = '#94A3B8';
       ctx.font = '600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText(currentTierKey === 'tier_4' ? 'TIER 4' : tierConfig.name.toUpperCase(), 175, 226);
+      ctx.fillText(
+        currentTierKey === 'tier_4'
+          ? 'TIER 4 (FOUNDATIONAL LEADER)'
+          : (tierConfig.name || 'MEMBERSHIP CARD').toUpperCase(),
+        175,
+        226
+      );
 
       // 9. QR Code (Bottom Right)
       const qrX = width - 110;
       const qrY = height - 110;
       const qrSize = 86;
 
-      ctx.fillStyle = '#FFFFFF';
-      roundRect(ctx, qrX, qrY, qrSize, qrSize, 8);
-      ctx.fill();
-
-      try {
-        const qrImg = new Image();
-        await new Promise((resolve, reject) => {
-          qrImg.onload = resolve;
-          qrImg.onerror = reject;
-          qrImg.src = qrCodeDataUri;
-        });
-        ctx.drawImage(qrImg, qrX + 4, qrY + 4, qrSize - 8, qrSize - 8);
-      } catch (e) {
-        console.warn('QR canvas render fallback', e);
-      }
+      drawQRCode(ctx, qrX, qrY, qrSize);
 
       // Dates on bottom
       ctx.fillStyle = '#94A3B8';
@@ -394,16 +421,54 @@ const MemberCard = ({
   };
 
   const handleDownloadImage = async () => {
+    if (downloading) return;
     try {
       setDownloading(true);
       const canvas = await exportToCanvas(3);
-      const dataUrl = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.download = `${membershipId}-${isTier1 ? 'advocate-card' : 'membership-card'}.png`;
-      link.href = dataUrl;
-      link.click();
+      const filename = `${membershipId}-${isTier1 ? 'advocate-card' : currentTierKey === 'tier_4' ? 'foundational-leader-card' : 'membership-card'}.png`;
+
+      const triggerDownload = (url) => {
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = url;
+        link.rel = 'noopener';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      if (canvas.toBlob) {
+        await new Promise((resolve) => {
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              triggerDownload(canvas.toDataURL('image/png'));
+              resolve();
+              return;
+            }
+            const blobUrl = URL.createObjectURL(blob);
+            triggerDownload(blobUrl);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+            resolve();
+          }, 'image/png');
+        });
+      } else {
+        triggerDownload(canvas.toDataURL('image/png'));
+      }
     } catch (err) {
       console.error('Error generating card image:', err);
+      // Fallback: Try 1x resolution if 3x hit memory/canvas limit
+      try {
+        const canvas = await exportToCanvas(1);
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = `${membershipId}-${isTier1 ? 'advocate-card' : currentTierKey === 'tier_4' ? 'foundational-leader-card' : 'membership-card'}.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (fallbackErr) {
+        console.error('Fallback card export failed:', fallbackErr);
+      }
     } finally {
       setDownloading(false);
     }
@@ -624,7 +689,7 @@ const MemberCard = ({
             className="flex-1 min-w-[130px] px-3.5 py-2.5 bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded-xl text-xs sm:text-sm shadow-md transition-all inline-flex items-center justify-center gap-2 active:scale-95"
           >
             <SafeIcon icon={FiDownload} className="w-4 h-4" />
-            <span>{downloading ? 'Generating...' : isTier1 ? 'Download Advocate Card' : 'Download Membership Card'}</span>
+            <span>{downloading ? 'Generating...' : isTier1 ? 'Download Advocate Card' : currentTierKey === 'tier_4' ? 'Download Leader Card' : 'Download Membership Card'}</span>
           </button>
 
           <button
