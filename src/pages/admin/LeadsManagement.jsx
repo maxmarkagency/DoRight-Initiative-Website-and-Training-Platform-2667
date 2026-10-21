@@ -12,6 +12,11 @@ import {
   getActiveSubCommittees,
   updateLeadTier,
   deleteLead,
+  deleteLeads,
+  approveLead,
+  approveLeads,
+  rejectLead,
+  rejectLeads,
   updateLeadImpactSubmission,
   sendTierNotificationEmail,
   sendMemberReminderEmail,
@@ -96,6 +101,8 @@ const LeadsManagement = () => {
   const [impactFilter, setImpactFilter] = useState('all'); // 'all' | 'submitted_current' | 'pending_current'
   const [subCommitteeFilter, setSubCommitteeFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'name_asc' | 'name_desc'
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'pending_review'
+  const [actioningLeadId, setActioningLeadId] = useState(null);
 
   // Selected Lead for Tier Management Modal
   const [selectedLead, setSelectedLead] = useState(null);
@@ -154,6 +161,13 @@ const LeadsManagement = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   const [deleteSuccessToast, setDeleteSuccessToast] = useState('');
+
+  // Bulk Multi-Select & Batch Action States
+  const [selectedLeadIds, setSelectedLeadIds] = useState(new Set());
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [bulkDeleteError, setBulkDeleteError] = useState('');
+  const [bulkActionSuccessToast, setBulkActionSuccessToast] = useState('');
 
   // Collective Export Modal State
   const [showExportModal, setShowExportModal] = useState(false);
@@ -235,6 +249,11 @@ const LeadsManagement = () => {
 
       const removedName = deletingLead.full_name || 'Member';
       setLeads((prev) => prev.filter((l) => l.id !== deletingLead.id));
+      setSelectedLeadIds((prev) => {
+        const next = new Set(prev);
+        next.delete(deletingLead.id);
+        return next;
+      });
 
       if (selectedLead?.id === deletingLead.id) {
         closeLeadModal();
@@ -258,6 +277,7 @@ const LeadsManagement = () => {
       tier_2: leads.filter((l) => l.tier === 'tier_2').length,
       tier_3: leads.filter((l) => l.tier === 'tier_3').length,
       tier_4: leads.filter((l) => l.tier === 'tier_4').length,
+      pendingReview: leads.filter((l) => l.status === 'pending_review').length,
       submittedCurrentMonth: leads.filter((l) => l.impact_submissions?.[currentMonthKey] === true).length
     };
   }, [leads, currentMonthKey]);
@@ -268,6 +288,11 @@ const LeadsManagement = () => {
       .filter((lead) => {
         const currentTier = lead.tier || 'tier_1';
         if (selectedTierTab !== 'all' && currentTier !== selectedTierTab) {
+          return false;
+        }
+
+        // Status Filter (pending registration approvals)
+        if (statusFilter === 'pending_review' && lead.status !== 'pending_review') {
           return false;
         }
 
@@ -305,10 +330,11 @@ const LeadsManagement = () => {
         if (sortBy === 'name_desc') return (b.full_name || '').localeCompare(a.full_name || '');
         return 0;
       });
-  }, [leads, selectedTierTab, subCommitteeFilter, impactFilter, searchTerm, sortBy, currentMonthKey]);
+  }, [leads, selectedTierTab, statusFilter, subCommitteeFilter, impactFilter, searchTerm, sortBy, currentMonthKey]);
 
   const hasActiveFilters =
     selectedTierTab !== 'all' ||
+    statusFilter !== 'all' ||
     impactFilter !== 'all' ||
     subCommitteeFilter !== 'all' ||
     searchTerm.trim() !== '' ||
@@ -316,10 +342,168 @@ const LeadsManagement = () => {
 
   const resetFilters = () => {
     setSelectedTierTab('all');
+    setStatusFilter('all');
     setImpactFilter('all');
     setSubCommitteeFilter('all');
     setSearchTerm('');
     setSortBy('newest');
+  };
+
+  // Bulk Selection Helpers
+  const allFilteredSelected = useMemo(() => {
+    return filteredLeads.length > 0 && filteredLeads.every((l) => selectedLeadIds.has(l.id));
+  }, [filteredLeads, selectedLeadIds]);
+
+  const isIndeterminate = useMemo(() => {
+    return selectedLeadIds.size > 0 && !allFilteredSelected && filteredLeads.some((l) => selectedLeadIds.has(l.id));
+  }, [selectedLeadIds, allFilteredSelected, filteredLeads]);
+
+  const handleToggleSelect = (e, leadId) => {
+    e.stopPropagation();
+    setSelectedLeadIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(leadId)) {
+        next.delete(leadId);
+      } else {
+        next.add(leadId);
+      }
+      return next;
+    });
+  };
+
+  const handleToggleSelectAll = (e) => {
+    e.stopPropagation();
+    if (allFilteredSelected) {
+      setSelectedLeadIds((prev) => {
+        const next = new Set(prev);
+        filteredLeads.forEach((l) => next.delete(l.id));
+        return next;
+      });
+    } else {
+      setSelectedLeadIds((prev) => {
+        const next = new Set(prev);
+        filteredLeads.forEach((l) => next.add(l.id));
+        return next;
+      });
+    }
+  };
+
+  const handleClearSelection = () => {
+    setSelectedLeadIds(new Set());
+  };
+
+  const handleConfirmBulkDelete = async () => {
+    if (selectedLeadIds.size === 0) return;
+    const idsToDelete = Array.from(selectedLeadIds);
+    try {
+      setBulkActionLoading(true);
+      setBulkDeleteError('');
+      await deleteLeads(idsToDelete);
+
+      // Instant optimistic UI update
+      setLeads((prev) => prev.filter((l) => !selectedLeadIds.has(l.id)));
+      if (selectedLead && selectedLeadIds.has(selectedLead.id)) {
+        closeLeadModal();
+      }
+      const count = idsToDelete.length;
+      setSelectedLeadIds(new Set());
+      setShowBulkDeleteModal(false);
+      setBulkActionSuccessToast(`Successfully removed ${count} member record${count === 1 ? '' : 's'}.`);
+      setTimeout(() => setBulkActionSuccessToast(''), 4500);
+    } catch (err) {
+      console.error('Error deleting leads in bulk:', err);
+      setBulkDeleteError('Unable to remove selected members. Please verify administrator permissions and try again.');
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    const leadsToApprove = leads.filter(
+      (l) => selectedLeadIds.has(l.id) && l.status === 'pending_review'
+    );
+    if (leadsToApprove.length === 0) return;
+
+    const count = leadsToApprove.length;
+    if (!window.confirm(`Approve ${count} registration${count === 1 ? '' : 's'}? This activates membership and sends official welcome emails.`)) {
+      return;
+    }
+
+    try {
+      setBulkActionLoading(true);
+      await approveLeads(leadsToApprove);
+      await fetchLeads();
+      setSelectedLeadIds(new Set());
+      setBulkActionSuccessToast(`Approved and activated ${count} member${count === 1 ? '' : 's'}.`);
+      setTimeout(() => setBulkActionSuccessToast(''), 4500);
+    } catch (err) {
+      console.error('Error in bulk approval:', err);
+      alert('Unable to approve selected registrations.');
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleBulkReject = async () => {
+    const leadIdsToReject = leads
+      .filter((l) => selectedLeadIds.has(l.id) && l.status === 'pending_review')
+      .map((l) => l.id);
+    if (leadIdsToReject.length === 0) return;
+
+    const count = leadIdsToReject.length;
+    if (!window.confirm(`Reject ${count} registration${count === 1 ? '' : 's'}? They will not be activated.`)) {
+      return;
+    }
+
+    try {
+      setBulkActionLoading(true);
+      await rejectLeads(leadIdsToReject);
+      await fetchLeads();
+      setSelectedLeadIds(new Set());
+      setBulkActionSuccessToast(`Marked ${count} registration${count === 1 ? '' : 's'} as rejected.`);
+      setTimeout(() => setBulkActionSuccessToast(''), 4500);
+    } catch (err) {
+      console.error('Error in bulk rejection:', err);
+      alert('Unable to reject selected registrations.');
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  // Approve a pending_review registration: activates member & sends welcome email
+  const handleApproveLead = async (e, lead) => {
+    e.stopPropagation();
+    const confirmMsg = `Approve ${lead.full_name || 'this registration'}? This activates their membership and sends the welcome email.`;
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      setActioningLeadId(lead.id);
+      await approveLead(lead);
+      await fetchLeads();
+    } catch (err) {
+      console.error('Error approving registration:', err);
+      alert('Unable to approve this registration. Please try again.');
+    } finally {
+      setActioningLeadId(null);
+    }
+  };
+
+  // Reject a pending_review registration
+  const handleRejectLead = async (e, lead) => {
+    e.stopPropagation();
+    const confirmMsg = `Reject ${lead.full_name || 'this registration'}? They will not be activated as a member.`;
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      setActioningLeadId(lead.id);
+      await rejectLead(lead.id);
+      await fetchLeads();
+    } catch (err) {
+      console.error('Error rejecting registration:', err);
+      alert('Unable to reject this registration. Please try again.');
+    } finally {
+      setActioningLeadId(null);
+    }
   };
 
   const openLeadModal = (lead, initialTab = 'tier') => {
@@ -907,6 +1091,19 @@ const LeadsManagement = () => {
               >
                 Tier 4 ({counts.tier_4 || 0})
               </button>
+              {counts.pendingReview > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter(statusFilter === 'pending_review' ? 'all' : 'pending_review')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                    statusFilter === 'pending_review'
+                      ? 'bg-red-600 text-white shadow-sm'
+                      : 'text-red-600 dark:text-red-400 hover:text-red-800'
+                  }`}
+                >
+                  Pending Review ({counts.pendingReview})
+                </button>
+              )}
             </div>
 
             {/* Search Bar */}
@@ -1035,9 +1232,21 @@ const LeadsManagement = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full text-left text-sm min-w-[1050px]">
               <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 <tr>
+                  <th className="p-4 w-12 text-center" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={allFilteredSelected}
+                      ref={(el) => {
+                        if (el) el.indeterminate = isIndeterminate;
+                      }}
+                      onChange={handleToggleSelectAll}
+                      aria-label="Select all members"
+                      className="w-4 h-4 rounded text-yellow-500 focus:ring-yellow-400 border-gray-300 dark:border-gray-600 cursor-pointer"
+                    />
+                  </th>
                   <th className="p-4">Member / Advocate</th>
                   <th className="p-4">Contact Info</th>
                   <th className="p-4">Current Tier</th>
@@ -1053,13 +1262,28 @@ const LeadsManagement = () => {
                   const currentTier = lead.tier || 'tier_1';
                   const tierConfig = TIERS[currentTier] || TIERS.tier_1;
                   const isSubmittedThisMonth = lead.impact_submissions?.[currentMonthKey] === true;
+                  const isSelected = selectedLeadIds.has(lead.id);
 
                   return (
                     <tr
                       key={lead.id}
                       onClick={() => openLeadModal(lead, 'tier')}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
+                      className={`cursor-pointer transition-colors ${
+                        isSelected
+                          ? 'bg-amber-50/80 dark:bg-amber-950/40 hover:bg-amber-100/70 dark:hover:bg-amber-950/60'
+                          : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                      }`}
                     >
+                      {/* Checkbox */}
+                      <td className="p-4 w-12 text-center" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => handleToggleSelect(e, lead.id)}
+                          aria-label={`Select ${lead.full_name || 'member'}`}
+                          className="w-4 h-4 rounded text-yellow-500 focus:ring-yellow-400 border-gray-300 dark:border-gray-600 cursor-pointer"
+                        />
+                      </td>
                       {/* Name & Avatar */}
                       <td className="p-4">
                         <div className="flex items-center gap-3">
@@ -1141,6 +1365,28 @@ const LeadsManagement = () => {
                       {/* Tier Actions */}
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                          {lead.status === 'pending_review' && (
+                            <>
+                              <button
+                                type="button"
+                                disabled={actioningLeadId === lead.id}
+                                onClick={(e) => handleApproveLead(e, lead)}
+                                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold rounded-md transition-colors"
+                                title="Approve registration and activate membership"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                type="button"
+                                disabled={actioningLeadId === lead.id}
+                                onClick={(e) => handleRejectLead(e, lead)}
+                                className="px-2.5 py-1 bg-red-100 hover:bg-red-200 disabled:opacity-50 text-red-800 text-xs font-bold rounded-md transition-colors"
+                                title="Reject registration"
+                              >
+                                Reject
+                              </button>
+                            </>
+                          )}
                           {currentTier === 'tier_1' && (
                             <button
                               type="button"
@@ -1179,6 +1425,17 @@ const LeadsManagement = () => {
                           >
                             Manage
                           </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeletingLead(lead);
+                            }}
+                            className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded transition-colors"
+                            title={`Delete ${lead.full_name || 'member'}`}
+                          >
+                            <SafeIcon icon={FiTrash2} className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -1189,6 +1446,98 @@ const LeadsManagement = () => {
           </div>
         )}
       </div>
+
+      {/* FLOATING BULK SELECTION ACTION BAR */}
+      <AnimatePresence>
+        {selectedLeadIds.size > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.98 }}
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-11/12 max-w-3xl bg-slate-900/95 dark:bg-slate-800/95 text-white backdrop-blur-md rounded-2xl shadow-2xl border border-slate-700/60 p-3 sm:p-4 flex flex-wrap items-center justify-between gap-3"
+          >
+            <div className="flex items-center gap-3">
+              <span className="flex items-center justify-center w-7 h-7 rounded-full bg-yellow-400 text-slate-950 font-bold text-xs">
+                {selectedLeadIds.size}
+              </span>
+              <div className="text-xs sm:text-sm font-semibold">
+                <span>{selectedLeadIds.size} {selectedLeadIds.size === 1 ? 'member' : 'members'} selected</span>
+                <span className="hidden sm:inline text-slate-400 text-xs ml-2">
+                  ({filteredLeads.filter((l) => selectedLeadIds.has(l.id)).length} of {filteredLeads.length} filtered)
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Select / Deselect all filtered shortcut */}
+              {!allFilteredSelected && filteredLeads.length > 1 && (
+                <button
+                  type="button"
+                  onClick={handleToggleSelectAll}
+                  className="px-2.5 py-1.5 text-xs font-semibold text-yellow-400 hover:text-yellow-300 hover:bg-slate-800 rounded-xl transition-colors"
+                >
+                  Select All Filtered ({filteredLeads.length})
+                </button>
+              )}
+
+              {/* Approve selected if any pending_review */}
+              {leads.some((l) => selectedLeadIds.has(l.id) && l.status === 'pending_review') && (
+                <button
+                  type="button"
+                  disabled={bulkActionLoading}
+                  onClick={handleBulkApprove}
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs inline-flex items-center gap-1.5 transition-colors"
+                >
+                  <SafeIcon icon={FiCheckCircle} className="w-3.5 h-3.5" />
+                  <span>Approve ({leads.filter((l) => selectedLeadIds.has(l.id) && l.status === 'pending_review').length})</span>
+                </button>
+              )}
+
+              {/* Reject selected if any pending_review */}
+              {leads.some((l) => selectedLeadIds.has(l.id) && l.status === 'pending_review') && (
+                <button
+                  type="button"
+                  disabled={bulkActionLoading}
+                  onClick={handleBulkReject}
+                  className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-red-300 font-bold text-xs rounded-xl inline-flex items-center gap-1.5 transition-colors"
+                >
+                  <SafeIcon icon={FiX} className="w-3.5 h-3.5" />
+                  <span>Reject</span>
+                </button>
+              )}
+
+              {/* Delete selected */}
+              <button
+                type="button"
+                disabled={bulkActionLoading}
+                onClick={() => setShowBulkDeleteModal(true)}
+                className="px-3.5 py-1.5 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs inline-flex items-center gap-1.5 transition-colors"
+              >
+                <SafeIcon icon={FiTrash2} className="w-3.5 h-3.5" />
+                <span>Delete ({selectedLeadIds.size})</span>
+              </button>
+
+              {/* Deselect All */}
+              <button
+                type="button"
+                onClick={handleClearSelection}
+                className="px-2.5 py-1.5 text-slate-400 hover:text-white text-xs font-semibold rounded-xl hover:bg-slate-800 transition-colors"
+              >
+                Clear
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* BULK ACTION SUCCESS TOAST */}
+      {bulkActionSuccessToast && (
+        <div className="fixed top-20 right-6 z-50 p-4 bg-emerald-600 text-white rounded-xl shadow-xl flex items-center gap-2.5 text-sm font-semibold animate-in fade-in slide-in-from-top-2">
+          <SafeIcon icon={FiCheckCircle} className="w-5 h-5 text-white" />
+          <span>{bulkActionSuccessToast}</span>
+        </div>
+      )}
 
       {/* INDIVIDUAL LEAD / MEMBER MODAL */}
       <AdminModal isOpen={!!selectedLead} maxWidth="max-w-2xl">
@@ -2620,6 +2969,81 @@ const LeadsManagement = () => {
             </div>
           </div>
         )}
+      </AdminModal>
+
+      {/* BULK DELETE CONFIRMATION MODAL */}
+      <AdminModal isOpen={showBulkDeleteModal} maxWidth="max-w-md">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 text-red-600">
+            <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-950/50 flex items-center justify-center">
+              <SafeIcon icon={FiTrash2} className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                Delete {selectedLeadIds.size} Selected Member{selectedLeadIds.size === 1 ? '' : 's'}
+              </h3>
+              <p className="text-xs text-gray-500">Irreversible administrative removal</p>
+            </div>
+          </div>
+
+          <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+            Are you sure you want to permanently delete these <strong>{selectedLeadIds.size}</strong> selected members? This will remove them from the database and dashboard automatically, and purge any uploaded card photos.
+          </p>
+
+          {/* Preview of items to delete */}
+          <div className="max-h-36 overflow-y-auto p-2.5 bg-gray-50 dark:bg-gray-800/60 rounded-lg border border-gray-200 dark:border-gray-700 text-xs space-y-1">
+            {leads
+              .filter((l) => selectedLeadIds.has(l.id))
+              .slice(0, 5)
+              .map((l) => (
+                <div key={l.id} className="flex justify-between text-gray-700 dark:text-gray-300">
+                  <span className="font-semibold truncate max-w-[200px]">{l.full_name || 'Unnamed Member'}</span>
+                  <span className="text-gray-400 font-mono text-[10px]">{l.membership_id || l.email}</span>
+                </div>
+              ))}
+            {selectedLeadIds.size > 5 && (
+              <div className="text-[11px] text-gray-400 italic pt-1">
+                + and {selectedLeadIds.size - 5} more members
+              </div>
+            )}
+          </div>
+
+          {bulkDeleteError && (
+            <div className="p-3 bg-red-50 border border-red-200 text-red-800 rounded-lg text-xs flex items-center gap-2">
+              <SafeIcon icon={FiAlertCircle} className="w-4 h-4 text-red-600 flex-shrink-0" />
+              <span>{bulkDeleteError}</span>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+            <button
+              type="button"
+              onClick={() => {
+                setShowBulkDeleteModal(false);
+                setBulkDeleteError('');
+              }}
+              disabled={bulkActionLoading}
+              className="px-4 py-2 border border-gray-300 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmBulkDelete}
+              disabled={bulkActionLoading}
+              className="px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 disabled:opacity-50 text-sm inline-flex items-center gap-1.5 shadow-sm"
+            >
+              {bulkActionLoading ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Deleting {selectedLeadIds.size}...</span>
+                </>
+              ) : (
+                <span>Confirm &amp; Delete ({selectedLeadIds.size})</span>
+              )}
+            </button>
+          </div>
+        </div>
       </AdminModal>
 
       {/* Collective Impact Report Export Modal */}

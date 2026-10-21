@@ -203,7 +203,7 @@ export const joinSubCommittee = async ({ membershipId, email, fullName, phone, s
   }
 };
 
-export const submitLead = async ({ fullName, email, phone, interest, message, subCommitteeId = null, photoFile, tier = 'tier_1', source = 'website', additionalNotes = '' }) => {
+export const submitLead = async ({ fullName, email, phone, interest, message, subCommitteeId = null, photoFile, tier = 'tier_1', source = 'website', additionalNotes = '', turnstileToken = null }) => {
   let photoPreview = null;
   let photoBase64 = null;
   let photoExt = 'jpg';
@@ -242,7 +242,8 @@ export const submitLead = async ({ fullName, email, phone, interest, message, su
         photoExt,
         photoMime,
         tier,
-        source
+        source,
+        turnstileToken
       }
     });
 
@@ -304,7 +305,7 @@ export const submitLead = async ({ fullName, email, phone, interest, message, su
     tier_1_at: now,
     ...(isTier4 ? { tier_4_at: now } : {}),
     membership_id: fallbackMembershipId,
-    status: isTier4 ? 'active' : 'new',
+    status: isTier4 ? 'active' : 'pending_review',
     admin_notes: effectiveAdminNotes,
     created_at: now
   };
@@ -334,7 +335,7 @@ export const submitLead = async ({ fullName, email, phone, interest, message, su
       insertError.message?.includes('row-level security');
 
     const safeSource = isConstraintOrRLSError ? 'website' : source;
-    const safeStatus = isConstraintOrRLSError ? 'new' : (isTier4 ? 'active' : 'new');
+    const safeStatus = isConstraintOrRLSError ? 'pending_review' : (isTier4 ? 'active' : 'pending_review');
     const safeAdminNotes = isConstraintOrRLSError
       ? `[System Record: Source '${source}' | Tier '${tier}']\n${effectiveAdminNotes || ''}`
       : effectiveAdminNotes;
@@ -633,6 +634,49 @@ export const updateLeadTier = async ({
 };
 
 /**
+ * Approves a pending_review registration: activates the member and sends the welcome email.
+ */
+export const approveLead = async (lead) => {
+  if (!lead?.id) throw new Error('Lead is required');
+
+  const { data, error } = await supabase
+    .from('leads')
+    .update({ status: 'active' })
+    .eq('id', lead.id)
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  try {
+    await supabase.functions.invoke('send-lead-welcome-email', {
+      body: { type: 'INSERT', record: data }
+    });
+  } catch (err) {
+    console.warn('Welcome email trigger warning on approval:', err);
+  }
+
+  return data;
+};
+
+/**
+ * Rejects a pending_review registration.
+ */
+export const rejectLead = async (leadId) => {
+  if (!leadId) throw new Error('Lead ID is required');
+
+  const { data, error } = await supabase
+    .from('leads')
+    .update({ status: 'rejected' })
+    .eq('id', leadId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+/**
  * Deletes / removes a member lead from the database and cleans up their uploaded photo if present.
  */
 export const deleteLead = async (leadId) => {
@@ -661,6 +705,88 @@ export const deleteLead = async (leadId) => {
 
   if (error) throw error;
   return { success: true, id: leadId, data };
+};
+
+/**
+ * Batch deletes multiple member leads from database and cleans up their uploaded photos from storage.
+ */
+export const deleteLeads = async (leadIds) => {
+  if (!Array.isArray(leadIds) || leadIds.length === 0) {
+    return { success: true, count: 0 };
+  }
+
+  // 1. Attempt batch photo cleanup from storage
+  try {
+    const { data: leadsWithPhotos } = await supabase
+      .from('leads')
+      .select('photo_url')
+      .in('id', leadIds);
+
+    const photoPaths = (leadsWithPhotos || [])
+      .map((l) => l.photo_url)
+      .filter((url) => url && !url.startsWith('http') && !url.startsWith('data:'));
+
+    if (photoPaths.length > 0) {
+      await supabase.storage.from('lead-photos').remove(photoPaths);
+    }
+  } catch (err) {
+    console.warn('Batch photo cleanup warning on deleteLeads:', err);
+  }
+
+  // 2. Batch delete rows from database
+  const { data, error } = await supabase
+    .from('leads')
+    .delete()
+    .in('id', leadIds)
+    .select();
+
+  if (error) throw error;
+  return { success: true, count: leadIds.length, data };
+};
+
+/**
+ * Batch approves multiple pending_review registrations: activates members and dispatches welcome emails.
+ */
+export const approveLeads = async (leadsToApprove) => {
+  if (!Array.isArray(leadsToApprove) || leadsToApprove.length === 0) return [];
+  const ids = leadsToApprove.map((l) => l.id);
+
+  const { data, error } = await supabase
+    .from('leads')
+    .update({ status: 'active' })
+    .in('id', ids)
+    .select();
+
+  if (error) throw error;
+
+  // Dispatch welcome emails
+  for (const lead of leadsToApprove) {
+    try {
+      await supabase.functions.invoke('send-lead-welcome-email', {
+        body: { type: 'INSERT', record: { ...lead, status: 'active' } }
+      });
+    } catch (err) {
+      console.warn('Batch welcome email trigger warning for lead:', lead.id, err);
+    }
+  }
+
+  return data;
+};
+
+/**
+ * Batch rejects multiple pending_review registrations.
+ */
+export const rejectLeads = async (leadIds) => {
+  if (!Array.isArray(leadIds) || leadIds.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from('leads')
+    .update({ status: 'rejected' })
+    .in('id', leadIds)
+    .select();
+
+  if (error) throw error;
+  return data;
 };
 
 /**

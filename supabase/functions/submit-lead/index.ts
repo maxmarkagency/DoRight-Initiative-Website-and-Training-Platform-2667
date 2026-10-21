@@ -54,6 +54,8 @@ Deno.serve(async (req) => {
     let photoBuffer: Uint8Array | null = null;
     let photoExt = "jpg";
     let photoMime = "image/jpeg";
+    let websiteHp = "";
+    let turnstileToken = "";
 
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
@@ -68,6 +70,8 @@ Deno.serve(async (req) => {
       subCommitteeName = formData.get("subCommitteeName")?.toString() || null;
       requestedTier = formData.get("tier")?.toString() || "tier_1";
       requestedSource = formData.get("source")?.toString() || "website";
+      websiteHp = formData.get("website_hp")?.toString() || formData.get("website_url_hp")?.toString() || "";
+      turnstileToken = formData.get("cf-turnstile-response")?.toString() || formData.get("turnstileToken")?.toString() || "";
 
       const file = formData.get("photo");
       if (file instanceof File) {
@@ -88,6 +92,8 @@ Deno.serve(async (req) => {
       subCommitteeName = body.subCommitteeName || null;
       requestedTier = body.tier || "tier_1";
       requestedSource = body.source || "website";
+      websiteHp = body.website_hp || body.website_url_hp || "";
+      turnstileToken = body["cf-turnstile-response"] || body.turnstileToken || "";
 
       if (body.photoBase64) {
         const base64Data = body.photoBase64.replace(/^data:image\/\w+;base64,/, "");
@@ -98,6 +104,47 @@ Deno.serve(async (req) => {
         }
         photoExt = body.photoExt || "jpg";
         photoMime = body.photoMime || "image/jpeg";
+      }
+    }
+
+    // Anti-bot check 1: Honeypot trap check (bots automatically populate hidden inputs)
+    if (websiteHp && websiteHp.trim().length > 0) {
+      console.warn("submit-lead: bot submission intercepted via honeypot trap");
+      return new Response(
+        JSON.stringify({ success: true, message: "Application received" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Anti-bot check 2: Cloudflare Turnstile token validation (active if CLOUDFLARE_TURNSTILE_SECRET_KEY is configured)
+    const turnstileSecret = Deno.env.get("CLOUDFLARE_TURNSTILE_SECRET_KEY");
+    if (turnstileSecret && action !== "check_duplicate" && action !== "update_photo") {
+      if (!turnstileToken) {
+        return new Response(
+          JSON.stringify({ error: "Cloudflare Turnstile verification token required." }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      try {
+        const verifyRes = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            secret: turnstileSecret,
+            response: turnstileToken,
+            remoteip: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
+          }),
+        });
+        const verifyData = await verifyRes.json();
+        if (!verifyData.success) {
+          console.warn("submit-lead: Cloudflare Turnstile verification failed", verifyData);
+          return new Response(
+            JSON.stringify({ error: "Bot verification challenge failed. Please refresh and try again." }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      } catch (cfErr) {
+        console.warn("submit-lead: Cloudflare Turnstile verification network error", cfErr);
       }
     }
 
@@ -507,7 +554,7 @@ Deno.serve(async (req) => {
       source: requestedSource,
       tier: requestedTier,
       tier_1_at: now,
-      ...(isTier4 ? { tier_4_at: now, status: "active" } : { status: "new" }),
+      ...(isTier4 ? { tier_4_at: now, status: "active" } : { status: "pending_review" }),
       membership_id: fallbackMembershipId,
       admin_notes: adminNotes,
     };
@@ -530,7 +577,7 @@ Deno.serve(async (req) => {
         insertError.message?.includes("leads_status_check")
       ) {
         leadInsertPayload.source = "website";
-        leadInsertPayload.status = "new";
+        leadInsertPayload.status = isTier4 ? "active" : "pending_review";
         leadInsertPayload.admin_notes = `[System Record: Source submitted as '${requestedSource}', Tier: '${requestedTier}']\n${adminNotes || ""}`;
       }
 
@@ -564,21 +611,23 @@ Deno.serve(async (req) => {
       insertedLead = data;
     }
 
-    // 4. Trigger Welcome Email
-    try {
-      await fetch(`${supabaseUrl}/functions/v1/send-lead-welcome-email`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${serviceRoleKey}`,
-        },
-        body: JSON.stringify({
-          type: "INSERT",
-          record: insertedLead,
-        }),
-      });
-    } catch (emailErr) {
-      console.error("submit-lead: background welcome email trigger failed", emailErr);
+    // 4. Trigger Welcome Email (skipped for pending_review leads until an admin approves them)
+    if (insertedLead?.status !== "pending_review") {
+      try {
+        await fetch(`${supabaseUrl}/functions/v1/send-lead-welcome-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${serviceRoleKey}`,
+          },
+          body: JSON.stringify({
+            type: "INSERT",
+            record: insertedLead,
+          }),
+        });
+      } catch (emailErr) {
+        console.error("submit-lead: background welcome email trigger failed", emailErr);
+      }
     }
 
     return new Response(

@@ -8,6 +8,7 @@ import { submitLead, checkLeadDuplicate } from '../services/leadsService';
 import MemberCard from '../components/MemberCard';
 import supabase from '../lib/supabase';
 import useSeo from '../hooks/useSeo';
+import TurnstileWidget from '../components/TurnstileWidget';
 
 const {
   FiUsers,
@@ -50,6 +51,9 @@ const Join = () => {
   const [submitError, setSubmitError] = useState('');
   const [duplicateWarning, setDuplicateWarning] = useState({ field: null, message: '' });
   const [siteSettings, setSiteSettings] = useState({});
+  const [honeypot, setHoneypot] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const formOpenedAtRef = useRef(Date.now());
   const waysSectionRef = useRef(null);
 
   useEffect(() => {
@@ -92,6 +96,8 @@ const Join = () => {
   }, [isModalOpen]);
 
   const openModal = (initialInterest = 'Volunteering') => {
+    formOpenedAtRef.current = Date.now();
+    setHoneypot('');
     setFormData((prev) => ({
       ...prev,
       interest: INTEREST_OPTIONS.includes(initialInterest) ? initialInterest : 'Volunteering'
@@ -105,6 +111,8 @@ const Join = () => {
 
   const closeModal = () => {
     setIsModalOpen(false);
+    setHoneypot('');
+    setTurnstileToken('');
     // If submitted, reset the form for a clean next open
     if (isSubmitted) {
       setFormData({ name: '', email: '', phone: '', interest: 'Volunteering', message: '' });
@@ -220,6 +228,23 @@ const Join = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Anti-bot blockage: Honeypot trap check
+    if (honeypot && honeypot.trim().length > 0) {
+      console.warn('Bot blocked via honeypot');
+      setIsSubmitting(true);
+      setTimeout(() => {
+        setIsSubmitting(false);
+        setIsSubmitted(true);
+      }, 800);
+      return;
+    }
+
+    // Anti-bot blockage: Timing check (< 2.5s is automated bot submission)
+    if (Date.now() - formOpenedAtRef.current < 2500) {
+      setSubmitError('Submission was received too quickly. Please take a few moments to review your information and submit again.');
+      return;
+    }
+
     if (!formData.name || formData.name.trim().length < 2) {
       setSubmitError('Please enter your full name as you would like it to appear on your membership card.');
       return;
@@ -235,8 +260,23 @@ const Join = () => {
       return;
     }
 
+    if (!formData.phone || formData.phone.trim().replace(/\D/g, '').length < 8) {
+      setSubmitError('Please provide a valid phone number so we can reach you.');
+      return;
+    }
+
+    if (!formData.message || formData.message.trim().length < 10) {
+      setSubmitError('Please tell us a little about your background or how you would like to collaborate (at least 10 characters).');
+      return;
+    }
+
     if (!photoFile) {
       setPhotoError('Please upload a clear passport or portrait photo for your official membership card.');
+      return;
+    }
+
+    if (import.meta.env.VITE_CLOUDFLARE_TURNSTILE_SITE_KEY && !turnstileToken) {
+      setSubmitError('Please complete the security verification challenge before submitting.');
       return;
     }
 
@@ -249,7 +289,8 @@ const Join = () => {
         phone: formData.phone?.trim() || '',
         interest: formData.interest,
         message: formData.message,
-        photoFile
+        photoFile,
+        turnstileToken
       });
       setSubmittedLead({
         full_name: formData.name.trim(),
@@ -625,7 +666,7 @@ const Join = () => {
                           ? 'Our collaboration opportunities and next steps have been sent to your email.'
                           : (
                             <>
-                              Your registration has been activated in <strong>Tier 1 (Personal Advocate)</strong>. Your official <strong>Advocate Card</strong> is ready below:
+                              Your application for <strong>Tier 1 (Personal Advocate)</strong> has been received and is pending admin review. A preview of your <strong>Advocate Card</strong> is below; it will be activated once approved:
                             </>
                           )}
                       </p>
@@ -802,10 +843,24 @@ const Join = () => {
                       </div>
                     </div>
 
+                    {/* Anti-bot honeypot field - visually hidden, inaccessible to users */}
+                    <div style={{ position: 'absolute', opacity: 0, zIndex: -1, width: 0, height: 0, overflow: 'hidden', pointerEvents: 'none' }} aria-hidden="true" tabIndex={-1}>
+                      <label htmlFor="modal-website-hp">Website URL (leave blank)</label>
+                      <input
+                        type="text"
+                        id="modal-website-hp"
+                        name="website_url_hp"
+                        value={honeypot}
+                        onChange={(e) => setHoneypot(e.target.value)}
+                        autoComplete="off"
+                        tabIndex={-1}
+                      />
+                    </div>
+
                     {/* Message */}
                     <div>
                       <label htmlFor="modal-message" className="block text-xs sm:text-sm font-semibold text-neutral-800 mb-1 sm:mb-1.5">
-                        Message <span className="text-neutral-400 font-normal">(Optional)</span>
+                        Message <span className="text-red-500">*</span>
                       </label>
                       <textarea
                         id="modal-message"
@@ -813,6 +868,7 @@ const Join = () => {
                         rows={3}
                         value={formData.message}
                         onChange={handleInputChange}
+                        required
                         placeholder="Tell us a little about your background or how you would like to collaborate..."
                         className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl text-neutral-900 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-neutral-400 resize-none transition-all"
                       />
@@ -902,6 +958,15 @@ const Join = () => {
                         </div>
                       </div>
                     )}
+
+                    {/* Cloudflare Turnstile Verification Widget */}
+                    <TurnstileWidget
+                      onVerify={(token) => {
+                        setTurnstileToken(token);
+                        if (submitError) setSubmitError('');
+                      }}
+                      onExpire={() => setTurnstileToken('')}
+                    />
 
                     {/* Submit Button */}
                     <div className="pt-2">
