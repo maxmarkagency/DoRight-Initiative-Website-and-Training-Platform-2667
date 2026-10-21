@@ -1,60 +1,108 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
+
+/**
+ * Cloudflare Turnstile Official Test Key:
+ * - 1x00000000000000000000AA: Always passes (renders challenge widget and issues a valid token)
+ */
+export const CLOUDFLARE_TEST_SITE_KEY = '1x00000000000000000000AA';
 
 /**
  * Cloudflare Turnstile CAPTCHA Widget
- * Automatically renders Cloudflare Turnstile challenge if site key is configured.
+ * Safely renders Cloudflare Turnstile challenge using explicit API rendering.
+ * Supports imperative reset() via ref, custom themes, and automatic script injection.
  */
-const TurnstileWidget = ({
-  siteKey = import.meta.env.VITE_CLOUDFLARE_TURNSTILE_SITE_KEY,
+const TurnstileWidget = forwardRef(({
+  siteKey = import.meta.env.VITE_CLOUDFLARE_TURNSTILE_SITE_KEY || CLOUDFLARE_TEST_SITE_KEY,
   onVerify,
   onExpire,
   onError,
-  theme = 'auto'
-}) => {
+  theme = 'auto',
+  size = 'normal',
+  className = ''
+}, ref) => {
   const containerRef = useRef(null);
   const widgetIdRef = useRef(null);
+  const isMountedRef = useRef(true);
+
+  // Imperative handle to let parent form trigger reset/removal
+  useImperativeHandle(ref, () => ({
+    reset: () => {
+      if (widgetIdRef.current !== null && window.turnstile) {
+        try {
+          window.turnstile.reset(widgetIdRef.current);
+        } catch (e) {
+          console.warn('Turnstile reset warning:', e);
+        }
+      }
+    },
+    remove: () => {
+      if (widgetIdRef.current !== null && window.turnstile) {
+        try {
+          window.turnstile.remove(widgetIdRef.current);
+        } catch (e) {
+          // ignore
+        }
+        widgetIdRef.current = null;
+      }
+    },
+    getWidgetId: () => widgetIdRef.current
+  }));
 
   useEffect(() => {
-    if (!siteKey) return;
+    isMountedRef.current = true;
+    const effectiveSiteKey = siteKey || import.meta.env.VITE_CLOUDFLARE_TURNSTILE_SITE_KEY || CLOUDFLARE_TEST_SITE_KEY;
+    if (!effectiveSiteKey) return;
 
-    let isMounted = true;
-
-    // Load Turnstile script dynamically if not already loaded
-    const scriptId = 'cloudflare-turnstile-script';
-    let script = document.getElementById(scriptId);
+    const scriptId = 'cf-turnstile-script';
 
     const renderWidget = () => {
-      if (!isMounted || !containerRef.current || !window.turnstile) return;
+      if (!isMountedRef.current || !containerRef.current || !window.turnstile) return;
 
-      // Clean up previous widget instance if present
+      // Clean up previous widget instance if one already exists for this container
       if (widgetIdRef.current !== null) {
         try {
           window.turnstile.remove(widgetIdRef.current);
         } catch (e) {
-          // ignore cleanup errors
+          // ignore
         }
         widgetIdRef.current = null;
       }
 
+      // Clear container DOM
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '';
+      }
+
       try {
-        widgetIdRef.current = window.turnstile.render(containerRef.current, {
-          sitekey: siteKey,
-          theme: theme,
+        const id = window.turnstile.render(containerRef.current, {
+          sitekey: effectiveSiteKey,
+          theme,
+          size,
           callback: (token) => {
-            if (isMounted && onVerify) onVerify(token);
+            if (isMountedRef.current && onVerify) {
+              onVerify(token);
+            }
           },
           'expired-callback': () => {
-            if (isMounted && onExpire) onExpire();
+            if (isMountedRef.current && onExpire) {
+              onExpire();
+            }
           },
           'error-callback': (err) => {
             console.warn('Turnstile widget error:', err);
-            if (isMounted && onError) onError(err);
+            if (isMountedRef.current && onError) {
+              onError(err);
+            }
           }
         });
+        widgetIdRef.current = id;
       } catch (err) {
-        console.warn('Turnstile render error:', err);
+        console.warn('Turnstile render exception:', err);
       }
     };
+
+    // Load Cloudflare Turnstile script dynamically
+    let script = document.getElementById(scriptId);
 
     if (!script) {
       script = document.createElement('script');
@@ -62,41 +110,59 @@ const TurnstileWidget = ({
       script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
       script.async = true;
       script.defer = true;
+
       script.onload = () => {
         if (window.turnstile) {
-          window.turnstile.ready(renderWidget);
+          renderWidget();
+        } else {
+          const pollInterval = setInterval(() => {
+            if (window.turnstile) {
+              clearInterval(pollInterval);
+              renderWidget();
+            }
+          }, 50);
+          setTimeout(() => clearInterval(pollInterval), 4000);
         }
       };
+
       document.head.appendChild(script);
     } else {
       if (window.turnstile) {
-        window.turnstile.ready(renderWidget);
+        renderWidget();
       } else {
-        script.addEventListener('load', renderWidget);
+        const pollInterval = setInterval(() => {
+          if (window.turnstile) {
+            clearInterval(pollInterval);
+            renderWidget();
+          }
+        }, 50);
+        setTimeout(() => clearInterval(pollInterval), 4000);
       }
     }
 
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
       if (widgetIdRef.current !== null && window.turnstile) {
         try {
           window.turnstile.remove(widgetIdRef.current);
         } catch (e) {
           // ignore
         }
+        widgetIdRef.current = null;
       }
     };
-  }, [siteKey, theme]);
-
-  if (!siteKey) {
-    return null; // Gracefully render nothing if no key is configured yet
-  }
+  }, [siteKey, theme, size]);
 
   return (
-    <div className="flex justify-center my-2.5">
-      <div ref={containerRef} className="cf-turnstile-container min-h-[65px]" />
+    <div className={`flex justify-center my-3 ${className}`}>
+      <div
+        ref={containerRef}
+        className="cf-turnstile-container min-h-[65px] flex items-center justify-center"
+      />
     </div>
   );
-};
+});
+
+TurnstileWidget.displayName = 'TurnstileWidget';
 
 export default TurnstileWidget;

@@ -53,6 +53,7 @@ const Join = () => {
   const [siteSettings, setSiteSettings] = useState({});
   const [honeypot, setHoneypot] = useState('');
   const [turnstileToken, setTurnstileToken] = useState('');
+  const turnstileRef = useRef(null);
   const formOpenedAtRef = useRef(Date.now());
   const waysSectionRef = useRef(null);
 
@@ -113,6 +114,7 @@ const Join = () => {
     setIsModalOpen(false);
     setHoneypot('');
     setTurnstileToken('');
+    turnstileRef.current?.reset();
     // If submitted, reset the form for a clean next open
     if (isSubmitted) {
       setFormData({ name: '', email: '', phone: '', interest: 'Volunteering', message: '' });
@@ -275,7 +277,7 @@ const Join = () => {
       return;
     }
 
-    if (import.meta.env.VITE_CLOUDFLARE_TURNSTILE_SITE_KEY && !turnstileToken) {
+    if (!turnstileToken) {
       setSubmitError('Please complete the security verification challenge before submitting.');
       return;
     }
@@ -302,6 +304,8 @@ const Join = () => {
     } catch (error) {
       console.error('Error submitting lead:', error);
       setSubmitError(getFriendlySubmitError(error));
+      setTurnstileToken('');
+      turnstileRef.current?.reset();
     } finally {
       setIsSubmitting(false);
     }
@@ -961,11 +965,13 @@ const Join = () => {
 
                     {/* Cloudflare Turnstile Verification Widget */}
                     <TurnstileWidget
+                      ref={turnstileRef}
                       onVerify={(token) => {
                         setTurnstileToken(token);
                         if (submitError) setSubmitError('');
                       }}
                       onExpire={() => setTurnstileToken('')}
+                      onError={() => setTurnstileToken('')}
                     />
 
                     {/* Submit Button */}

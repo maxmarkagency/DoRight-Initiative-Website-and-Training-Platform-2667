@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import { SiTiktok } from 'react-icons/si';
@@ -7,6 +7,7 @@ import supabase from '../lib/supabase';
 import { getPageContent, getSectionByKey } from '../services/pageContentService';
 import { sanitizeHtml } from '../lib/sanitizeHtml';
 import useSeo from '../hooks/useSeo';
+import TurnstileWidget from '../components/TurnstileWidget';
 
 const { FiMail, FiPhone, FiMapPin, FiFacebook, FiTwitter, FiInstagram, FiLinkedin, FiSend, FiCheck, FiAlertCircle, FiCheckCircle, FiLoader } = FiIcons;
 
@@ -23,6 +24,9 @@ const Contact = () => {
   const [contactError, setContactError] = useState('');
   const [sections, setSections] = useState([]);
   const [siteSettings, setSiteSettings] = useState({});
+  const [honeypot, setHoneypot] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const turnstileRef = useRef(null);
 
   useEffect(() => {
     getPageContent('contact').then(setSections);
@@ -50,6 +54,17 @@ const Contact = () => {
     e.preventDefault();
     setContactError('');
 
+    // Anti-bot check 1: Honeypot trap check
+    if (honeypot && honeypot.trim().length > 0) {
+      console.warn('Bot blocked via honeypot on contact form');
+      setIsSending(true);
+      setTimeout(() => {
+        setIsSending(false);
+        setIsSubmitted(true);
+      }, 700);
+      return;
+    }
+
     if (!formData.name || formData.name.trim().length < 2) {
       setContactError('Please enter your full name.');
       return;
@@ -67,6 +82,11 @@ const Contact = () => {
 
     if (!formData.message || formData.message.trim().length < 10) {
       setContactError('Please provide a little more detail in your message (at least 10 characters).');
+      return;
+    }
+
+    if (!turnstileToken) {
+      setContactError('Please complete the security verification challenge before sending.');
       return;
     }
 
@@ -117,6 +137,8 @@ const Contact = () => {
       console.error('Error submitting contact message:', err);
       setIsSending(false);
       setContactError('An unexpected error occurred. Please try sending again or write directly to info@doright.ng.');
+      setTurnstileToken('');
+      turnstileRef.current?.reset();
     }
   };
 
@@ -124,6 +146,9 @@ const Contact = () => {
     setFormData({ name: '', email: '', subject: '', message: '' });
     setIsSubmitted(false);
     setContactError('');
+    setHoneypot('');
+    setTurnstileToken('');
+    turnstileRef.current?.reset();
   };
 
   const heroSection = getSectionByKey(sections, 'hero');
@@ -308,6 +333,31 @@ const Contact = () => {
                       className="w-full px-4 py-2.5 sm:py-3 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm sm:text-base transition-all resize-none"
                     />
                   </div>
+
+                  {/* Anti-bot honeypot field */}
+                  <div style={{ position: 'absolute', opacity: 0, zIndex: -1, width: 0, height: 0, overflow: 'hidden', pointerEvents: 'none' }} aria-hidden="true" tabIndex={-1}>
+                    <label htmlFor="contact-hp">Website URL (leave blank)</label>
+                    <input
+                      type="text"
+                      id="contact-hp"
+                      name="website_url_hp"
+                      value={honeypot}
+                      onChange={(e) => setHoneypot(e.target.value)}
+                      autoComplete="off"
+                      tabIndex={-1}
+                    />
+                  </div>
+
+                  {/* Cloudflare Turnstile Verification Widget */}
+                  <TurnstileWidget
+                    ref={turnstileRef}
+                    onVerify={(token) => {
+                      setTurnstileToken(token);
+                      if (contactError) setContactError('');
+                    }}
+                    onExpire={() => setTurnstileToken('')}
+                    onError={() => setTurnstileToken('')}
+                  />
 
                   {contactError && (
                     <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs sm:text-sm flex items-start gap-2.5">

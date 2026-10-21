@@ -116,8 +116,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Anti-bot check 2: Cloudflare Turnstile token validation (active if CLOUDFLARE_TURNSTILE_SECRET_KEY is configured)
-    const turnstileSecret = Deno.env.get("CLOUDFLARE_TURNSTILE_SECRET_KEY");
+    // Anti-bot check 2: Cloudflare Turnstile token validation
+    const turnstileSecret = Deno.env.get("CLOUDFLARE_TURNSTILE_SECRET_KEY") || "1x0000000000000000000000000000000AA";
     if (turnstileSecret && action !== "check_duplicate" && action !== "update_photo") {
       if (!turnstileToken) {
         return new Response(

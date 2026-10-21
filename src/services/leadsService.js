@@ -280,10 +280,29 @@ export const submitLead = async ({ fullName, email, phone, interest, message, su
         throw dupError; // NEVER proceed to fallback insert on duplicate!
       }
 
+      // Check if edge function rejected due to Turnstile bot check
+      const errMsg = errBody?.error || funcError.message || '';
+      if (
+        funcError.status === 403 ||
+        errMsg.toLowerCase().includes('turnstile') ||
+        errMsg.toLowerCase().includes('bot verification') ||
+        errMsg.toLowerCase().includes('challenge failed')
+      ) {
+        const botError = new Error(errMsg || 'Bot security verification failed. Please refresh and try again.');
+        botError.code = 'BOT_VERIFICATION_FAILED';
+        throw botError; // NEVER proceed to fallback insert on bot failure!
+      }
+
       console.warn('submit-lead function returned non-duplicate error, evaluating fallback:', funcError);
     }
   } catch (funcErr) {
-    if (funcErr.code === 'DUPLICATE_REGISTRATION' || funcErr.message?.includes('already registered')) {
+    if (
+      funcErr.code === 'DUPLICATE_REGISTRATION' ||
+      funcErr.code === 'BOT_VERIFICATION_FAILED' ||
+      funcErr.message?.includes('already registered') ||
+      funcErr.message?.toLowerCase().includes('turnstile') ||
+      funcErr.message?.toLowerCase().includes('bot verification')
+    ) {
       throw funcErr; // Re-throw immediately to Join form UI!
     }
     console.warn('submit-lead function invocation error, using resilient fallback:', funcErr);
@@ -420,7 +439,8 @@ export const submitFoundationLead = async ({
   governanceRole,
   organization,
   vision,
-  photoFile
+  photoFile,
+  turnstileToken = null
 }) => {
   const notes = [
     governanceRole ? `Governance Role: ${governanceRole}` : null,
@@ -437,7 +457,8 @@ export const submitFoundationLead = async ({
     tier: 'tier_4',
     source: 'foundation_portal',
     additionalNotes: notes,
-    photoFile
+    photoFile,
+    turnstileToken
   });
 };
 

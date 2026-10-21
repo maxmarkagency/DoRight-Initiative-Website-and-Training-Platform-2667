@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
@@ -6,6 +6,7 @@ import SafeIcon from '../common/SafeIcon';
 import useSeo from '../hooks/useSeo';
 import MemberCard from '../components/MemberCard';
 import { submitFoundationLead, checkLeadDuplicate } from '../services/leadsService';
+import TurnstileWidget from '../components/TurnstileWidget';
 
 const {
   FiShield,
@@ -49,6 +50,9 @@ const FoundationMemberForm = () => {
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedLead, setSubmittedLead] = useState(null);
+  const [honeypot, setHoneypot] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const turnstileRef = useRef(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -151,6 +155,30 @@ const FoundationMemberForm = () => {
       return;
     }
 
+    // Anti-bot honeypot check
+    if (honeypot && honeypot.trim().length > 0) {
+      console.warn('Bot blocked via honeypot');
+      setIsSubmitting(true);
+      setTimeout(() => {
+        setIsSubmitting(false);
+        setSubmittedLead({
+          full_name: formData.fullName.trim(),
+          membership_id: `DRAI-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+          tier: 'tier_4',
+          tier_1_at: new Date().toISOString(),
+          photo_preview: photoPreview,
+          photo_url_signed: photoPreview,
+          email: formData.email.trim().toLowerCase(),
+        });
+      }, 700);
+      return;
+    }
+
+    if (!turnstileToken) {
+      setSubmitError('Please complete the security verification challenge before submitting.');
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError('');
 
@@ -160,7 +188,8 @@ const FoundationMemberForm = () => {
         email: formData.email.trim().toLowerCase(),
         phone: formData.phone.trim(),
         vision: formData.vision.trim() || null,
-        photoFile
+        photoFile,
+        turnstileToken
       });
 
       const fallbackId = `DRAI-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -176,6 +205,8 @@ const FoundationMemberForm = () => {
       });
     } catch (err) {
       console.error('Error submitting Tier 4 registration:', err);
+      setTurnstileToken('');
+      turnstileRef.current?.reset();
       const msg = err?.message || '';
       if (msg.includes('already registered') || err?.code === 'DUPLICATE_REGISTRATION') {
         setSubmitError('A registration record with this email or phone number already exists. If you have already registered, please contact admin@doright.ng to retrieve your card.');
@@ -529,6 +560,32 @@ const FoundationMemberForm = () => {
                     className="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 resize-none"
                   />
                 </div>
+
+                {/* Anti-bot honeypot field */}
+                <div style={{ position: 'absolute', opacity: 0, zIndex: -1, width: 0, height: 0, overflow: 'hidden', pointerEvents: 'none' }} aria-hidden="true" tabIndex={-1}>
+                  <label htmlFor="foundation-hp">Website URL (leave blank)</label>
+                  <input
+                    type="text"
+                    id="foundation-hp"
+                    name="website_url_hp"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                    autoComplete="off"
+                    tabIndex={-1}
+                  />
+                </div>
+
+                {/* Cloudflare Turnstile Verification Widget */}
+                <TurnstileWidget
+                  ref={turnstileRef}
+                  theme="dark"
+                  onVerify={(token) => {
+                    setTurnstileToken(token);
+                    if (submitError) setSubmitError('');
+                  }}
+                  onExpire={() => setTurnstileToken('')}
+                  onError={() => setTurnstileToken('')}
+                />
 
                 {/* Submit Action */}
                 <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
