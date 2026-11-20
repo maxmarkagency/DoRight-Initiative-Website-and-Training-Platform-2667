@@ -46,6 +46,11 @@ test('external button links open in a new tab', () => {
   expect(screen.getByRole('link', { name: 'Partner' })).toHaveAttribute('target', '_blank');
 });
 
+test('the hero cannot be hidden, since the header relies on it for contrast (I-5)', () => {
+  expect(homeConfig.components.HomeHero.fields.hidden).toBeUndefined();
+  expect(homeConfig.components.HomeWhoWeAre.fields.hidden).toBeDefined();
+});
+
 test('HomeWhoWeAre renders heading and both paragraphs', () => {
   renderSection('HomeWhoWeAre');
   expect(screen.getByRole('heading', { name: 'Who We Are' })).toBeInTheDocument();

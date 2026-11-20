@@ -23,10 +23,13 @@ Marketing pages are being moved to a visual editor built on [Puck](https://pucke
 - **Fixed layout:** each page has a config in `src/cms/pages/<page>.config.js` listing its
   sections (`order`), each section's labelled fields, and `defaultProps` equal to the page's
   original hardcoded content. Editors can't add, move or delete sections; they can hide one.
-- **Fallback:** public pages render the defaults immediately, then the published content
-  (`src/cms/usePageContent.js` + `src/cms/pageData.js`). Missing sections, missing props, empty
-  lists, failed requests and never-published pages all fall back to defaults, so a page never
-  renders blank.
+- **Fallback:** public pages wait up to 1.5 s for published content (showing a dark hero-sized
+  placeholder), then render it (`src/cms/usePageContent.js` + `src/cms/pageData.js`). Missing
+  sections, missing props, empty lists, failed or slow requests and never-published pages all
+  fall back to the defaults, so a page never renders blank. The Home hero can't be hidden
+  because the transparent header needs it.
+- **Autosave:** saves run one at a time, retry every 5 s after a failure, save on leaving the
+  editor, and the browser warns before closing a tab with unsaved changes.
 - **Bundle:** public pages render with `src/cms/PageRenderer.jsx`; Puck is only loaded (lazily)
   by `src/pages/admin/PageEditor.jsx`.
 - **Links:** button links accept `/internal-paths`, `http(s)`, `mailto:` and `tel:`; anything

@@ -24,9 +24,14 @@ const PageEditor = () => {
   useEffect(() => {
     if (!page) return;
     fetchPageRow(slug)
-      .then((row) => setData(resolvePageData(row?.draft ?? row?.published, page.config)))
+      .then((row) => {
+        const initial = resolvePageData(row?.draft ?? row?.published, page.config);
+        setData(initial);
+        // A page that was never saved has no draft; queue one so Publish works without an edit.
+        if (!row?.draft) autosave.schedule(initial);
+      })
       .catch((err) => setLoadError(err.message));
-  }, [slug, page]);
+  }, [slug, page]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!page) return <p className="p-8">Unknown page. <Link to="/admin/pages" className="underline">Back to pages</Link></p>;
   if (loadError) return <p className="p-8 text-red-600">Couldn't load this page: {loadError}</p>;
@@ -52,7 +57,9 @@ const PageEditor = () => {
           headerActions: () => <EditorToolbar slug={slug} autosave={autosave} onShowHistory={() => setShowHistory(true)} />,
         }}
       />
-      {showHistory && <HistoryPanel slug={slug} onRestored={handleRestored} onClose={() => setShowHistory(false)} />}
+      {showHistory && (
+        <HistoryPanel slug={slug} onBeforeRestore={autosave.reset} onRestored={handleRestored} onClose={() => setShowHistory(false)} />
+      )}
     </div>
   );
 };

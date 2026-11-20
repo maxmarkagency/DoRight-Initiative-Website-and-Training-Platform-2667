@@ -17,10 +17,11 @@ export const listPageRows = async () =>
   unwrap(await supabase.from('page_content').select(ROW_COLUMNS));
 
 export const saveDraft = async (slug, data) => {
-  const { data: auth } = await supabase.auth.getUser();
+  // getSession reads the local session (no network round-trip before the upsert).
+  const { data: auth } = await supabase.auth.getSession();
   unwrap(
     await supabase.from('page_content').upsert(
-      { slug, draft: data, updated_at: new Date().toISOString(), updated_by: auth?.user?.id ?? null },
+      { slug, draft: data, updated_at: new Date().toISOString(), updated_by: auth?.session?.user?.id ?? null },
       { onConflict: 'slug' }
     )
   );

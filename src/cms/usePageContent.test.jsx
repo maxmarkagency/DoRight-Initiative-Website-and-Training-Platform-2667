@@ -1,5 +1,5 @@
 import React from 'react';
-import { renderHook, render, screen, waitFor } from '@testing-library/react';
+import { renderHook, render, screen, waitFor, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import usePageContent from './usePageContent';
 import PageRenderer from './PageRenderer';
@@ -30,6 +30,26 @@ test('uses published content once loaded', async () => {
   fetchPublished.mockResolvedValueOnce({ content: [{ type: 'HomeCallToAction', props: { heading: 'New' } }] });
   const { result } = renderHook(() => usePageContent('home'));
   await waitFor(() => expect(result.current.data.content[3].props.heading).toBe('New'));
+});
+
+test('not ready until content loads, so old defaults never flash (I-4)', async () => {
+  fetchPublished.mockResolvedValueOnce(null);
+  const { result } = renderHook(() => usePageContent('home'));
+  expect(result.current.ready).toBe(false);
+  await waitFor(() => expect(result.current.ready).toBe(true));
+});
+
+test('becomes ready with defaults if loading takes too long (I-4)', async () => {
+  vi.useFakeTimers();
+  fetchPublished.mockReturnValueOnce(new Promise(() => {}));
+  const { result } = renderHook(() => usePageContent('home'));
+  expect(result.current.ready).toBe(false);
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(1500);
+  });
+  expect(result.current.ready).toBe(true);
+  expect(result.current.data).toEqual(buildDefaultData(homeConfig));
+  vi.useRealTimers();
 });
 
 test('PageRenderer skips hidden sections', () => {

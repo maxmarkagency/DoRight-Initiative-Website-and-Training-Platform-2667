@@ -3,7 +3,7 @@ import { listVersions, restoreVersion } from '../pageContentApi';
 
 const formatDate = (iso) => new Date(iso).toLocaleString();
 
-const HistoryPanel = ({ slug, onRestored, onClose }) => {
+const HistoryPanel = ({ slug, onBeforeRestore, onRestored, onClose }) => {
   const [versions, setVersions] = useState(null);
   const [error, setError] = useState(null);
 
@@ -16,6 +16,7 @@ const HistoryPanel = ({ slug, onRestored, onClose }) => {
   const handleRestore = async (id) => {
     if (!window.confirm('Replace your current draft with this version? You can review it before publishing.')) return;
     try {
+      await onBeforeRestore(); // drop queued edits so they can't overwrite the restored draft
       onRestored(await restoreVersion(id));
     } catch (err) {
       setError(`Restore failed: ${err.message}`);

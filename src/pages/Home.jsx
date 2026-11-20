@@ -7,7 +7,7 @@ import homeConfig from '../cms/pages/home.config';
 
 // Content is edited in Admin → Pages → Home; defaults live in src/cms/pages/home.config.js.
 const Home = () => {
-  const { data } = usePageContent('home');
+  const { data, ready } = usePageContent('home');
 
   useSeo({
     path: '/',
@@ -18,7 +18,12 @@ const Home = () => {
   return (
     <MotionConfig reducedMotion="user">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen w-full overflow-x-hidden">
-        <PageRenderer data={data} config={homeConfig} />
+        {ready ? (
+          <PageRenderer data={data} config={homeConfig} />
+        ) : (
+          // Hero-sized dark placeholder keeps the transparent header readable while content loads.
+          <div className="min-h-[640px] sm:min-h-[760px] lg:min-h-[880px] bg-black" aria-hidden="true" />
+        )}
       </motion.div>
     </MotionConfig>
   );

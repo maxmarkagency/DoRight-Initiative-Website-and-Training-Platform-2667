@@ -40,7 +40,7 @@ const homeConfig = {
         },
         primaryButton: buttonField('Main button'),
         secondaryButton: buttonField('Second button'),
-        hidden: hiddenField,
+        // No "hidden" toggle: the transparent site header needs the dark hero behind it on "/".
       },
       defaultProps: {
         slides: [
@@ -68,7 +68,6 @@ const homeConfig = {
         ],
         primaryButton: { label: 'Join The Movement', href: '/join' },
         secondaryButton: { label: 'Explore Programs', href: '/programs' },
-        hidden: false,
       },
       render: HomeHero,
     },
