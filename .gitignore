@@ -34,3 +34,6 @@ CLAUDE.md
 
 # Supabase CLI local artifacts
 supabase/.temp/
+
+# Brainstorming companion mockups
+.superpowers/
