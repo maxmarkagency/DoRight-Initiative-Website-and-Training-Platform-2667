@@ -5,13 +5,58 @@ import TrusteesClosing from '../sections/trustees/TrusteesClosing';
 import { imageField } from '../fields/imageField';
 import { textField, textareaField, buttonField, hiddenField } from '../fields/common';
 
+const S3 = 'https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com';
+
 const TRUSTEES = [
-  { name: 'Pastor Wale Adefarasin', photo: { url: 'https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759593162037-wale-adefarasin-1.jpg', alt: 'Pastor Wale Adefarasin' }, description: 'Pastor Wale Adefarasin is the General Overseer of Guiding Light Assembly, he is presenter of \'The Heart of the matter\', a television programme that deals with social issues.', fullProfile: 'He is married to Pastor Olaolu Adefarasin and they have 3 children and 2 grandchildren. He is a firm believer in the sanctity of \'family\', and the importance of family in our national life. He believes that it is in the family that the character of our future leaders is forged. Pastor Wale Adefarasin has great hope in the future of Nigeria, and is passionate that there is a future and a hope for Nigeria, once its citizens arise to work for it.' },
-  { name: 'Ayodele Alamutu', photo: { url: 'https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759593178510-alamutu-1.jpg', alt: 'Ayodele Alamutu' }, description: 'She is the founder of RollTheDice Global Resources, involved in Internal Control, Audit, Business Advisory and Risk Management Advisory Services. She is a Risk Management, Assurance and Control Executive with more than 25 years progressive experience in the UK and Nigeria.', fullProfile: 'Ms. Alamutu is a fellow of the Institute of Chartered Accountants of Nigeria, A Certified member of The Institute of Risk Management (CIRM) and currently the Vice Chair of IRM Nigeria Regional Group. She is an Information Systems Auditor, Project Management Professional and a Board member of the Institute of Internal Auditors. She has been mentoring youths for over 30 years and is rewarded by living to witness the strides these youths have and are achieving today. This has geared her to continue her involvement with the youth and join them to help promote the tenets of Doing Right nationally. In her spare time, she loves to read and Zumba dance. Her risk management philosophy is to challenge management to consider extreme events and asymmetric risks that could impact their objectives and test them against their current activities.' },
-  { name: 'Ekeinde Ohiwerei', photo: { url: 'https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759593181701-ekehinde-1.jpg', alt: 'Ekeinde Ohiwerei' }, description: 'Ekeinde Ohiwerei has broad technical, commercial and leadership skills acquired in his career at Nigeria LNG Limited. His technical roles have been in maintenance, engineering and projects.', fullProfile: 'He has led key corporate activities and initiatives over the years. These include handling all contracting and procurement activities across and driving Nigerian Content. He currently leads the launched the company\'s digital transformation and energy transition agendas along with responsibilities for projects and engineering. Ekeinde is a member of the Nigerian Society of Engineers and Council for the Regulation of Engineering in Nigeria (COREN), as well as a member of the Chartered Institute of Procurement and Supply.' },
-  { name: 'Tunde Oduwole', photo: { url: 'https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759593188790-oduwole-1.jpg', alt: 'Tunde Oduwole' }, description: 'Tunde Oduwole is a passionate believer in Nigeria and the promise the country holds. He is currently the Financial Director at a multinational energy company in Nigeria.', fullProfile: 'He has nearly three decades of rich experience across commercial finance, corporate strategy, business development, audit and accounting across oil and gas industry, financial and management consulting in Africa, Europe and North America. He has served on Boards of multinational energy companies in Nigeria and West Africa and has led multi-billion dollars corporate and project finance transactions that unlocked immense economic opportunities for Nigeria in the upstream and midstream energy sectors. A Fellow of the Institute of Chartered Accountants of Nigeria, as well as an International Associate of the American Institute of Certified Public Accountants. He holds a Master of Science degree in Banking and Finance from Boston University, Massachusetts USA. An adventurous traveller, who enjoys painting, playing saxophone and producing stage plays. Among other plays, in 2017 he produced the critically acclaimed play "Gula" based on a written account of former President Olusegun Obasanjo\'s experience with a young underworld kingpin while a political prisoner.' },
-  { name: 'Ajibike Badeji', photo: { url: 'https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759593192104-mrs-badeji-1.jpg', alt: 'Ajibike Badeji' }, description: 'Ajibike Badeji has over 20 years combined experience in business, management and technology consulting. She is an accredited SMEDAN Business Development Service Provider (BDSP), a certified Scrum Master and a certified Learning and Performance Institute (LPI) Trainer.', fullProfile: 'She is passionate about Nigeria, entrepreneurs and the economic development of women and hence loves to coach and mentor entrepreneurs and young women. In addition to being an International Finance Corporation (IFC) Trainer, she brings extensive expertise in business development and technology consulting to help drive positive change in communities across Nigeria.' },
-  { name: 'Adeniyi Aromolaran', photo: { url: 'https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759593586025-niyi-1.png', alt: 'Adeniyi Aromolaran' }, description: 'Adeniyi Aromolaran, MCIoD,FCIPM,FITD,HRPL,fondly referred to as "AA"- The Transformer\', is a Certified Sustainable Development Solutions & Modelling Consultant, an International Finance Corporation/Learning and Performance Institute (LPI) Certified Trainer.', fullProfile: 'He is an Expert-In-Residence at the Enterprise Development Centre,(EDC), Lagos Business School,(LBS) Pan African University, Lagos Nigeria. At various times he served on the Council of the Nigeria-Britain Association as the Honorary Deputy Financial Secretary, Honorary Financial Secretary, Honorary Treasurer and Honorary Secretary. He was a one-time Global President of Government College Lagos Old Boys Association, GCLOBA). He is presently the Executive Director, Enterprises Services Directorate at the Lagos State Development and Property Corporation, LSDPC. He is the Co-Convener/Co-Founder, Rethinking Nigeria Business Leadership Network. The network promotes the "Rethinking Business Conduct and Practices- a Sustainable Concept to Transforming Nigeria\'s Business Eco-System mind-set.' }
+  {
+    name: 'Pastor Wale Adefarasin',
+    role: 'General Overseer & National Reformist',
+    photo: { url: `${S3}/1759593162037-wale-adefarasin-1.jpg`, alt: 'Pastor Wale Adefarasin' },
+    description: 'Pastor Wale Adefarasin is the General Overseer of Guiding Light Assembly and host of the television broadcast The Heart of the Matter.',
+    fullProfile: "A passionate advocate for national transformation, he champions the family unit as the crucible where future leaders' character is forged, holding an unshakeable faith that Nigeria’s bright future rests on active citizenship. He is happily married to Pastor Olaolu Adefarasin, and together they have three children and two grandchildren.",
+  },
+  {
+    name: 'Ayodele Alamutu',
+    role: 'Governance & Risk Executive',
+    photo: { url: `${S3}/1759593178510-alamutu-1.jpg`, alt: 'Ayodele Alamutu' },
+    description: 'Ayodele Alamutu is a Risk Management, Assurance, and Control Executive with over 25 years of global experience across the UK and Nigeria.',
+    fullProfile: 'Founder of RollTheDice Global Resources, she holds key credentials as a Fellow of ICAN, Vice Chair of IRM Nigeria, PMP, CISA, and Board Member of the Institute of Internal Auditors. Alongside her strategic governance work, she brings a 30-year legacy of youth mentorship and deep commitment to national values through the Doing Right Awareness Initiative.',
+  },
+  {
+    name: 'Ekeinde Ohiwerei',
+    role: 'Technical & Enterprise Leader',
+    photo: { url: `${S3}/1759593181701-ekehinde-1.jpg`, alt: 'Ekeinde Ohiwerei' },
+    description: 'Ekeinde Ohiwerei is a seasoned engineering and corporate leader with an extensive career at Nigeria LNG Limited.',
+    fullProfile: "Combining deep technical mastery with commercial acumen and stakeholder management, he has led critical enterprise initiatives spanning procurement, local content development, projects, and engineering - while spearheading the company's digital transformation and energy transition agendas. He is a registered member of the Nigerian Society of Engineers (NSE), COREN, IMechE, Chartered Institute of Directors (CIOD) and the Chartered Institute of Procurement and Supply (CIPS).",
+  },
+  {
+    name: 'Tunde Oduwole',
+    role: 'Financial Director & Corporate Strategist',
+    photo: { url: `${S3}/1759593188790-oduwole-1.jpg`, alt: 'Tunde Oduwole' },
+    description: 'Tunde Oduwole is a financial director, corporate strategist, and advocate for Nigeria’s economic development with nearly 30 years of global experience in finance, energy, and governance across Africa, Europe, and North America.',
+    fullProfile: 'A former board member of West African energy firms, he has led multi-billion-dollar financing transactions that drove national growth. He is a Fellow of ICAN, an International Associate of the AICPA, a Boston University M.Sc. graduate, and an accomplished painter, saxophonist, and stage producer of the acclaimed play Gula.',
+  },
+  {
+    name: 'Ajibike Badeji',
+    role: 'Business, Management and Technology Consultant',
+    photo: { url: `${S3}/1759593192104-mrs-badeji-1.jpg`, alt: 'Ajibike Badeji' },
+    description: 'Ajibike Badeji is a business, management, and technology consultant with over 20 years of experience delivering technology-enabled transformation, strategic change and business improvement across diverse industries.',
+    fullProfile: 'She combines deep operational expertise with a passion for coaching entrepreneurs and empowering women to drive positive change and community transformation across Nigeria.',
+  },
+  {
+    name: 'Adeniyi Nehemiah Aromolaran (MCIoD, FCIPM, FITD, FNIM, HRPL)',
+    role: 'Executive Director, Enterprise Services Directorate',
+    photo: { url: `${S3}/1759593586025-niyi-1.png`, alt: 'Adeniyi Nehemiah Aromolaran' },
+    description: 'Adeniyi Aromolaran - widely known as "AA - The Transformer" - is the Executive Director of Enterprise Services Directorate at the Lagos State Development and Property Corporation (LSDPC).',
+    fullProfile: 'A Sustainable Development Expert, an IFC/LPI Certified Trainer, Organisation, Human Capital and Learning Development Specialist, President, National Institute for Policy & Strategy Studies PSLC Cohort 51, author and publisher of "Leading with Impact - Keys to Avoiding Collateral Damage", a past Honorary Council member of the Nigeria-Britain Association and past Global President of Government College Lagos Old Boys Association (GCLOBA). He co-founded the Rethinking Nigeria Business Leadership Network to champion sustainable corporate governance and conduct. He is also the Founder/Visioner, Nehemiah Aromolaran Foundation, enablers of "Lend a Hand", a Social Enterprise Initiative.',
+  },
+  {
+    name: 'Adesua Adewole',
+    role: 'General Manager, Country Services, TotalEnergies Nigeria',
+    photo: { url: '/trustees/adesua-adewole.jpg', alt: 'Adesua Adewole' },
+    description: 'Adesua Adewole is General Manager, Country Services at TotalEnergies in Nigeria, where she leads corporate communications, reputation management and stakeholder engagement, and provides CSR oversight for the downstream business.',
+    fullProfile: 'Over 29 years with TotalEnergies across Nigeria, Ghana and South Africa, she has worked in sales and marketing, human resources and corporate affairs, bringing a broad, business-wide perspective to her leadership. Adesua holds an MBA from the University of Leeds and a B.Sc. in Geography and Regional Planning from the University of Benin. She is an ICF-certified coach and mentors managers and emerging women leaders.',
+  },
 ];
 
 const trusteesConfig = {
@@ -31,12 +76,14 @@ const trusteesConfig = {
     TrusteesHero: {
       label: 'Hero',
       fields: {
+        eyebrow: textField('Small label above the heading'),
         heading: textField('Heading'),
         text: textareaField('Intro text'),
         // No "hidden" toggle: the transparent site header needs the dark hero behind it on "/trustees".
       },
       defaultProps: {
-        heading: 'OUR TRUSTEES',
+        eyebrow: 'WHO WE ARE',
+        heading: 'OUR BOARD OF TRUSTEES',
         text: "Meet the distinguished leaders who guide DRAI's mission with their wisdom, expertise, and unwavering commitment to building a Nigeria of integrity and accountability.",
       },
       render: TrusteesHero,
@@ -62,9 +109,10 @@ const trusteesConfig = {
           type: 'array',
           label: 'Trustees (add, remove or reorder)',
           getItemSummary: (item) => item.name || 'Trustee',
-          defaultItemProps: { name: 'New trustee', description: '', fullProfile: '', photo: { url: '', alt: '' } },
+          defaultItemProps: { name: 'New trustee', role: '', description: '', fullProfile: '', photo: { url: '', alt: '' } },
           arrayFields: {
             name: textField('Name'),
+            role: textField('Title / role (shown under the name)'),
             photo: imageField('Photo'),
             description: textareaField('Short bio'),
             fullProfile: textareaField('Full profile'),

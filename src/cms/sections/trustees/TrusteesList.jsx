@@ -20,7 +20,8 @@ const TrusteesList = ({ trustees = [] }) => (
                     <span className="text-sm font-semibold text-neutral-900"> Board of Trustees </span>
                   </div>
                 </div>
-                <h2 className="text-h2 font-heading font-bold text-neutral-900 mb-4"> {trustee.name} </h2>
+                <h2 className={`text-h2 font-heading font-bold text-neutral-900 ${trustee.role ? 'mb-2' : 'mb-4'}`}> {trustee.name} </h2>
+                {trustee.role && <p className="text-base font-semibold text-primary mb-4">{trustee.role}</p>}
                 <p className="text-lg text-neutral-700 mb-6 leading-relaxed"> {trustee.description} </p>
                 <div className="bg-neutral-50 rounded-lg p-6 mb-6">
                   <p className="text-neutral-700 leading-relaxed"> {trustee.fullProfile} </p>
