@@ -56,7 +56,7 @@ const aboutConfig = {
       },
       defaultProps: {
         badge: 'Our Story',
-        heading: 'About DRAI',
+        heading: 'About', // the gold 'DRAI' accent is appended; live DB had 'About DRAI' which rendered 'About DRAI DRAI'
         headingAccent: 'DRAI',
         text: 'We are a movement of Nigerian citizens committed to building a culture of integrity, accountability, and civic responsibility across our nation.',
         stats: STATS,

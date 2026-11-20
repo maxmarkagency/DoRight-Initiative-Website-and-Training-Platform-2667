@@ -29,7 +29,7 @@ test('registered as about at /about', () => {
 
 test('fallback identity: h1 and every section heading match the live page', async () => {
   await renderPage();
-  expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('About DRAI DRAI');
+  expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/^About DRAI$/);
   [
     'Our Mission', 'Our Vision', 'Our Core Values', 'Our Impact Since 2018', 'Our Journey',
     'Meet Our Team', 'Join Our Mission',
