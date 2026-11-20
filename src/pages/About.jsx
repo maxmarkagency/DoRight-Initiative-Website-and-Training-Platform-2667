@@ -30,7 +30,8 @@ const About = () => {
     setLoading(false);
   };
 
-  const iconMap = { FiHeart, FiUsers, FiTarget, FiTrendingUp, FiEye, FiAward, FiCalendar };
+  const { FiCheckCircle, FiShield, FiZap } = FiIcons;
+  const iconMap = { FiHeart, FiUsers, FiTarget, FiTrendingUp, FiEye, FiAward, FiCalendar, FiCheckCircle, FiShield, FiZap };
 
   const heroSection = getSectionByKey(sections, 'hero');
   const missionSection = getSectionByKey(sections, 'mission');
@@ -49,10 +50,13 @@ const About = () => {
   ];
 
   const values = valuesSection?.content_data?.values || [
-    { icon: 'FiHeart', title: 'Integrity', description: 'We model the values we promote,operating with transparency and accountability in all our actions.' },
-    { icon: 'FiUsers', title: 'Community-Centered', description: 'Our work is driven by communities,ensuring local ownership and sustainable impact.' },
-    { icon: 'FiTarget', title: 'Results-Oriented', description: 'We measure our success by tangible improvements in governance and civic engagement.' },
-    { icon: 'FiTrendingUp', title: 'Innovation', description: 'We leverage technology and creative approaches to solve complex social challenges.' }
+    { icon: 'FiCheckCircle', title: 'Integrity', description: 'Being honest, telling the truth and consistently upholding strong moral values and ethical standards.' },
+    { icon: 'FiTrendingUp', title: 'Diligence', description: 'Working steadily and earnestly, and persevering until the goal is achieved.' },
+    { icon: 'FiUsers', title: 'Respect', description: 'Showing due regard for the feelings, wishes and rights of others.' },
+    { icon: 'FiHeart', title: 'Compassion', description: 'Recognising when others are in distress or suffering and taking action to help them.' },
+    { icon: 'FiShield', title: 'Justice', description: 'Acting fairly and upholding what is morally right, both in how we treat people and in the causes we support.' },
+    { icon: 'FiZap', title: 'Courage', description: 'Choosing to face pain, danger, uncertainty or intimidation in pursuit of a worthy goal.' },
+    { icon: 'FiAward', title: 'Meritocracy', description: 'Building a society that values excellence, selects the most competent people for leadership and holds them accountable to the highest standards.' }
   ];
 
   const stats = heroSection?.content_data?.stats || [
@@ -124,9 +128,9 @@ const About = () => {
             <p className="text-sm sm:text-lg text-neutral-700 max-w-2xl mx-auto"> {valuesSection?.subtitle || 'These values guide everything we do and shape how we work with communities across Nigeria.'} </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+          <div className="flex flex-wrap justify-center gap-8">
             {values.map((value, index) => (
-              <motion.div key={value.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.1 }} viewport={{ once: true }} whileHover={{ y: -10, scale: 1.05 }} className="text-center group">
+              <motion.div key={value.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.1 }} viewport={{ once: true }} whileHover={{ y: -10, scale: 1.05 }} className="text-center group w-full sm:w-[calc(50%-1rem)] lg:w-[calc(25%-1.5rem)]">
                 <motion.div initial={{ scale: 0 }} whileInView={{ scale: 1 }} transition={{ duration: 0.6, delay: index * 0.1 + 0.2, type: "spring" }} viewport={{ once: true }} className="bg-neutral-100 w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:bg-primary transition-colors duration-300">
                   <SafeIcon icon={iconMap[value.icon] || FiTarget} className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-primary group-hover:text-white transition-colors duration-300" />
                 </motion.div>
