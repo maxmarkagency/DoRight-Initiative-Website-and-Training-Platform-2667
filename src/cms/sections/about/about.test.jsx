@@ -68,3 +68,13 @@ test('the hero cannot be hidden; other sections can', () => {
   expect(aboutConfig.components.AboutMissionVision.fields.hidden).toBeDefined();
   expect(aboutConfig.components.AboutCallToAction.fields.hidden).toBeDefined();
 });
+
+test('Values has its own top padding so hiding Mission & Vision keeps spacing', async () => {
+  const { default: AboutValues } = await import('./AboutValues');
+  const { default: AboutMissionVision } = await import('./AboutMissionVision');
+  const { container } = render(<AboutValues title="t" subtitle="s" values={[]} />);
+  expect(container.querySelector('section').className).toMatch(/\bpt-12\b/);
+  expect(container.querySelector('section').className).toMatch(/\blg:pt-20\b/);
+  const mv = render(<AboutMissionVision missionTitle="m" missionText="" visionTitle="v" visionText="" />);
+  expect(mv.container.querySelector('section').className).toContain('[&:has(+section)>div>div]:mb-0');
+});

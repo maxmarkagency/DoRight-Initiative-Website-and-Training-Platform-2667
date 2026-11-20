@@ -5,7 +5,7 @@ import { FiTarget } from 'react-icons/fi';
 import { ICONS } from '../../fields/iconField';
 
 const AboutValues = ({ title, subtitle, values = [] }) => (
-  <section className="pb-12 sm:pb-16 lg:pb-20 bg-white">
+  <section className="pt-12 sm:pt-16 lg:pt-20 pb-12 sm:pb-16 lg:pb-20 bg-white">
     <div className="max-w-container mx-auto px-4 sm:px-6 lg:px-8">
       <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }} className="text-center mb-12 sm:mb-16">
         <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-neutral-900 mb-3 sm:mb-4"> {title} </h2>

@@ -141,3 +141,8 @@ test('an email carrying mailto query params renders no mailto link', () => {
   render(<ContactFormIntro departments={[{ name: 'Q', email: 'a@b.com?bcc=evil', description: 'd' }]} />);
   expect(screen.queryByRole('link', { name: /a@b.com/ })).toBeNull();
 });
+
+test('contact form cannot be hidden by editors', () => {
+  expect(contactConfig.components.ContactFormIntro.fields.hidden).toBeUndefined();
+  expect(contactConfig.components.ContactFormIntro.defaultProps.hidden).toBeUndefined();
+});

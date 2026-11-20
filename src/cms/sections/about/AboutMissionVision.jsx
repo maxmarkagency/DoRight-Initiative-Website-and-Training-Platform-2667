@@ -5,7 +5,7 @@ import { FiTarget, FiEye } from 'react-icons/fi';
 import { sanitizeHtml } from '../../../lib/sanitizeHtml';
 
 const AboutMissionVision = ({ missionTitle, missionText, visionTitle, visionText }) => (
-  <section className="pt-12 sm:pt-16 lg:pt-20 bg-white">
+  <section className="pt-12 sm:pt-16 lg:pt-20 bg-white [&:has(+section)>div>div]:mb-0">
     <div className="max-w-container mx-auto px-4 sm:px-6 lg:px-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-16 items-center mb-12 sm:mb-16 lg:mb-20">
         <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }}>

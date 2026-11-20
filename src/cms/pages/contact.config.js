@@ -94,7 +94,6 @@ const contactConfig = {
           },
         },
         followHeading: textField(`Social links heading (${SETTINGS_NOTE})`),
-        hidden: hiddenField,
       },
       defaultProps: {
         formHeading: 'Send Us a Message',
@@ -105,7 +104,7 @@ const contactConfig = {
         departmentsText: 'For specific inquiries,you can reach out directly to the relevant department.',
         departments: DEPARTMENTS,
         followHeading: 'Follow Us',
-        hidden: false,
+        // No "hidden" toggle: this is the only contact form (lead source).
       },
       render: ContactFormIntro,
     },
