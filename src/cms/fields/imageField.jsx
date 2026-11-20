@@ -16,8 +16,9 @@ export const ImageFieldInput = ({ value, onChange, field, showAlt = true }) => {
 
   const usePastedAddress = () => {
     const address = pasted.trim();
-    if (!/^https?:\/\/\S+$/i.test(address)) {
-      setPasteError('The address must start with https:// (or http://).');
+    // https only: http images are blocked as mixed content on the https site.
+    if (!/^https:\/\/\S+$/i.test(address)) {
+      setPasteError('The address must start with https://');
       return;
     }
     setPasteError('');
@@ -40,9 +41,17 @@ export const ImageFieldInput = ({ value, onChange, field, showAlt = true }) => {
       <div className="flex gap-2">
         <input
           id={pasteId}
-          type="url"
+          type="text"
+          inputMode="url"
           value={pasted}
           onChange={(e) => setPasted(e.target.value)}
+          onKeyDown={(e) => {
+            // This field often sits inside an admin <form>; Enter must apply the address, not submit it.
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              usePastedAddress();
+            }
+          }}
           placeholder="https://…"
           className="flex-1 min-w-0 text-sm px-2 py-1.5 rounded border border-neutral-300"
         />

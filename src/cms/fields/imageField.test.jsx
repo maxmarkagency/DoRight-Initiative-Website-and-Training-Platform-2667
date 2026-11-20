@@ -84,3 +84,26 @@ test('a non-http image address is rejected', () => {
   expect(onChange).not.toHaveBeenCalled();
   expect(screen.getByText(/must start with https:\/\//i)).toBeInTheDocument();
 });
+
+test('pressing Enter in the paste box applies the address without submitting the surrounding form', () => {
+  const onChange = vi.fn();
+  const onSubmit = vi.fn((e) => e.preventDefault());
+  render(
+    <form onSubmit={onSubmit}>
+      <ImageInput value={{ url: '', alt: '' }} onChange={onChange} field={{ label: 'Image' }} />
+    </form>
+  );
+  const input = screen.getByLabelText(/paste an image address/i);
+  fireEvent.change(input, { target: { value: 'https://cdn.example.org/b.jpg' } });
+  fireEvent.keyDown(input, { key: 'Enter' });
+  expect(onChange).toHaveBeenCalledWith({ url: 'https://cdn.example.org/b.jpg', alt: '' });
+  expect(onSubmit).not.toHaveBeenCalled();
+  expect(input).not.toHaveAttribute('type', 'url');
+});
+
+test('plain http image addresses are rejected (mixed content on an https site)', () => {
+  const onChange = renderInput({ url: '', alt: '' });
+  fireEvent.change(screen.getByLabelText(/paste an image address/i), { target: { value: 'http://cdn.example.org/a.jpg' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Use address' }));
+  expect(onChange).not.toHaveBeenCalled();
+});
