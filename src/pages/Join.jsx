@@ -9,6 +9,10 @@ import MemberCard from '../components/MemberCard';
 import supabase from '../lib/supabase';
 import useSeo from '../hooks/useSeo';
 import TurnstileWidget from '../components/TurnstileWidget';
+import usePageContent from '../cms/usePageContent';
+import PageRenderer from '../cms/PageRenderer';
+import joinConfig from '../cms/pages/join.config';
+import { PageActionsContext } from '../cms/pageActions';
 
 const {
   FiUsers,
@@ -16,8 +20,6 @@ const {
   FiCheck,
   FiArrowRight,
   FiMail,
-  FiPhone,
-  FiMapPin,
   FiAlertCircle,
   FiX,
   FiUploadCloud,
@@ -28,10 +30,12 @@ const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
 const INTEREST_OPTIONS = ['Volunteering', 'Donating', 'Partnership'];
 
 const Join = () => {
+  const { data, ready } = usePageContent('join');
+
   useSeo({
     path: '/join',
-    title: 'Join The Movement',
-    description: 'Get involved with DoRight Awareness Initiative — volunteer, donate, or partner with us to help build a more accountable Nigeria.',
+    title: data.root.props.seoTitle,
+    description: data.root.props.seoDescription,
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -55,7 +59,6 @@ const Join = () => {
   const [turnstileToken, setTurnstileToken] = useState('');
   const turnstileRef = useRef(null);
   const formOpenedAtRef = useRef(Date.now());
-  const waysSectionRef = useRef(null);
 
   useEffect(() => {
     supabase
@@ -196,10 +199,6 @@ const Join = () => {
     setPhotoPreview(URL.createObjectURL(file));
   };
 
-  const scrollToWays = () => {
-    waysSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   const getFriendlySubmitError = (error) => {
     if (!error) return 'Unable to submit your application right now. Please check your internet connection and try again.';
     const msg = typeof error === 'string' ? error : error?.message || '';
@@ -311,292 +310,22 @@ const Join = () => {
     }
   };
 
-  const ways = [
-    {
-      title: 'Volunteer',
-      interestKey: 'Volunteering',
-      description: 'Join our community of dedicated volunteers working on the ground to promote integrity and accountability.',
-      features: [
-        'Community outreach programs',
-        'Event organization support',
-        'Training and mentorship',
-        'Flexible time commitment',
-        'Skills development opportunities'
-      ],
-      icon: FiUsers,
-      color: 'bg-primary',
-      ctaText: 'Become a Volunteer'
-    },
-    {
-      title: 'Donate',
-      interestKey: 'Donating',
-      description: 'Support our mission with financial contributions that help us expand our reach and impact across Nigeria.',
-      features: [
-        'Monthly or one-time donations',
-        'Transparent fund allocation',
-        'Regular impact reports',
-        'Tax-deductible receipts',
-        'Direct community impact'
-      ],
-      icon: FiHeart,
-      color: 'bg-accent',
-      ctaText: 'Make a Donation'
-    },
-    {
-      title: 'Partner',
-      interestKey: 'Partnership',
-      description: 'Collaborate with us as an organization, institution, or business to amplify our collective impact.',
-      features: [
-        'Strategic partnerships',
-        'Joint program development',
-        'Resource sharing',
-        'Co-branded initiatives',
-        'Network expansion'
-      ],
-      icon: FaHandshake,
-      color: 'bg-primary',
-      ctaText: 'Partner With Us'
-    }
-  ];
-
-  const stats = [
-    { number: '500+', label: 'Active Volunteers' },
-    { number: '₦50M+', label: 'Funds Raised' },
-    { number: '25+', label: 'Partner Organizations' },
-    { number: '100+', label: 'Communities Impacted' }
-  ];
+  // The CMS sections call these; selectWay is exactly what the old CTA buttons did (openModal).
+  const actions = {
+    selectWay: openModal,
+    contactSettings: siteSettings,
+  };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen">
-      {/* Hero Section */}
-      <section className="bg-primary text-white pt-24 sm:pt-28 lg:pt-32 pb-20">
-        <div className="max-w-container mx-auto px-5">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center max-w-4xl mx-auto"
-          >
-            <h1 className="text-h1 font-heading font-bold mb-6 leading-tight">Join the Movement</h1>
-            <p className="text-xl text-neutral-300 leading-relaxed mb-8">
-              Become part of a growing community of Nigerians committed to building a more transparent, accountable, and integrity-driven society. Together, we can create lasting change.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={() => openModal('Volunteering')}
-                className="bg-accent text-neutral-900 px-8 py-4 rounded-lg font-semibold hover:brightness-90 transition-all shadow-lg hover:shadow-xl inline-flex items-center justify-center text-lg"
-              >
-                Apply to Join
-                <SafeIcon icon={FiArrowRight} className="ml-2 w-5 h-5" />
-              </button>
-              <button
-                onClick={scrollToWays}
-                className="border-2 border-white/80 text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-primary transition-all inline-flex items-center justify-center text-lg"
-              >
-                Explore Opportunities
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Ways to Join */}
-      <section ref={waysSectionRef} className="py-20 bg-neutral-100">
-        <div className="max-w-container mx-auto px-5">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-h2 font-heading font-bold text-neutral-900 mb-4">Ways to Get Involved</h2>
-            <p className="text-lg text-neutral-700 max-w-2xl mx-auto">
-              Choose how you'd like to contribute to building a better Nigeria. Every form of support makes a meaningful difference.
-            </p>
-          </motion.div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {ways.map((way, index) => (
-              <motion.div
-                key={way.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="bg-white rounded-lg border border-neutral-200 overflow-hidden hover:shadow-[0_4px_12px_rgba(13,14,22,0.15)] transition-shadow flex flex-col justify-between"
-              >
-                <div>
-                  <div className={`p-6 ${way.color}`}>
-                    <SafeIcon
-                      icon={way.icon}
-                      className={`w-12 h-12 ${way.title === 'Donate' ? 'text-neutral-900' : 'text-white'} mb-4`}
-                    />
-                    <h3
-                      className={`text-h3 font-heading font-bold ${way.title === 'Donate' ? 'text-neutral-900' : 'text-white'} mb-2`}
-                    >
-                      {way.title}
-                    </h3>
-                  </div>
-                  <div className="p-6">
-                    <p className="text-neutral-700 mb-6 leading-relaxed">{way.description}</p>
-                    <div className="space-y-3 mb-8">
-                      {way.features.map((feature, featureIndex) => (
-                        <div key={featureIndex} className="flex items-center">
-                          <SafeIcon icon={FiCheck} className="w-5 h-5 text-primary mr-3 flex-shrink-0" />
-                          <span className="text-neutral-700">{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div className="p-6 pt-0">
-                  <button
-                    onClick={() => openModal(way.interestKey)}
-                    className={`w-full ${way.title === 'Donate' ? 'bg-accent text-neutral-900 hover:brightness-90' : 'bg-primary text-white hover:bg-primary-600'} px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center justify-center`}
-                  >
-                    {way.ctaText}
-                    <SafeIcon icon={FiArrowRight} className="ml-2 w-5 h-5" />
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Contact Information & Support */}
-      <section className="py-20 bg-white">
-        <div className="max-w-container mx-auto px-5">
-          <div className="bg-neutral-50 rounded-2xl p-8 sm:p-12 border border-neutral-200">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              <div className="lg:col-span-7">
-                <span className="inline-block text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 px-3 py-1 rounded-full mb-3">
-                  Have Questions?
-                </span>
-                <h3 className="text-h2 font-heading font-bold text-neutral-900 mb-4">
-                  Connect With Our Team
-                </h3>
-                <p className="text-neutral-700 text-lg mb-6 leading-relaxed">
-                  Want to learn more before applying or need assistance with your application? Reach out to us directly or visit our office.
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="flex items-start">
-                    <SafeIcon icon={FiMail} className="w-6 h-6 text-primary mr-3 mt-1 flex-shrink-0" />
-                    <div>
-                      <h4 className="font-semibold text-neutral-900 mb-0.5">Email Us</h4>
-                      <p className="text-neutral-700 text-sm">{siteSettings.contact_email || 'info@doright.ng'}</p>
-                      <p className="text-neutral-700 text-sm">volunteer@doright.ng</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <SafeIcon icon={FiPhone} className="w-6 h-6 text-primary mr-3 mt-1 flex-shrink-0" />
-                    <div>
-                      <h4 className="font-semibold text-neutral-900 mb-0.5">Call Us</h4>
-                      <p className="text-neutral-700 text-sm">
-                        <a href={`tel:${(siteSettings.contact_phone || '+234 912 339 9968').replace(/\s+/g, '')}`} className="hover:text-primary transition-colors">
-                          {siteSettings.contact_phone || '+234 912 339 9968'}
-                        </a>
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start sm:col-span-2">
-                    <SafeIcon icon={FiMapPin} className="w-6 h-6 text-primary mr-3 mt-1 flex-shrink-0" />
-                    <div>
-                      <h4 className="font-semibold text-neutral-900 mb-0.5">Visit Us</h4>
-                      <p className="text-neutral-700 text-sm">
-                        {siteSettings.contact_address || '28b, Olaminuyun street, Parkview, Ikoyi, Lagos, Nigeria 101233'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="lg:col-span-5 bg-white p-6 sm:p-8 rounded-xl border border-neutral-200 text-center flex flex-col items-center justify-center">
-                <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-4 text-primary">
-                  <SafeIcon icon={FiUsers} className="w-7 h-7" />
-                </div>
-                <h4 className="text-xl font-heading font-bold text-neutral-900 mb-2">Ready to Make an Impact?</h4>
-                <p className="text-neutral-600 text-sm mb-6">
-                  Fill out our brief form and our team will get back to you promptly.
-                </p>
-                <button
-                  onClick={() => openModal('Volunteering')}
-                  className="w-full bg-primary text-white px-6 py-3.5 rounded-lg font-semibold hover:bg-primary-600 transition-colors inline-flex items-center justify-center shadow-md hover:shadow-lg"
-                >
-                  Open Application Form
-                  <SafeIcon icon={FiArrowRight} className="ml-2 w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Impact Stats */}
-      <section className="py-16 bg-neutral-50">
-        <div className="max-w-container mx-auto px-5">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-h2 font-heading font-bold text-neutral-900 mb-4">Our Growing Impact</h2>
-            <p className="text-lg text-neutral-700 max-w-2xl mx-auto">
-              See how our community is making a difference across Nigeria
-            </p>
-          </motion.div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="text-center"
-              >
-                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">{stat.number}</div>
-                <div className="text-neutral-700 font-medium">{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 bg-primary text-white">
-        <div className="max-w-container mx-auto px-5 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-h2 font-heading font-bold mb-6">Every Action Counts</h2>
-            <p className="text-xl text-neutral-300 mb-8 max-w-2xl mx-auto">
-              Whether you volunteer an hour a week, partner with us, or donate monthly, your contribution helps build a Nigeria where integrity thrives.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={() => openModal('Volunteering')}
-                className="bg-accent text-neutral-900 px-8 py-4 rounded-lg font-semibold hover:brightness-90 transition-colors inline-flex items-center justify-center"
-              >
-                Start Volunteering
-                <SafeIcon icon={FiArrowRight} className="ml-2 w-5 h-5" />
-              </button>
-              <Link
-                to="/pay"
-                className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-primary transition-colors inline-flex items-center justify-center"
-              >
-                Sponsor / Make a Payment
-                <SafeIcon icon={FiArrowRight} className="ml-2 w-5 h-5" />
-              </Link>
-            </div>
-          </motion.div>
-        </div>
-      </section>
+      {ready ? (
+        <PageActionsContext.Provider value={actions}>
+          <PageRenderer data={data} config={joinConfig} />
+        </PageActionsContext.Provider>
+      ) : (
+        // Hero-sized placeholder keeps the transparent header readable while content loads.
+        <div className="min-h-[320px] bg-primary" aria-hidden="true" />
+      )}
 
       {/* Pop-up Application Form Modal */}
       <AnimatePresence>

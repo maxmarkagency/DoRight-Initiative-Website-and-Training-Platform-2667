@@ -4,6 +4,7 @@ import programsConfig from './programs.config';
 import trusteesConfig from './trustees.config';
 import contactConfig from './contact.config';
 import subCommitteesConfig from './subcommittees.config';
+import joinConfig from './join.config';
 
 export const PAGES = {
   home: { title: 'Home', path: '/', config: homeConfig },
@@ -12,4 +13,5 @@ export const PAGES = {
   trustees: { title: 'Trustees', path: '/trustees', config: trusteesConfig },
   contact: { title: 'Contact', path: '/contact', config: contactConfig },
   'sub-committees': { title: 'Sub-Committees', path: '/sub-committees', config: subCommitteesConfig },
+  join: { title: 'Join', path: '/join', config: joinConfig },
 };
