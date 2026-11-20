@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AdminSidebar from './AdminSidebar';
 import AdminHeader from './AdminHeader';
@@ -14,6 +14,10 @@ import EventManagement from '../../pages/admin/EventManagement';
 import LeadsManagement from '../../pages/admin/LeadsManagement';
 import MediaManagement from '../../pages/admin/MediaManagement';
 import Settings from '../../pages/admin/Settings';
+import PagesList from '../../pages/admin/PagesList';
+
+// Lazy so the Puck editor bundle only loads when an admin opens a page editor.
+const PageEditor = lazy(() => import('../../pages/admin/PageEditor'));
 
 const AdminLayout = () => {
   return (
@@ -27,6 +31,8 @@ const AdminLayout = () => {
             <Route path="users" element={<UserManagement />} />
             <Route path="courses" element={<CourseManagement />} />
             <Route path="analytics" element={<CourseAnalytics />} />
+            <Route path="pages" element={<PagesList />} />
+            <Route path="pages/:slug" element={<Suspense fallback={<p className="p-8 text-neutral-500">Loading editor…</p>}><PageEditor /></Suspense>} />
             <Route path="content" element={<ContentManagement />} />
             <Route path="blog" element={<BlogManagement />} />
             <Route path="gallery" element={<GalleryManagement />} />
