@@ -59,3 +59,9 @@ test('a trustee with an empty photo renders no img', () => {
 test('hero has no hidden toggle', () => {
   expect(trusteesConfig.components.TrusteesHero.fields.hidden).toBeUndefined();
 });
+
+test('default copy has no comma-without-space or "30years" typos', () => {
+  const text = JSON.stringify(trusteesConfig);
+  expect(text).not.toMatch(/[a-z)],[A-Za-z]/);
+  expect(text).not.toMatch(/\d+years/);
+});
