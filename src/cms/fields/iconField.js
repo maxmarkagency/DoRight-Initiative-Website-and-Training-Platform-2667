@@ -1,9 +1,9 @@
 import {
-  FiUsers, FiTarget, FiTrendingUp, FiShield, FiHeart, FiAward, FiBookOpen, FiGlobe, FiStar, FiCheckCircle,
+  FiUsers, FiTarget, FiTrendingUp, FiShield, FiHeart, FiAward, FiBookOpen, FiGlobe, FiStar, FiCheckCircle, FiEye, FiCalendar, FiZap,
 } from 'react-icons/fi';
 
 export const ICONS = {
-  FiUsers, FiTarget, FiTrendingUp, FiShield, FiHeart, FiAward, FiBookOpen, FiGlobe, FiStar, FiCheckCircle,
+  FiUsers, FiTarget, FiTrendingUp, FiShield, FiHeart, FiAward, FiBookOpen, FiGlobe, FiStar, FiCheckCircle, FiEye, FiCalendar, FiZap,
 };
 
 export const iconField = (label) => ({
