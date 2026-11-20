@@ -156,7 +156,7 @@ const programsConfig = {
         title: 'How We Create Change',
         text: 'Our integrated approach combines community mobilization with institutional engagement, creating sustainable change from the grassroots up while influencing policy at the highest levels.',
         items: [
-          { icon: 'FiUsers', title: 'Community Engagement', description: 'We start at the grassroots level,working directly with communities to identify challenges and build local capacity for change.' },
+          { icon: 'FiUsers', title: 'Community Engagement', description: 'We start at the grassroots level, working directly with communities to identify challenges and build local capacity for change.' },
           { icon: 'FiTarget', title: 'Evidence-Based Advocacy', description: 'Our research and data collection inform targeted advocacy efforts that address systemic issues and promote policy reform.' },
           { icon: 'FiTrendingUp', title: 'Sustainable Impact', description: 'We measure outcomes and adapt our strategies to ensure lasting change that communities can maintain and expand.' },
         ],
@@ -174,17 +174,17 @@ const programsConfig = {
         hidden: hiddenField,
       },
       defaultProps: {
-        title: 'Real Programs,Real Impact',
+        title: 'Real Programs, Real Impact',
         text: 'These images showcase our actual work in Nigerian schools and communities - from classroom mentorship sessions to community outreach programs and educational resource distribution.',
         classroom: {
           title: 'In the Classroom',
-          text: 'Our educators work directly with students in their learning environments,fostering discussions about integrity,leadership,and civic responsibility through interactive sessions and practical exercises.',
+          text: 'Our educators work directly with students in their learning environments, fostering discussions about integrity, leadership, and civic responsibility through interactive sessions and practical exercises.',
           bullets: items('Direct student engagement in schools', 'Interactive integrity workshops', 'Character development programs', 'Peer learning facilitation'),
           image: { url: '', alt: '' },
         },
         community: {
           title: 'In the Community',
-          text: 'Beyond the classroom,we engage with community members,distribute educational resources,and create platforms for dialogue about accountability and positive change in local governance.',
+          text: 'Beyond the classroom, we engage with community members, distribute educational resources, and create platforms for dialogue about accountability and positive change in local governance.',
           bullets: items('Community dialogue sessions', 'Educational resource distribution', 'Local partnership building', 'Civic engagement training'),
           image: { url: '', alt: '' },
         },
@@ -203,7 +203,7 @@ const programsConfig = {
       },
       defaultProps: {
         heading: 'Get Involved in Our Programs',
-        text: "Whether you're interested in volunteering,partnering with us,or starting a program in your community,we'd love to work with you.",
+        text: "Whether you're interested in volunteering, partnering with us, or starting a program in your community, we'd love to work with you.",
         primaryButton: { label: 'Volunteer Now', href: '/join' },
         secondaryButton: { label: 'Partner With Us', href: '/join' },
         hidden: false,

@@ -31,7 +31,7 @@ test('registered as programs at /programs', () => {
 test('fallback identity: h1 and every section heading match the live page', async () => {
   await renderPage();
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/^Our Programs$/);
-  ['How We Create Change', 'Real Programs,Real Impact', 'Get Involved in Our Programs'].forEach((name) => {
+  ['How We Create Change', 'Real Programs, Real Impact', 'Get Involved in Our Programs'].forEach((name) => {
     expect(screen.getByRole('heading', { level: 2, name })).toBeInTheDocument();
   });
   ['In the Classroom', 'In the Community', 'Community Engagement', 'Evidence-Based Advocacy', 'Sustainable Impact'].forEach((name) => {
