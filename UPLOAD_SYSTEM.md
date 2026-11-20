@@ -81,6 +81,14 @@ text field — e.g. `BlogManagement.jsx` sets `featured_image_url`, `GalleryMana
 them; deleting a file from the Media Library does not automatically clear references to it
 elsewhere.
 
+## Image Fields in the Page Editor
+
+The visual page editor (Admin → Pages) uses `src/cms/fields/imageField.jsx` for every image.
+It stores `{ url, alt }` and offers three ways to set the image: **Upload** (wraps
+`MediaUpload` with `allowedTypes="image"`), **Choose from library**
+(`src/cms/fields/MediaLibraryPicker.jsx` lists the newest 100 jpg/png/gif/webp files in
+`media-library`), and **Remove**. Alt text is edited alongside the image.
+
 ## Known Limitations
 
 - No image processing (thumbnails, compression, format conversion) — files are stored and served

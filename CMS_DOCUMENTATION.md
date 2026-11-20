@@ -5,6 +5,38 @@ tables directly via `supabase.from(...)`, and RLS policies decide who's allowed 
 previously-documented Express `/api/cms/*` endpoints are gone; this reflects what the admin UI
 actually calls today.
 
+## Visual Page Editor (Admin → Pages)
+
+Marketing pages are being moved to a visual editor built on [Puck](https://puckeditor.com)
+(`@puckeditor/core`). **Home** is migrated; other pages still use the legacy tables below.
+
+- **Storage:** `page_content` (one row per page `slug`: `draft` and `published` Puck JSON) and
+  `page_content_versions` (one row per publish, newest 10 kept). Migration:
+  `supabase/migrations/20261121090000_create_page_content.sql`.
+- **Access:** both tables are admin-only via RLS (`public.is_admin()`). The public site reads
+  published content only through `get_published_page(slug)`. Publishing and restoring go
+  through `publish_page(slug)` and `restore_page_version(version_id)`, which check admin
+  themselves.
+- **Editing flow:** edits autosave to `draft` (debounced). **Publish** saves any pending edit,
+  then copies draft → published and records a version. **History** restores an old version into
+  the draft for review. `/?preview=draft` shows the draft to signed-in admins.
+- **Fixed layout:** each page has a config in `src/cms/pages/<page>.config.js` listing its
+  sections (`order`), each section's labelled fields, and `defaultProps` equal to the page's
+  original hardcoded content. Editors can't add, move or delete sections; they can hide one.
+- **Fallback:** public pages render the defaults immediately, then the published content
+  (`src/cms/usePageContent.js` + `src/cms/pageData.js`). Missing sections, missing props, empty
+  lists, failed requests and never-published pages all fall back to defaults, so a page never
+  renders blank.
+- **Bundle:** public pages render with `src/cms/PageRenderer.jsx`; Puck is only loaded (lazily)
+  by `src/pages/admin/PageEditor.jsx`.
+- **Links:** button links accept `/internal-paths`, `http(s)`, `mailto:` and `tel:`; anything
+  else renders as plain text (`src/cms/sections/ButtonLink.jsx`).
+
+**To make another page editable:** move each visible section of the page into
+`src/cms/sections/<page>/<Section>.jsx` taking content as props, write
+`src/cms/pages/<page>.config.js` with today's content as `defaultProps`, register it in
+`src/cms/pages/index.js`, and render the page with `usePageContent('<slug>')` + `PageRenderer`.
+
 ## Content Tables in Active Use
 
 | Table | Admin page | Public-facing page(s) |
