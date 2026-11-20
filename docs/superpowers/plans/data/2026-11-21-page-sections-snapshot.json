@@ -1,0 +1,334 @@
+[
+  {
+    "slug": "about",
+    "page_sections": [
+      {
+        "title": "About DRAI",
+        "content": "We are a movement of Nigerian citizens committed to building a culture of integrity, accountability, and civic responsibility across our nation.",
+        "subtitle": "Our Story",
+        "image_url": null,
+        "is_active": true,
+        "section_key": "hero",
+        "content_data": {
+          "badge": "Our Story",
+          "stats": [
+            {
+              "label": "Years of Impact",
+              "number": "6",
+              "suffix": "+"
+            },
+            {
+              "label": "States Reached",
+              "number": "15",
+              "suffix": "+"
+            },
+            {
+              "label": "Citizens Trained",
+              "number": "5000",
+              "suffix": "+"
+            },
+            {
+              "label": "Policy Reforms",
+              "number": "25",
+              "suffix": "+"
+            }
+          ]
+        }
+      },
+      {
+        "title": "Our Core Values",
+        "content": null,
+        "subtitle": "These values guide everything we do and shape how we work with communities across Nigeria.",
+        "image_url": null,
+        "is_active": true,
+        "section_key": "values",
+        "content_data": {
+          "values": [
+            {
+              "icon": "FiCheckCircle",
+              "title": "Integrity",
+              "description": "Being honest, telling the truth and consistently upholding strong moral values and ethical standards."
+            },
+            {
+              "icon": "FiTrendingUp",
+              "title": "Diligence",
+              "description": "Working steadily and earnestly, and persevering until the goal is achieved."
+            },
+            {
+              "icon": "FiUsers",
+              "title": "Respect",
+              "description": "Showing due regard for the feelings, wishes and rights of others."
+            },
+            {
+              "icon": "FiHeart",
+              "title": "Compassion",
+              "description": "Recognising when others are in distress or suffering and taking action to help them."
+            },
+            {
+              "icon": "FiShield",
+              "title": "Justice",
+              "description": "Acting fairly and upholding what is morally right, both in how we treat people and in the causes we support."
+            },
+            {
+              "icon": "FiZap",
+              "title": "Courage",
+              "description": "Choosing to face pain, danger, uncertainty or intimidation in pursuit of a worthy goal."
+            },
+            {
+              "icon": "FiAward",
+              "title": "Meritocracy",
+              "description": "Building a society that values excellence, selects the most competent people for leadership and holds them accountable to the highest standards."
+            }
+          ]
+        }
+      },
+      {
+        "title": "Meet Our Team",
+        "content": "Meet the passionate DRAI team members who work tirelessly to promote integrity and civic responsibility across Nigerian communities. Together, we're building a movement that transforms lives and strengthens democracy.",
+        "subtitle": "The passionate individuals behind DRAI's mission to promote integrity and accountability across Nigeria.",
+        "image_url": "https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759575290797-DSC_0360-scaled-2-1536x1024.jpg",
+        "is_active": true,
+        "section_key": "team",
+        "content_data": {}
+      },
+      {
+        "title": "Our Mission",
+        "content": "To promote integrity, accountability, and civic responsibility across Nigeria through education, advocacy, and community-led action, creating sustainable change from the grassroots up. We believe that lasting transformation comes from empowering citizens with the knowledge, tools, and networks needed to demand and create positive change in their communities.",
+        "subtitle": null,
+        "image_url": null,
+        "is_active": true,
+        "section_key": "mission",
+        "content_data": {}
+      },
+      {
+        "title": "Our Vision",
+        "content": "A Nigeria where integrity is the norm, where citizens actively participate in governance, and where transparent, accountable leadership drives sustainable development for all. We envision communities empowered to hold their leaders accountable, institutions that serve the public interest, and a culture where doing right is celebrated and rewarded.",
+        "subtitle": null,
+        "image_url": null,
+        "is_active": true,
+        "section_key": "vision",
+        "content_data": {}
+      },
+      {
+        "title": "Our Journey",
+        "content": null,
+        "subtitle": "Key milestones in our mission to promote integrity and accountability across Nigeria.",
+        "image_url": null,
+        "is_active": true,
+        "section_key": "timeline",
+        "content_data": {
+          "timeline": [
+            {
+              "year": "2018",
+              "title": "Foundation",
+              "description": "Doing Right Awareness Initiative (DRAI) was founded by a group of passionate Nigerian citizens committed to promoting integrity and accountability."
+            },
+            {
+              "year": "2019",
+              "title": "First Community Programs",
+              "description": "Launched our first youth mentorship programs in Lagos and Abuja, reaching over 500 young leaders."
+            },
+            {
+              "year": "2020",
+              "title": "Digital Expansion",
+              "description": "Developed our first online training platform and launched digital reporting tools for citizens."
+            },
+            {
+              "year": "2021",
+              "title": "National Reach",
+              "description": "Expanded operations to 15 states across Nigeria, establishing local chapters and partnerships."
+            },
+            {
+              "year": "2022",
+              "title": "Policy Impact",
+              "description": "Our advocacy efforts contributed to 12 policy reforms at local and state government levels."
+            },
+            {
+              "year": "2024",
+              "title": "Comprehensive Platform",
+              "description": "Launched our complete training and certification system, serving over 5,000 active learners."
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "slug": "programs",
+    "page_sections": [
+      {
+        "title": "Our Programs",
+        "content": "Comprehensive community-led solutions designed to promote integrity, accountability, and civic responsibility across Nigeria through education, advocacy, and grassroots action.",
+        "subtitle": null,
+        "image_url": null,
+        "is_active": true,
+        "section_key": "hero",
+        "content_data": {}
+      },
+      {
+        "title": null,
+        "content": null,
+        "subtitle": null,
+        "image_url": null,
+        "is_active": true,
+        "section_key": "impact_stats",
+        "content_data": {
+          "stats": [
+            {
+              "label": "Citizens Engaged",
+              "number": "5,000+"
+            },
+            {
+              "label": "Communities Reached",
+              "number": "50+"
+            },
+            {
+              "label": "Leaders Trained",
+              "number": "100+"
+            },
+            {
+              "label": "Policy Changes Influenced",
+              "number": "25+"
+            }
+          ]
+        }
+      },
+      {
+        "title": null,
+        "content": null,
+        "subtitle": null,
+        "image_url": null,
+        "is_active": true,
+        "section_key": "programs_list",
+        "content_data": {
+          "programs": [
+            {
+              "icon": "FiUsers",
+              "image": "https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759595241762-Do-right-awarenss-initiative-school-project-7-scaled-2-1536x1024.jpg",
+              "title": "Youth Mentorship",
+              "features": [
+                "Interactive classroom sessions",
+                "One-on-one mentorship pairing",
+                "Student leadership development",
+                "Character building workshops",
+                "Peer-to-peer learning networks"
+              ],
+              "subtitle": "Leadership for Tomorrow",
+              "description": "Empowering the next generation of integrity champions through comprehensive mentorship programs, leadership workshops, and peer-led community projects in schools across Nigeria."
+            },
+            {
+              "icon": "FiTarget",
+              "image": "https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759595235026-Do-right-awarenss-initiative-school-project-9-scaled-2-1536x1024.jpg",
+              "title": "Community Campaigns",
+              "features": [
+                "Community awareness campaigns",
+                "Door-to-door civic education",
+                "Local government engagement sessions",
+                "Volunteer coordination and training",
+                "Public accountability forums"
+              ],
+              "subtitle": "Local Action for Change",
+              "description": "Grassroots mobilization initiatives that promote civic awareness, accountability, and community pride through targeted campaigns and local projects."
+            },
+            {
+              "icon": "FiTrendingUp",
+              "image": "https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759595248284-Do-right-awarenss-initiative-school-project-13-scaled-2-1536x1024.jpg",
+              "title": "Policy Advocacy",
+              "features": [
+                "Policy research and analysis",
+                "Stakeholder engagement sessions",
+                "Legislative advocacy",
+                "Reform implementation monitoring",
+                "Coalition building with partners"
+              ],
+              "subtitle": "Systemic Change Through Research",
+              "description": "Evidence-based policy research and strategic engagement with stakeholders to create lasting institutional reforms and systemic improvements."
+            },
+            {
+              "icon": "FiShield",
+              "image": "https://quest-media-storage-bucket.s3.us-east-2.amazonaws.com/1759595280475-Do-right-awarenss-initiative-school-project-10-scaled-2-1536x1024.jpg",
+              "title": "Educational Outreach",
+              "features": [
+                "Educational resource distribution",
+                "School partnership programs",
+                "Teacher training workshops",
+                "Student scholarship support",
+                "Community learning centers"
+              ],
+              "subtitle": "Knowledge Sharing & Resource Distribution",
+              "description": "Comprehensive educational initiatives that provide learning materials, resources, and direct support to schools and communities across Nigeria."
+            }
+          ]
+        }
+      },
+      {
+        "title": "How We Create Change",
+        "content": "Our integrated approach combines community mobilization with institutional engagement, creating sustainable change from the grassroots up while influencing policy at the highest levels.",
+        "subtitle": null,
+        "image_url": null,
+        "is_active": true,
+        "section_key": "how_we_work",
+        "content_data": {}
+      }
+    ]
+  },
+  {
+    "slug": "contact",
+    "page_sections": [
+      {
+        "title": "Contact us",
+        "content": null,
+        "subtitle": null,
+        "image_url": null,
+        "is_active": false,
+        "section_key": "",
+        "content_data": {
+          "contactInfo": [
+            {
+              "icon": "FiMail",
+              "title": "Email Us",
+              "details": [
+                "info@doright.ng",
+                "support@doright.ng"
+              ]
+            },
+            {
+              "icon": "FiMapPin",
+              "title": "Call us",
+              "details": [
+                "+234 802 329 8260"
+              ]
+            }
+          ],
+          "departments": [
+            {
+              "name": "General Inquiries",
+              "email": "info@doright.ng",
+              "description": "General questions about our organization and programs"
+            },
+            {
+              "name": "Partnerships",
+              "email": "partnerships@doright.ng",
+              "description": "Collaboration opportunities and strategic partnerships"
+            },
+            {
+              "name": "Volunteer Coordination",
+              "email": "volunteer@doright.ng",
+              "description": "Volunteer opportunities and community engagement"
+            },
+            {
+              "name": "Training Programs",
+              "email": "training@doright.ng",
+              "description": "Course inquiries and certification support"
+            },
+            {
+              "name": "Media & Press",
+              "email": "media@doright.ng",
+              "description": "Press inquiries and media relations"
+            }
+          ]
+        }
+      }
+    ]
+  }
+]
