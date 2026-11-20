@@ -4,6 +4,7 @@ import SafeIcon from '../../../common/SafeIcon';
 import { SiTiktok } from 'react-icons/si';
 import { FiMail, FiFacebook, FiTwitter, FiInstagram, FiLinkedin } from 'react-icons/fi';
 import { usePageActions } from '../../pageActions';
+import { isSafeEmail } from './safeLinks';
 
 // The form card and the department column share one two-column section, so they are one
 // editor block. The form itself (state, Turnstile, lead insert) is supplied by the page via
@@ -42,9 +43,15 @@ const ContactFormIntro = ({
                 <motion.div key={index} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.1 }} viewport={{ once: true }} className="bg-white rounded-lg border border-neutral-200 p-4 sm:p-6 hover:shadow-[0_4px_12px_rgba(13,14,22,0.15)] transition-shadow">
                   <h3 className="text-lg sm:text-xl font-heading font-bold text-neutral-900 mb-2"> {dept.name} </h3>
                   <p className="text-neutral-600 mb-3 text-sm sm:text-base"> {dept.description} </p>
-                  <a href={`mailto:${dept.email}`} className="text-primary hover:text-primary-600 font-medium inline-flex items-center text-sm sm:text-base">
-                    <SafeIcon icon={FiMail} className="mr-2 w-4 h-4" /> {dept.email}
-                  </a>
+                  {isSafeEmail(dept.email) ? (
+                    <a href={`mailto:${dept.email}`} className="text-primary hover:text-primary-600 font-medium inline-flex items-center text-sm sm:text-base">
+                      <SafeIcon icon={FiMail} className="mr-2 w-4 h-4" /> {dept.email}
+                    </a>
+                  ) : (
+                    <span className="text-primary font-medium inline-flex items-center text-sm sm:text-base">
+                      <SafeIcon icon={FiMail} className="mr-2 w-4 h-4" /> {dept.email}
+                    </span>
+                  )}
                 </motion.div>
               ))}
             </div>

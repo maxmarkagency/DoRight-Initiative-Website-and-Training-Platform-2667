@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import SafeIcon from '../../../common/SafeIcon';
 import { FiMail, FiPhone, FiMapPin } from 'react-icons/fi';
 import { usePageActions } from '../../pageActions';
+import { isSafeEmail } from './safeLinks';
 
 // Email/phone/address values come from site_settings (passed in via page actions);
 // editors only change the headings and labels around them.
@@ -56,7 +57,7 @@ const ContactInfoIntro = ({
               <div className="space-y-1.5 sm:space-y-2">
                 {info.details.map((detail, detailIndex) => {
                   const isPhone = detail.startsWith('+');
-                  const isEmail = detail.includes('@');
+                  const isEmail = detail.includes('@') && isSafeEmail(detail);
                   if (isPhone) {
                     return (
                       <p key={detailIndex} className="text-sm sm:text-base">

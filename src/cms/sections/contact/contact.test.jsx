@@ -94,3 +94,50 @@ test('the real form still submits through the lead insert path', async () => {
   expect(insert).toHaveBeenCalledWith(expect.objectContaining({ full_name: 'Ada Obi', email: 'ada@example.com', source: 'contact_page', status: 'new' }));
   expect(supabase.functions.invoke).toHaveBeenCalledWith('send-lead-welcome-email', expect.anything());
 });
+
+import ContactMap from './ContactMap';
+
+const DEFAULT_EMBED = contactConfig.components.ContactMap.defaultProps.embedUrl;
+
+test('javascript: embed url falls back to the default embed', () => {
+  const { container } = render(
+    <MemoryRouter><ContactMap embedUrl="javascript:alert(1)" /></MemoryRouter>
+  );
+  expect(container.querySelector('iframe')).toHaveAttribute('src', DEFAULT_EMBED);
+});
+
+test('embed on another host or http falls back to the default embed', () => {
+  const { container, rerender } = render(
+    <MemoryRouter><ContactMap embedUrl="https://evil.example/x" /></MemoryRouter>
+  );
+  expect(container.querySelector('iframe')).toHaveAttribute('src', DEFAULT_EMBED);
+  rerender(<MemoryRouter><ContactMap embedUrl="http://www.google.com/maps/embed?pb=1" /></MemoryRouter>);
+  expect(container.querySelector('iframe')).toHaveAttribute('src', DEFAULT_EMBED);
+});
+
+test('an https www.google.com embed url is used', () => {
+  const url = 'https://www.google.com/maps/embed?pb=abc';
+  const { container } = render(<MemoryRouter><ContactMap embedUrl={url} /></MemoryRouter>);
+  expect(container.querySelector('iframe')).toHaveAttribute('src', url);
+});
+
+test('javascript: directions url renders no link', () => {
+  render(<MemoryRouter><ContactMap directionsUrl="javascript:alert(1)" /></MemoryRouter>);
+  expect(screen.getByText('Open in Google Maps / Get Directions')).toBeInTheDocument();
+  expect(screen.queryByRole('link')).toBeNull();
+});
+
+test('department with a bad email renders no mailto link', () => {
+  const { container } = render(
+    <ContactFormIntro departments={[{ name: 'Bad', email: 'x"onmouseover=y', description: 'd' }, { name: 'Good', email: 'ok@doright.ng', description: 'd' }]} />
+  );
+  expect(container.querySelector('a[href="mailto:x\\"onmouseover=y"]')).toBeNull();
+  expect(screen.getByText('x"onmouseover=y')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: /ok@doright.ng/ })).toHaveAttribute('href', 'mailto:ok@doright.ng');
+  expect(screen.getAllByRole('link').filter((a) => a.getAttribute('href').startsWith('mailto:'))).toHaveLength(1);
+});
+
+test('an email carrying mailto query params renders no mailto link', () => {
+  render(<ContactFormIntro departments={[{ name: 'Q', email: 'a@b.com?bcc=evil', description: 'd' }]} />);
+  expect(screen.queryByRole('link', { name: /a@b.com/ })).toBeNull();
+});
