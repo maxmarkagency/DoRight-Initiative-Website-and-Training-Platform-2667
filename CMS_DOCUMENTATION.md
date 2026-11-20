@@ -8,7 +8,8 @@ actually calls today.
 ## Visual Page Editor (Admin → Pages)
 
 Marketing pages are being moved to a visual editor built on [Puck](https://puckeditor.com)
-(`@puckeditor/core`). **Home** is migrated; other pages still use the legacy tables below.
+(`@puckeditor/core`). **Home, About, Programs, Trustees, Contact, Sub-Committees and Join** are
+all editable (see `src/cms/pages/index.js`). The legacy tables below are no longer read by any page.
 
 - **Storage:** `page_content` (one row per page `slug`: `draft` and `published` Puck JSON) and
   `page_content_versions` (one row per publish, newest 10 kept). Migration:
@@ -35,6 +36,19 @@ Marketing pages are being moved to a visual editor built on [Puck](https://pucke
 - **Links:** button links accept `/internal-paths`, `http(s)`, `mailto:` and `tel:`; anything
   else renders as plain text (`src/cms/sections/ButtonLink.jsx`).
 
+- **Form pages (page actions):** forms and modals (Contact, Join, Sub-Committees) stay in the page
+  component and are handed to sections through `PageActionsContext` (`src/cms/pageActions.js`).
+  In the editor there is no provider, so every action is a no-op.
+- **Fixed lists:** lists whose items carry behaviour use `mergeByKey` / `fixedListField`
+  (`src/cms/fields/fixedList.js`). Sub-Committees are keyed by `id`, Join "ways" by `interestKey`.
+  Editors change text only; ids, links and colours stay in code
+  (`src/pages/subCommitteesData.js`, `src/cms/sections/join/waysData.js`).
+- **URL safety:** link helpers in `src/cms/sections/contact/safeLinks.js` plus `ButtonLink.jsx`
+  reject unsafe URL schemes; unsafe values render as plain text.
+- **Operational contact details** (email, phone, address) are not page content: they stay in
+  `site_settings` / code and are passed to sections via page actions.
+- **Admin "Content" screen** (`ContentManagement.jsx`) is now **Site Settings** only.
+
 **To make another page editable:** move each visible section of the page into
 `src/cms/sections/<page>/<Section>.jsx` taking content as props, write
 `src/cms/pages/<page>.config.js` with today's content as `defaultProps`, register it in
@@ -44,7 +58,6 @@ Marketing pages are being moved to a visual editor built on [Puck](https://pucke
 
 | Table | Admin page | Public-facing page(s) |
 |---|---|---|
-| `pages`, `page_sections` | `ContentManagement.jsx` | read via `src/services/pageContentService.js` |
 | `blog_posts` | `BlogManagement.jsx` | `Blog.jsx`, `BlogPost.jsx` |
 | `gallery_items` | `GalleryManagement.jsx` | `Gallery.jsx` |
 | `events` | `EventManagement.jsx` | `Events.jsx` |
@@ -53,32 +66,11 @@ Marketing pages are being moved to a visual editor built on [Puck](https://pucke
 All of these follow the same pattern: public/anonymous users get read access to published rows,
 and writes are gated to admins by RLS.
 
-### `pages` / `page_sections`
-
-Each row in `pages` represents a site page (`slug`, `title`). `page_sections` holds that page's
-content blocks: `page_id` (FK), `section_key`, `position`, a JSON-ish content payload, and
-`is_active`. `pageContentService.getPageContent(slug)` looks up the page by slug, then fetches its
-active sections ordered by `position`:
-
-```js
-const { data: page } = await supabase.from('pages').select('id').eq('slug', pageSlug).maybeSingle();
-const { data: sections } = await supabase
-  .from('page_sections')
-  .select('*')
-  .eq('page_id', page.id)
-  .eq('is_active', true)
-  .order('position', { ascending: true });
-```
-
-`ContentManagement.jsx` is the admin editor for this — it currently exposes a "Page Sections" tab
-per page (home, about, programs, events, contact, trustees).
-
 ### `blog_posts`, `gallery_items`, `events`, `webinars`
 
 Each has its own admin management page doing direct CRUD (`select`/`insert`/`update`/`delete`)
 against its table, and its own public page reading published rows. There's nothing more
-centralized than that — no shared "content service" layer wraps them the way `pageContentService`
-does for pages.
+centralized than that — no shared "content service" layer wraps them.
 
 ## RLS Model
 
@@ -98,10 +90,12 @@ To find or change these rules for a given table, go to Supabase Dashboard → Da
 An earlier CMS design created additional tables — `content_sections`, `site_settings`,
 `team_members`, `programs_cms`, `events_calendar`, `navigation_items` (from
 `supabase/migrations/20251213000542_002_create_cms_content_tables.sql`) and a second, overlapping
-attempt (`page_sections`, `programs`, `team_members`, `events`, `site_settings` from
+attempt (`pages`, `page_sections`, `programs`, `team_members`, `events`, `site_settings` from
 `20251213073224_create_cms_content_tables.sql`). These migrations are already applied and are
 left in place (removing an applied migration file doesn't undo it in a live database), but as of
-this writing **no frontend code reads or writes** `content_sections`, `site_settings`,
+this writing **no page reads** `pages`, `page_sections`, `programs` or `team_members` (they are
+left in the database unused; `pageContentService` was removed), and no frontend code reads or
+writes `content_sections`,
 `team_members`, `programs_cms`, `events_calendar`, or `navigation_items` — grep `src/` for
 `.from('<table>')` before building anything against them, since some of these names are shared
 between the two historical schema attempts and may not mean what their column comments say.
@@ -109,7 +103,7 @@ between the two historical schema attempts and may not mean what their column co
 ## Troubleshooting
 
 **Content not updating on the public site:**
-- Confirm the row is marked visible/active (`is_active` on `page_sections`, `is_published` on
+- Confirm the row is marked visible/active (`is_published` on
   events/webinars where applicable).
 - Hard-refresh — there's no server cache, but the browser may cache the JS bundle.
 - Check the browser console for the actual Supabase error.
