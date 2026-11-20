@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import SafeIcon from '../../common/SafeIcon';
-import MediaUpload from '../../components/admin/MediaUpload';
+import { ImageFieldInput } from '../../cms/fields/imageField';
 import AdminModal from '../../components/admin/AdminModal';
 import SearchFilterBar from '../../components/admin/SearchFilterBar';
 import * as FiIcons from 'react-icons/fi';
@@ -73,13 +73,6 @@ const BlogManagement = () => {
       tags: []
     });
     setShowModal(true);
-  };
-
-  const handleUploadSuccess = (file) => {
-    setFormData(prev => ({
-      ...prev,
-      featured_image_url: file.url
-    }));
   };
 
   const handleEditPost = (post) => {
@@ -308,29 +301,12 @@ const BlogManagement = () => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Upload Featured Image</label>
-                  <MediaUpload
-                    onUploadSuccess={handleUploadSuccess}
-                    allowedTypes="image"
-                  />
-                  {formData.featured_image_url && (
-                    <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm text-green-700">
-                      Image uploaded successfully!
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Featured Image URL</label>
-                  <input
-                    type="url"
-                    value={formData.featured_image_url}
-                    onChange={(e) => setFormData({ ...formData, featured_image_url: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-400"
-                    placeholder="Upload an image or enter URL manually"
-                  />
-                </div>
+                <ImageFieldInput
+                  field={{ label: 'Featured image' }}
+                  showAlt={false}
+                  value={{ url: formData.featured_image_url, alt: '' }}
+                  onChange={(img) => setFormData((prev) => ({ ...prev, featured_image_url: img.url }))}
+                />
 
                 <div>
                   <label className="block text-sm font-medium mb-1">Status</label>

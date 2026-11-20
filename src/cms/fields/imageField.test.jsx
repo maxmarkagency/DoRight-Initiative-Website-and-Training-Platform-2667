@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { imageField } from './imageField';
+import { imageField, ImageFieldInput } from './imageField';
 import MediaLibraryPicker from './MediaLibraryPicker';
 
 const { list, getPublicUrl } = vi.hoisted(() => ({ list: vi.fn(), getPublicUrl: vi.fn() }));
@@ -61,4 +61,10 @@ test('library picker shows an error when listing fails', async () => {
   list.mockResolvedValue({ data: null, error: new Error('denied') });
   render(<MediaLibraryPicker open onClose={() => {}} onSelect={() => {}} />);
   expect(await screen.findByText(/Couldn't load the media library/)).toBeInTheDocument();
+});
+
+test('showAlt={false} hides the alt input and helper text', () => {
+  render(<ImageFieldInput value={{ url: 'a.jpg', alt: '' }} onChange={vi.fn()} field={{ label: 'Photo' }} showAlt={false} />);
+  expect(screen.queryByLabelText(/Alt text/)).not.toBeInTheDocument();
+  expect(screen.queryByText(/screen readers/)).not.toBeInTheDocument();
 });

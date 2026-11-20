@@ -5,7 +5,7 @@ import MediaLibraryPicker from './MediaLibraryPicker';
 const EMPTY = { url: '', alt: '' };
 
 // Puck custom field. Value shape: { url, alt }. Upload goes to the media-library bucket.
-const ImageFieldInput = ({ value, onChange, field }) => {
+export const ImageFieldInput = ({ value, onChange, field, showAlt = true }) => {
   const image = { ...EMPTY, ...value };
   const [pickerOpen, setPickerOpen] = useState(false);
   const altId = useId();
@@ -32,15 +32,19 @@ const ImageFieldInput = ({ value, onChange, field }) => {
           </button>
         )}
       </div>
-      <label htmlFor={altId} className="block text-xs text-neutral-700">Alt text</label>
-      <input
-        id={altId}
-        type="text"
-        value={image.alt}
-        onChange={(e) => update({ alt: e.target.value })}
-        className="w-full text-sm px-2 py-1.5 rounded border border-neutral-300"
-      />
-      <p className="text-xs text-neutral-500">Describe the image for people using screen readers.</p>
+      {showAlt && (
+        <>
+        <label htmlFor={altId} className="block text-xs text-neutral-700">Alt text</label>
+        <input
+          id={altId}
+          type="text"
+          value={image.alt}
+          onChange={(e) => update({ alt: e.target.value })}
+          className="w-full text-sm px-2 py-1.5 rounded border border-neutral-300"
+        />
+        <p className="text-xs text-neutral-500">Describe the image for people using screen readers.</p>
+        </>
+      )}
       <MediaLibraryPicker open={pickerOpen} onClose={() => setPickerOpen(false)} onSelect={(url) => update({ url })} />
     </div>
   );

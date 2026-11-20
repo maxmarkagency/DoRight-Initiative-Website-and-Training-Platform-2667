@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import SafeIcon from '../../common/SafeIcon';
-import MediaUpload from '../../components/admin/MediaUpload';
+import { ImageFieldInput } from '../../cms/fields/imageField';
 import AdminModal from '../../components/admin/AdminModal';
 import SearchFilterBar from '../../components/admin/SearchFilterBar';
 import * as FiIcons from 'react-icons/fi';
@@ -81,13 +81,6 @@ const WebinarManagement = () => {
       tags: []
     });
     setShowModal(true);
-  };
-
-  const handleUploadSuccess = (file) => {
-    setFormData(prev => ({
-      ...prev,
-      image_url: file.url
-    }));
   };
 
   const handleEditWebinar = (webinar) => {
@@ -340,29 +333,12 @@ const WebinarManagement = () => {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Upload Webinar Image</label>
-                  <MediaUpload
-                    onUploadSuccess={handleUploadSuccess}
-                    allowedTypes="image"
-                  />
-                  {formData.image_url && (
-                    <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm text-green-700">
-                      Image uploaded successfully!
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Image URL</label>
-                  <input
-                    type="url"
-                    value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-400"
-                    placeholder="Upload an image or enter URL manually"
-                  />
-                </div>
+                <ImageFieldInput
+                  field={{ label: 'Webinar image' }}
+                  showAlt={false}
+                  value={{ url: formData.image_url, alt: '' }}
+                  onChange={(img) => setFormData((prev) => ({ ...prev, image_url: img.url }))}
+                />
 
                 <div>
                   <label className="block text-sm font-medium mb-1">Max Participants</label>

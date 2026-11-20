@@ -22,7 +22,7 @@ const AdminSidebar = () => {
       { name: 'Courses', path: '/admin/courses', icon: FiBookOpen },
       { name: 'Analytics', path: '/admin/analytics', icon: FiBarChart2 },
       { name: 'Pages', path: '/admin/pages', icon: FiLayout },
-      { name: 'Content', path: '/admin/content', icon: FiEdit3 },
+      { name: 'Site Settings', path: '/admin/content', icon: FiEdit3 },
       { name: 'Blog', path: '/admin/blog', icon: FiMessageSquare },
       { name: 'Gallery', path: '/admin/gallery', icon: FiImage },
       { name: 'Webinars', path: '/admin/webinars', icon: FiVideo },

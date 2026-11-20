@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import SafeIcon from '../../common/SafeIcon';
 import MediaUpload from '../../components/admin/MediaUpload';
+import { ImageFieldInput } from '../../cms/fields/imageField';
 import AdminModal from '../../components/admin/AdminModal';
 import * as FiIcons from 'react-icons/fi';
 import supabase from '../../lib/supabase';
@@ -351,15 +352,12 @@ const GalleryManagement = () => {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">Thumbnail URL (optional)</label>
-                  <input
-                    type="url"
-                    value={formData.thumbnail_url}
-                    onChange={(e) => setFormData({ ...formData, thumbnail_url: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-400"
-                  />
-                </div>
+                <ImageFieldInput
+                  field={{ label: 'Thumbnail (optional)' }}
+                  showAlt={false}
+                  value={{ url: formData.thumbnail_url, alt: '' }}
+                  onChange={(img) => setFormData((prev) => ({ ...prev, thumbnail_url: img.url }))}
+                />
 
                 <div>
                   <label className="block text-sm font-medium mb-1">Category</label>
