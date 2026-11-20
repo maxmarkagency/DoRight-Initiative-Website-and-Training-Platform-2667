@@ -7,9 +7,12 @@ import SubCommitteesList from './SubCommitteesList';
 import SubCommitteesHero from './SubCommitteesHero';
 import { PAGES } from '../../pages';
 import { PageActionsContext } from '../../pageActions';
+import SubCommitteesFooter from './SubCommitteesFooter';
 import { fetchPublished } from '../../pageContentApi';
+import { joinSubCommittee } from '../../../services/leadsService';
 
 vi.mock('../../pageContentApi', () => ({ fetchPublished: vi.fn(), fetchPageRow: vi.fn() }));
+vi.mock('../../../services/leadsService', () => ({ joinSubCommittee: vi.fn(() => Promise.resolve({ lead: {} })) }));
 vi.mock('../../../lib/supabase', () => {
   const chain = { select: () => chain, eq: () => chain, maybeSingle: () => Promise.resolve({ data: null }) };
   return { default: { from: vi.fn(() => chain) } };
@@ -118,4 +121,44 @@ test('hero renders plain-paragraph edits', () => {
   render(<SubCommitteesHero {...defaultsOf('SubCommitteesHero')} title="New title" paragraphs={[{ text: 'Only one' }]} />);
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('New title');
   expect(screen.getByText('Only one')).toBeInTheDocument();
+});
+
+test('footer phone numbers are code constants; stored values are ignored and not editable', () => {
+  const fields = subCommitteesConfig.components.SubCommitteesFooter.fields;
+  expect(fields.adminPhone).toBeUndefined();
+  expect(fields.directorPhone).toBeUndefined();
+  render(<SubCommitteesFooter {...defaultsOf('SubCommitteesFooter')} adminPhone="+1 555 000 1111" directorPhone="+1 555 000 2222" />);
+  expect(screen.getByRole('link', { name: '+234 912 339 9968' })).toHaveAttribute('href', 'tel:+2349123399968');
+  expect(screen.getByRole('link', { name: '+234 802 329 8260' })).toHaveAttribute('href', 'tel:+2348023298260');
+  expect(screen.queryByText(/555/)).toBeNull();
+});
+
+test('the join modal and lead data use the code name, not the CMS-edited name', async () => {
+  const committees = defaultsOf('SubCommitteesList').committees.map((c) =>
+    c.id === 'strategy' ? { ...c, name: 'Edited Strategy Name' } : c
+  );
+  await renderPage({ content: [{ type: 'SubCommitteesList', props: { committees } }] });
+  fireEvent.click(screen.getAllByRole('button', { name: /Join This Sub-Committee/ })[2]);
+  expect(await screen.findByRole('heading', { level: 3, name: 'Strategy Sub-Committee' })).toBeInTheDocument();
+  const q = (n) => document.querySelector(`input[name="${n}"]`);
+  fireEvent.change(q('membershipId'), { target: { name: 'membershipId', value: 'DRAI-2026-1234' } });
+  fireEvent.change(q('fullName'), { target: { name: 'fullName', value: 'Jane Doe' } });
+  fireEvent.change(q('email'), { target: { name: 'email', value: 'jane@example.com' } });
+  fireEvent.submit(q('email').closest('form'));
+  await waitFor(() => expect(joinSubCommittee).toHaveBeenCalled());
+  expect(joinSubCommittee).toHaveBeenCalledWith(
+    expect.objectContaining({ subCommitteeId: 'strategy', subCommitteeName: 'Strategy Sub-Committee' })
+  );
+});
+
+test('hostile greeting HTML is stripped', () => {
+  const { container } = render(
+    <SubCommitteesHero
+      {...defaultsOf('SubCommitteesHero')}
+      paragraphs={[{ text: 'Hi <img src=x onerror=alert(1)><script>alert(2)</script><strong>ok</strong>' }]}
+    />
+  );
+  expect(container.querySelector('script')).toBeNull();
+  expect(container.querySelector('img')?.getAttribute('onerror') ?? null).toBeNull();
+  expect(container.querySelector('strong')).toHaveTextContent('ok');
 });

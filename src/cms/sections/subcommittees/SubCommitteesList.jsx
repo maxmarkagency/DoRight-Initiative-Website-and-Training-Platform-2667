@@ -14,7 +14,7 @@ const SubCommitteesList = ({ committees, rolesHeading, requirementText, joinLabe
   const merged = mergeByKey(SUB_COMMITTEES_DATA, committees, 'id', EDITABLE_FIELDS);
 
   return (
-    <section className="py-16 sm:py-24 bg-slate-900">
+    <section className="py-16 sm:py-24 bg-slate-900 [&:has(+section)]:pb-0">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 sm:space-y-16">
         {merged.map((committee, idx) => {
           const IconComponent = committee.icon;

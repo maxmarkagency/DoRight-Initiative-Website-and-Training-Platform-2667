@@ -88,8 +88,11 @@ const SubCommittees = () => {
       });
   }, []);
 
+  // The join flow always uses the code entry (looked up by id), so join/lead data never depends on CMS copy.
   const openJoinModal = (committee) => {
-    setSelectedCommittee(committee);
+    const codeEntry = SUB_COMMITTEES_DATA.find((c) => c.id === committee?.id);
+    if (!codeEntry) return;
+    setSelectedCommittee(codeEntry);
     setIsJoined(false);
     setJoinError('');
     setRestrictionData(null);
