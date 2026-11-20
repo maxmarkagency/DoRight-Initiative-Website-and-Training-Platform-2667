@@ -7,6 +7,7 @@ const NOOP_ACTIONS = {
   selectWay: () => {},
   scrollToForm: () => {},
   renderContactForm: null,
+  waysVisible: true,
   contactSettings: null,
 };
 

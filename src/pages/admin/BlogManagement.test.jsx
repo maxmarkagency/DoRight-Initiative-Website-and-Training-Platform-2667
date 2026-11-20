@@ -7,7 +7,16 @@ const { insert } = vi.hoisted(() => ({ insert: vi.fn() }));
 vi.mock('../../lib/supabase', () => ({
   default: {
     from: () => ({
-      select: () => ({ order: () => Promise.resolve({ data: [], error: null }) }),
+      // Chainable like Supabase's query builder (order/eq/ilike), awaitable at any point.
+      select: () => {
+        const query = {
+          order: () => query,
+          eq: () => query,
+          ilike: () => query,
+          then: (resolve) => resolve({ data: [], error: null }),
+        };
+        return query;
+      },
       insert,
     }),
     storage: { from: () => ({ list: vi.fn(), getPublicUrl: vi.fn() }) },

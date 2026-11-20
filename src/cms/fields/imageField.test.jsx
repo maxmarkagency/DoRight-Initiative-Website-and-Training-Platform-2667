@@ -68,3 +68,19 @@ test('showAlt={false} hides the alt input and helper text', () => {
   expect(screen.queryByLabelText(/Alt text/)).not.toBeInTheDocument();
   expect(screen.queryByText(/screen readers/)).not.toBeInTheDocument();
 });
+
+test('pasting an https image address sets the url', () => {
+  const onChange = renderInput({ url: '', alt: '' });
+  const input = screen.getByLabelText(/paste an image address/i);
+  fireEvent.change(input, { target: { value: 'https://cdn.example.org/a.jpg' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Use address' }));
+  expect(onChange).toHaveBeenCalledWith({ url: 'https://cdn.example.org/a.jpg', alt: '' });
+});
+
+test('a non-http image address is rejected', () => {
+  const onChange = renderInput({ url: '', alt: '' });
+  fireEvent.change(screen.getByLabelText(/paste an image address/i), { target: { value: 'javascript:alert(1)' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Use address' }));
+  expect(onChange).not.toHaveBeenCalled();
+  expect(screen.getByText(/must start with https:\/\//i)).toBeInTheDocument();
+});

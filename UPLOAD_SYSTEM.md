@@ -87,7 +87,8 @@ The visual page editor (Admin → Pages) uses `src/cms/fields/imageField.jsx` fo
 It stores `{ url, alt }` and offers three ways to set the image: **Upload** (wraps
 `MediaUpload` with `allowedTypes="image"`), **Choose from library**
 (`src/cms/fields/MediaLibraryPicker.jsx` lists the newest 100 jpg/png/gif/webp files in
-`media-library`), and **Remove**. Alt text is edited alongside the image.
+`media-library`), **Or paste an image address** (accepted only if it starts with `https://` or
+`http://`), and **Remove**. Alt text is edited alongside the image.
 
 The same picker (`ImageFieldInput`, with `showAlt` for the page editor) is also used in Blog,
 Events, Webinars, Gallery thumbnails and Site Settings image values. Outside the page editor these

@@ -8,8 +8,22 @@ const EMPTY = { url: '', alt: '' };
 export const ImageFieldInput = ({ value, onChange, field, showAlt = true }) => {
   const image = { ...EMPTY, ...value };
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [pasted, setPasted] = useState('');
+  const [pasteError, setPasteError] = useState('');
   const altId = useId();
+  const pasteId = useId();
   const update = (patch) => onChange({ ...image, ...patch });
+
+  const usePastedAddress = () => {
+    const address = pasted.trim();
+    if (!/^https?:\/\/\S+$/i.test(address)) {
+      setPasteError('The address must start with https:// (or http://).');
+      return;
+    }
+    setPasteError('');
+    setPasted('');
+    update({ url: address });
+  };
 
   return (
     <div className="space-y-2">
@@ -22,6 +36,21 @@ export const ImageFieldInput = ({ value, onChange, field, showAlt = true }) => {
         </div>
       )}
       <MediaUpload allowedTypes="image" onUploadSuccess={(file) => update({ url: file.url })} />
+      <label htmlFor={pasteId} className="block text-xs text-neutral-700">Or paste an image address</label>
+      <div className="flex gap-2">
+        <input
+          id={pasteId}
+          type="url"
+          value={pasted}
+          onChange={(e) => setPasted(e.target.value)}
+          placeholder="https://…"
+          className="flex-1 min-w-0 text-sm px-2 py-1.5 rounded border border-neutral-300"
+        />
+        <button type="button" onClick={usePastedAddress} className="text-xs px-2 py-1.5 rounded border border-neutral-300 hover:bg-neutral-100">
+          Use address
+        </button>
+      </div>
+      {pasteError && <p className="text-xs text-red-600">{pasteError}</p>}
       <div className="flex gap-2">
         <button type="button" onClick={() => setPickerOpen(true)} className="flex-1 text-xs px-2 py-1.5 rounded border border-neutral-300 hover:bg-neutral-100">
           Choose from library

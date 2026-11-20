@@ -25,3 +25,11 @@ test('https and mailto links render as external links', () => {
   renderLink('mailto:info@doright.ng');
   expect(screen.getByRole('link')).toHaveAttribute('href', 'mailto:info@doright.ng');
 });
+
+test.each([String.raw`/\evil.com`, '/\t/evil.com', String.raw`/\/evil.com`])(
+  'backslash and whitespace tricks (%j) are not treated as internal links',
+  (href) => {
+    renderLink(href);
+    expect(screen.queryByRole('link')).toBeNull();
+  }
+);

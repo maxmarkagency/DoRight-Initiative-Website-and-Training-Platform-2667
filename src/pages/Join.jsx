@@ -314,6 +314,8 @@ const Join = () => {
   const actions = {
     selectWay: openModal,
     contactSettings: siteSettings,
+    // The hero's "Explore" button scrolls to the Ways section; hide it when that section is hidden.
+    waysVisible: !data.content.find((item) => item.type === 'JoinWays')?.props.hidden,
   };
 
   return (

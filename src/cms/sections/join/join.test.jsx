@@ -170,3 +170,10 @@ test('the real signup form still renders and submits through submitLead', async 
   );
   spy.mockRestore();
 });
+
+test('the Explore button is not shown when the Ways section is hidden', async () => {
+  fetchPublished.mockResolvedValueOnce({ content: [{ type: 'JoinWays', props: { hidden: true } }] });
+  render(<MemoryRouter><Join /></MemoryRouter>);
+  await screen.findByRole('heading', { level: 1 });
+  expect(screen.queryByRole('button', { name: /Explore Opportunities/ })).toBeNull();
+});

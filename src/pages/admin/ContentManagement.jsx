@@ -134,7 +134,7 @@ const ContentManagement = () => {
             />
           ) : type === 'image' ? (
             <ImageFieldInput
-              field={{ label: '' }}
+              field={{ label: 'Image' }}
               showAlt={false}
               value={{ url: typeof editingItem.setting_value === 'string' ? editingItem.setting_value : '', alt: '' }}
               onChange={(img) => setEditingItem({ ...editingItem, setting_value: img.url })}
